@@ -127,42 +127,35 @@ const Launch = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5 min-w-0">
+                  <div className="space-y-1.5">
                     <Label htmlFor="meeting-date" className="text-xs">Date</Label>
-                    <Input id="meeting-date" type="date" className="w-full h-8 text-sm" />
+                    <Input id="meeting-date" type="date" className="h-9 text-sm" />
                   </div>
-                  <div className="space-y-1.5 min-w-0">
+                  <div className="space-y-1.5">
                     <Label htmlFor="meeting-time" className="text-xs">Time</Label>
-                    <Input id="meeting-time" type="time" className="w-full h-8 text-sm" />
+                    <Input id="meeting-time" type="time" className="h-9 text-sm" />
                   </div>
                 </div>
 
-                  <div className="space-y-2">
-                    <Label>Meeting Type</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button
-                        variant={meetingType === "public" ? "default" : "outline"}
-                        onClick={() => setMeetingType("public")}
-                        className="text-sm"
-                      >
-                        Public
-                      </Button>
-                      <Button
-                        variant={meetingType === "followers" ? "default" : "outline"}
-                        onClick={() => setMeetingType("followers")}
-                        className="text-sm"
-                      >
-                        Followers
-                      </Button>
-                      <Button
-                        variant={meetingType === "private" ? "default" : "outline"}
-                        onClick={() => setMeetingType("private")}
-                        className="text-sm"
-                      >
-                        Private
-                      </Button>
-                    </div>
+                <div className="space-y-2">
+                  <Label>Meeting Type</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={meetingType === "public" ? "default" : "outline"}
+                      onClick={() => setMeetingType("public")}
+                      className="text-sm"
+                    >
+                      Public
+                    </Button>
+                    <Button
+                      variant={meetingType === "private" ? "default" : "outline"}
+                      onClick={() => setMeetingType("private")}
+                      className="text-sm"
+                    >
+                      Private
+                    </Button>
                   </div>
+                </div>
 
                   {meetingType === "public" && (
                     <div className="space-y-4 pt-2 border-t">
