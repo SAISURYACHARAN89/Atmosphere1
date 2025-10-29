@@ -412,18 +412,40 @@ const Trade = () => {
               <>
                 {/* Search Bar and Saved Toggle */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      value={searchValue}
-                      onChange={(e) => setSearchValue(e.target.value)}
-                      placeholder="Search..."
-                      className="pl-10 pr-10 h-12 rounded-full bg-muted border-0"
-                    />
+                  <div className="relative flex-1 bg-muted rounded-full">
+                    <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                    <div className="flex flex-wrap items-center gap-2 pl-10 pr-16 py-2 min-h-[48px]">
+                      {/* Selected Category Chips */}
+                      {selectedCategories.map((category) => (
+                        <Badge
+                          key={category}
+                          variant="default"
+                          className="flex items-center gap-1 px-2 py-1"
+                        >
+                          <span className="text-xs">{category}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCategoryClick(category);
+                            }}
+                            className="hover:bg-primary-foreground/20 rounded-full p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      {/* Search Input */}
+                      <Input
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        placeholder={selectedCategories.length === 0 ? "Search..." : ""}
+                        className="flex-1 min-w-[100px] border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
                     {searchValue && (
                       <button
                         onClick={() => setSearchValue("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                        className="absolute right-12 top-1/2 -translate-y-1/2"
                       >
                         <X className="w-5 h-5 text-muted-foreground" />
                       </button>
