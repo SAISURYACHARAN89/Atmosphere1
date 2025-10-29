@@ -127,13 +127,13 @@ const Launch = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="meeting-date">Date</Label>
-                    <Input id="meeting-date" type="date" />
+                    <Input id="meeting-date" type="date" className="w-full" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <Label htmlFor="meeting-time">Time</Label>
-                    <Input id="meeting-time" type="time" />
+                    <Input id="meeting-time" type="time" className="w-full" />
                   </div>
                 </div>
 
