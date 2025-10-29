@@ -117,12 +117,12 @@ const startupData = [
   }
 ];
 
-type FilterType = "all" | "investors" | "startups" | "reels";
+type FilterType = "investors" | "startups" | "reels";
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("investors");
 
   const toggleCategory = (category: string) => {
     setSelectedCategories(prev => 
@@ -186,16 +186,6 @@ const Search = () => {
         {(searchQuery || selectedCategories.length > 0) && (
           <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
             <button
-              onClick={() => setActiveFilter("all")}
-              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                activeFilter === "all"
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-foreground hover:bg-muted/80"
-              }`}
-            >
-              All
-            </button>
-            <button
               onClick={() => setActiveFilter("investors")}
               className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 activeFilter === "investors"
@@ -232,7 +222,7 @@ const Search = () => {
         {(searchQuery || selectedCategories.length > 0) && (
           <div className="space-y-6">
             {/* Investors Section */}
-            {(activeFilter === "all" || activeFilter === "investors") && (
+            {activeFilter === "investors" && (
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-4">Investors</h2>
               <div className="space-y-3">
@@ -277,7 +267,7 @@ const Search = () => {
             )}
 
             {/* Startups Section */}
-            {(activeFilter === "all" || activeFilter === "startups") && (
+            {activeFilter === "startups" && (
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-4">Startups</h2>
               <div className="space-y-3">
