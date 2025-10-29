@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp, Trash2, Edit } from "lucide-react";
+import { Search, X, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp, Trash2, Edit, Bookmark } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ const Trade = () => {
   const [maxRange, setMaxRange] = useState<number>(50);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [editingTradeId, setEditingTradeId] = useState<number | null>(null);
+  const [savedSellers, setSavedSellers] = useState<number[]>([]);
 
   const showContent = tradeMode !== null;
   const showSellers = searchValue.trim() !== "" || selectedCategories.length > 0;
@@ -108,6 +109,14 @@ const Trade = () => {
       setMaxRange(trade.maxRange);
       handleDeleteTrade(tradeId);
     }
+  };
+
+  const handleToggleSaveSeller = (sellerId: number) => {
+    setSavedSellers(prev => 
+      prev.includes(sellerId) 
+        ? prev.filter(id => id !== sellerId)
+        : [...prev, sellerId]
+    );
   };
 
   return (
@@ -408,7 +417,7 @@ const Trade = () => {
                       {sellers.map((seller) => (
                         <div
                           key={seller.id}
-                          className="flex items-center gap-3 p-4 bg-card border border-border rounded-lg hover:bg-muted transition-all cursor-pointer"
+                          className="flex items-center gap-3 p-4 bg-card border border-border rounded-lg hover:bg-muted transition-all"
                         >
                           <Avatar className="w-12 h-12">
                             <AvatarImage src={seller.avatar} />
@@ -419,6 +428,15 @@ const Trade = () => {
                           <div className="flex-1">
                             <p className="font-medium text-foreground">{seller.name}</p>
                           </div>
+                          <button
+                            onClick={() => handleToggleSaveSeller(seller.id)}
+                            className="p-2 hover:bg-background rounded-lg transition-colors"
+                            title={savedSellers.includes(seller.id) ? "Unsave" : "Save"}
+                          >
+                            <Bookmark 
+                              className={`w-5 h-5 ${savedSellers.includes(seller.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
+                            />
+                          </button>
                         </div>
                       ))}
                     </div>
