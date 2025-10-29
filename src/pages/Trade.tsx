@@ -101,6 +101,7 @@ const Trade = () => {
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [editingTradeId, setEditingTradeId] = useState<number | null>(null);
   const [savedSellers, setSavedSellers] = useState<number[]>([]);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
 
   const showContent = tradeMode !== null;
   const showSellers = searchValue.trim() !== "" || selectedCategories.length > 0;
@@ -409,23 +410,34 @@ const Trade = () => {
             ) : (
               /* Buying Page - Original Flow */
               <>
-                {/* Search Bar */}
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="Search..."
-                    className="pl-10 pr-10 h-12 rounded-full bg-muted border-0"
-                  />
-                  {searchValue && (
-                    <button
-                      onClick={() => setSearchValue("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                    >
-                      <X className="w-5 h-5 text-muted-foreground" />
-                    </button>
-                  )}
+                {/* Search Bar and Saved Toggle */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      placeholder="Search..."
+                      className="pl-10 pr-10 h-12 rounded-full bg-muted border-0"
+                    />
+                    {searchValue && (
+                      <button
+                        onClick={() => setSearchValue("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                      >
+                        <X className="w-5 h-5 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
+                  <Button
+                    variant={showSavedOnly ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => setShowSavedOnly(!showSavedOnly)}
+                    className="h-12 w-12 flex-shrink-0 rounded-full"
+                    title={showSavedOnly ? "Show all sellers" : "Show saved sellers"}
+                  >
+                    <Bookmark className={`w-5 h-5 ${showSavedOnly ? 'fill-primary-foreground' : ''}`} />
+                  </Button>
                 </div>
 
                 {/* Category Tags */}
@@ -459,7 +471,9 @@ const Trade = () => {
 
                     {/* Seller Cards */}
                     <div className="space-y-4 pb-4">
-                      {sellers.map((seller) => (
+                      {sellers
+                        .filter(seller => !showSavedOnly || savedSellers.includes(seller.id))
+                        .map((seller) => (
                         <div
                           key={seller.id}
                           className="border border-border rounded-lg p-6 bg-card hover:bg-muted/50 transition-all"
