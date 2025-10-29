@@ -100,7 +100,7 @@ const Trade = () => {
   const [maxRange, setMaxRange] = useState<number>(50);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [editingTradeId, setEditingTradeId] = useState<number | null>(null);
-  const [savedSellers, setSavedSellers] = useState<number[]>([]);
+  const [savedSellers, setSavedSellers] = useState<number[]>([1, 3, 5]); // Pre-populated with dummy saved sellers
   const [showSavedOnly, setShowSavedOnly] = useState(false);
 
   const showContent = tradeMode !== null;
@@ -430,13 +430,13 @@ const Trade = () => {
                     )}
                   </div>
                   <Button
-                    variant={showSavedOnly ? "default" : "outline"}
+                    variant="ghost"
                     size="icon"
                     onClick={() => setShowSavedOnly(!showSavedOnly)}
-                    className="h-12 w-12 flex-shrink-0 rounded-full"
+                    className="h-12 w-12 flex-shrink-0 rounded-full hover:bg-muted"
                     title={showSavedOnly ? "Show all sellers" : "Show saved sellers"}
                   >
-                    <Bookmark className={`w-5 h-5 ${showSavedOnly ? 'fill-primary-foreground' : ''}`} />
+                    <Bookmark className={`w-5 h-5 ${showSavedOnly ? 'fill-foreground' : ''}`} />
                   </Button>
                 </div>
 
