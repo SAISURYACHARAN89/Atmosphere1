@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, X, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp, Trash2, Edit } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,18 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 
 type TradeMode = "buy" | "sell" | null;
+
+interface ActiveTrade {
+  id: number;
+  companyId: number;
+  companyName: string;
+  preMoneyValuation: string;
+  postMoneyValuation: string;
+  minRange: number;
+  maxRange: number;
+  views: number;
+  saves: number;
+}
 
 const categories = [
   "AI", "ML", "DeepTech", "Manufacturing", "Cafe", "B2B", "B2C", "B2B2C",
@@ -41,6 +53,8 @@ const Trade = () => {
   const [expandedCompany, setExpandedCompany] = useState<number | null>(null);
   const [minRange, setMinRange] = useState<number>(10);
   const [maxRange, setMaxRange] = useState<number>(50);
+  const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
+  const [editingTradeId, setEditingTradeId] = useState<number | null>(null);
 
   const showContent = tradeMode !== null;
   const showSellers = searchValue.trim() !== "" || selectedCategories.length > 0;
@@ -58,8 +72,42 @@ const Trade = () => {
   };
 
   const handleOpenTrade = () => {
-    // Handle trade submission
-    console.log("Opening trade with range:", minRange, "-", maxRange);
+    if (expandedCompany === null) return;
+    
+    const company = portfolio.find(c => c.id === expandedCompany);
+    if (!company) return;
+
+    const newTrade: ActiveTrade = {
+      id: Date.now(),
+      companyId: company.id,
+      companyName: company.name,
+      preMoneyValuation: company.preMoneyValuation,
+      postMoneyValuation: company.postMoneyValuation,
+      minRange,
+      maxRange,
+      views: 0,
+      saves: 0,
+    };
+
+    setActiveTrades([...activeTrades, newTrade]);
+    setExpandedCompany(null);
+    setMinRange(10);
+    setMaxRange(50);
+  };
+
+  const handleDeleteTrade = (tradeId: number) => {
+    setActiveTrades(activeTrades.filter(trade => trade.id !== tradeId));
+  };
+
+  const handleUpdateTrade = (tradeId: number) => {
+    setEditingTradeId(tradeId);
+    const trade = activeTrades.find(t => t.id === tradeId);
+    if (trade) {
+      setExpandedCompany(trade.companyId);
+      setMinRange(trade.minRange);
+      setMaxRange(trade.maxRange);
+      handleDeleteTrade(tradeId);
+    }
   };
 
   return (
@@ -110,8 +158,12 @@ const Trade = () => {
 
             {tradeMode === "sell" ? (
               /* Selling Page - Portfolio View */
-              <div className="space-y-4 pb-4">
-                {portfolio.map((company) => (
+              <>
+                {/* Portfolio Section */}
+                <div className="mb-8">
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Portfolio</h2>
+                  <div className="space-y-4">
+                    {portfolio.map((company) => (
                   <div key={company.id} className="border border-border rounded-lg overflow-hidden">
                     <button
                       onClick={() => handleCompanyClick(company.id)}
@@ -145,29 +197,51 @@ const Trade = () => {
                         {/* Range Sliders */}
                         <div className="space-y-6">
                           <div className="space-y-3">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-4">
                               <Label className="text-foreground">Minimum Buying Requirement</Label>
-                              <span className="text-sm font-medium text-foreground">{minRange}%</span>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  value={minRange}
+                                  onChange={(e) => setMinRange(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  className="w-20 h-8 text-sm text-right"
+                                />
+                                <span className="text-sm font-medium text-foreground">%</span>
+                              </div>
                             </div>
                             <Slider
                               value={[minRange]}
                               onValueChange={(value) => setMinRange(value[0])}
                               max={100}
-                              step={1}
+                              step={0.01}
                               className="w-full"
                             />
                           </div>
 
                           <div className="space-y-3">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-4">
                               <Label className="text-foreground">Maximum Buying Requirement</Label>
-                              <span className="text-sm font-medium text-foreground">{maxRange}%</span>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  value={maxRange}
+                                  onChange={(e) => setMaxRange(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                                  step="0.01"
+                                  min="0"
+                                  max="100"
+                                  className="w-20 h-8 text-sm text-right"
+                                />
+                                <span className="text-sm font-medium text-foreground">%</span>
+                              </div>
                             </div>
                             <Slider
                               value={[maxRange]}
                               onValueChange={(value) => setMaxRange(value[0])}
                               max={100}
-                              step={1}
+                              step={0.01}
                               className="w-full"
                             />
                           </div>
@@ -201,8 +275,83 @@ const Trade = () => {
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Active Trades Section */}
+                {activeTrades.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">Active Trades</h2>
+                    <div className="space-y-4">
+                      {activeTrades.map((trade) => (
+                        <div key={trade.id} className="border border-border rounded-lg p-6 bg-card">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-12 h-12">
+                                <AvatarFallback className="bg-muted text-foreground">
+                                  You
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <h3 className="font-semibold text-foreground">{trade.companyName}</h3>
+                                <div className="flex gap-4 text-sm text-muted-foreground mt-1">
+                                  <span>Pre: {trade.preMoneyValuation}</span>
+                                  <span>Post: {trade.postMoneyValuation}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleUpdateTrade(trade.id)}
+                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                title="Edit trade"
+                              >
+                                <Edit className="w-4 h-4 text-foreground" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTrade(trade.id)}
+                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                title="Delete trade"
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Range:</span>
+                              <span className="font-medium text-foreground">{trade.minRange}% - {trade.maxRange}%</span>
+                            </div>
+
+                            <div className="relative h-2 bg-background rounded-full overflow-hidden">
+                              <div
+                                className="absolute h-full bg-primary"
+                                style={{
+                                  left: `${trade.minRange}%`,
+                                  width: `${trade.maxRange - trade.minRange}%`,
+                                }}
+                              />
+                            </div>
+
+                            <div className="flex items-center gap-6 text-sm pt-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Views:</span>
+                                <span className="font-medium text-foreground">{trade.views}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Saves:</span>
+                                <span className="font-medium text-foreground">{trade.saves}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               /* Buying Page - Original Flow */
               <>
