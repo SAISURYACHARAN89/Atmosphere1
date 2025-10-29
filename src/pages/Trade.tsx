@@ -131,10 +131,9 @@ const Trade = () => {
                   <h2 className="text-sm font-medium text-foreground">
                     Sellers in – "{selectedCategories.length > 0 ? selectedCategories.join(", ") : "All"}"
                   </h2>
-                  <Button variant="secondary" size="sm" className="rounded-full h-8 px-4">
-                    <SlidersHorizontal className="w-4 h-4 mr-1" />
-                    Filter
-                  </Button>
+                  <button className="w-8 h-8 flex items-center justify-center hover:bg-muted rounded-full transition-colors">
+                    <SlidersHorizontal className="w-5 h-5 text-foreground" />
+                  </button>
                 </div>
 
                 {/* Seller Cards */}
