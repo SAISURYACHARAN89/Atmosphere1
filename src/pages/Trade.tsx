@@ -412,36 +412,18 @@ const Trade = () => {
               <>
                 {/* Search Bar and Saved Toggle */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="relative flex-1 max-w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-                    <div className="flex items-center h-12 pl-10 pr-12 bg-muted rounded-full overflow-x-auto overflow-y-hidden scrollbar-hide">
-                      <div className="flex items-center gap-2 min-w-fit">
-                        {selectedCategories.map((category) => (
-                          <Badge
-                            key={category}
-                            variant="default"
-                            className="whitespace-nowrap flex-shrink-0 text-xs px-2 py-1"
-                          >
-                            {category}
-                          </Badge>
-                        ))}
-                        <Input
-                          value={searchValue}
-                          onChange={(e) => setSearchValue(e.target.value)}
-                          placeholder={selectedCategories.length === 0 ? "Search..." : ""}
-                          className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 min-w-[100px]"
-                        />
-                      </div>
-                    </div>
-                    {/* Fade overlay on the right */}
-                    <div className="absolute right-12 top-0 bottom-0 w-12 bg-gradient-to-l from-muted to-transparent pointer-events-none rounded-r-full" />
-                    {(searchValue || selectedCategories.length > 0) && (
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      value={searchValue}
+                      onChange={(e) => setSearchValue(e.target.value)}
+                      placeholder="Search..."
+                      className="pl-10 pr-10 h-12 rounded-full bg-muted border-0"
+                    />
+                    {searchValue && (
                       <button
-                        onClick={() => {
-                          setSearchValue("");
-                          setSelectedCategories([]);
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
+                        onClick={() => setSearchValue("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
                       >
                         <X className="w-5 h-5 text-muted-foreground" />
                       </button>
