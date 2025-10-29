@@ -1,18 +1,26 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Rocket, Plus, Play, DollarSign } from "lucide-react";
 
 type TabType = "home" | "launch" | "trade" | "reels" | "assets";
 
 const BottomNav = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>("home");
 
   const tabs = [
-    { id: "home" as TabType, icon: Home, label: "Home" },
-    { id: "launch" as TabType, icon: Rocket, label: "Launch" },
-    { id: "trade" as TabType, icon: Plus, label: "Trade" },
-    { id: "reels" as TabType, icon: Play, label: "Reels" },
-    { id: "assets" as TabType, icon: DollarSign, label: "Assets" },
+    { id: "home" as TabType, icon: Home, label: "Home", path: "/" },
+    { id: "launch" as TabType, icon: Rocket, label: "Launch", path: "/launch" },
+    { id: "trade" as TabType, icon: Plus, label: "Trade", path: "/trade" },
+    { id: "reels" as TabType, icon: Play, label: "Reels", path: "/reels" },
+    { id: "assets" as TabType, icon: DollarSign, label: "Assets", path: "/assets" },
   ];
+
+  const handleTabClick = (tab: typeof tabs[0]) => {
+    setActiveTab(tab.id);
+    navigate(tab.path);
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
@@ -25,7 +33,7 @@ const BottomNav = () => {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabClick(tab)}
               className="flex flex-col items-center justify-center gap-1 flex-1 hover:opacity-70"
               aria-label={tab.label}
             >
