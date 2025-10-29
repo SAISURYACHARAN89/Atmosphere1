@@ -1,12 +1,21 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import TopBar from "@/components/TopBar";
+import BottomNav from "@/components/BottomNav";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Top Bar */}
+      <TopBar />
+
+      {/* Main Feed Area - Empty for now */}
+      <main className="pt-14 pb-16 min-h-screen">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          {/* Feed content will go here */}
+        </div>
+      </main>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 };
