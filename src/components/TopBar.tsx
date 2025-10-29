@@ -1,6 +1,9 @@
 import { User, Search, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const TopBar = () => {
+  const navigate = useNavigate();
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-background border-b border-border z-50">
       <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
@@ -17,7 +20,10 @@ const TopBar = () => {
           </button>
 
           {/* Messages with notification badge */}
-          <button className="relative hover:opacity-70">
+          <button 
+            onClick={() => navigate('/messages')}
+            className="relative hover:opacity-70"
+          >
             <MessageCircle className="w-6 h-6 text-foreground" strokeWidth={1.5} />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full" />
           </button>
