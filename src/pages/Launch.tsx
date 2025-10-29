@@ -93,43 +93,49 @@ const Launch = () => {
         <div className="max-w-2xl mx-auto px-4 py-6">
           {/* Launch and Join Buttons Section */}
           <div className="space-y-4 mb-8">
-            {/* Launch Meeting Button */}
-            <div className="space-y-3">
+            {/* Buttons Side by Side */}
+            <div className="grid grid-cols-2 gap-3">
               <Button
                 onClick={() => {
                   setLaunchExpanded(!launchExpanded);
                   if (joinExpanded) setJoinExpanded(false);
                 }}
                 variant="outline"
-                className="w-full justify-between h-12 text-base bg-muted hover:bg-muted/80"
+                className="h-12 text-base bg-muted hover:bg-muted/80"
               >
-                <span>Launch Meeting</span>
-                <ChevronDown className={`transition-transform ${launchExpanded ? 'rotate-180' : ''}`} />
+                Launch Meeting
               </Button>
+              <Button
+                onClick={() => {
+                  setJoinExpanded(!joinExpanded);
+                  if (launchExpanded) setLaunchExpanded(false);
+                }}
+                variant="outline"
+                className="h-12 text-base bg-muted hover:bg-muted/80"
+              >
+                Join Meeting
+              </Button>
+            </div>
 
-              {launchExpanded && (
-                <div className="border border-border rounded-lg p-4 space-y-4 bg-card animate-accordion-down">
+            {/* Launch Meeting Expanded Form */}
+            {launchExpanded && (
+              <div className="border border-border rounded-lg p-4 space-y-4 bg-card animate-accordion-down">
+
+                <div className="space-y-2">
+                  <Label htmlFor="meeting-title">Meeting Title</Label>
+                  <Input id="meeting-title" placeholder="Enter meeting title" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="meeting-title">Meeting Title</Label>
-                    <Input id="meeting-title" placeholder="Enter meeting title" />
+                    <Label htmlFor="meeting-date">Date</Label>
+                    <Input id="meeting-date" type="date" />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="meeting-date">Date</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input id="meeting-date" type="date" className="pl-10" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="meeting-time">Time</Label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input id="meeting-time" type="time" className="pl-10" />
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="meeting-time">Time</Label>
+                    <Input id="meeting-time" type="time" />
                   </div>
+                </div>
 
                   <div className="space-y-2">
                     <Label>Meeting Type</Label>
@@ -219,28 +225,14 @@ const Launch = () => {
                     </div>
                   )}
 
-                  <Button className="w-full" size="lg">
-                    Launch Meeting
-                  </Button>
-                </div>
-              )}
-            </div>
+                <Button className="w-full" size="lg">
+                  Launch Meeting
+                </Button>
+              </div>
+            )}
 
-            {/* Join Meeting Button */}
-            <div className="space-y-3">
-              <Button
-                onClick={() => {
-                  setJoinExpanded(!joinExpanded);
-                  if (launchExpanded) setLaunchExpanded(false);
-                }}
-                variant="outline"
-                className="w-full justify-between h-12 text-base bg-muted hover:bg-muted/80"
-              >
-                <span>Join Meeting</span>
-                <ChevronDown className={`transition-transform ${joinExpanded ? 'rotate-180' : ''}`} />
-              </Button>
-
-              {joinExpanded && (
+            {/* Join Meeting Expanded Form */}
+            {joinExpanded && (
                 <div className="border border-border rounded-lg p-4 space-y-4 bg-card animate-accordion-down">
                   <div className="space-y-3">
                     <h3 className="font-semibold text-sm">Search Public Meetings</h3>
@@ -272,19 +264,15 @@ const Launch = () => {
                     </ScrollArea>
                   </div>
 
-                  <div className="pt-4 border-t space-y-2">
-                    <h3 className="font-semibold text-sm">Join via Code</h3>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Code className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Enter meeting code" className="pl-10" />
-                      </div>
-                      <Button>Join</Button>
-                    </div>
+                <div className="pt-4 border-t space-y-2">
+                  <h3 className="font-semibold text-sm">Join via Code</h3>
+                  <div className="flex gap-2">
+                    <Input placeholder="Enter meeting code" />
+                    <Button>Join</Button>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Startup Launches Section */}
