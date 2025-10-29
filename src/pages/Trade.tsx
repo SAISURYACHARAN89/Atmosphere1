@@ -445,23 +445,25 @@ const Trade = () => {
                 </div>
 
                 {/* Category Tags */}
-                <div className="bg-muted rounded-xl p-4 mb-6 max-h-48 overflow-y-auto">
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((category) => {
-                      const isSelected = selectedCategories.includes(category);
-                      return (
-                        <Badge
-                          key={category}
-                          variant={isSelected ? "default" : "outline"}
-                          onClick={() => handleCategoryClick(category)}
-                          className="cursor-pointer transition-all"
-                        >
-                          {category}
-                        </Badge>
-                      );
-                    })}
+                {!showSavedOnly && (
+                  <div className="bg-muted rounded-xl p-4 mb-6 max-h-48 overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((category) => {
+                        const isSelected = selectedCategories.includes(category);
+                        return (
+                          <Badge
+                            key={category}
+                            variant={isSelected ? "default" : "outline"}
+                            onClick={() => handleCategoryClick(category)}
+                            className="cursor-pointer transition-all"
+                          >
+                            {category}
+                          </Badge>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Saved Sellers Section */}
                 {showSavedOnly && (
@@ -544,7 +546,7 @@ const Trade = () => {
                 )}
 
                 {/* Regular Sellers Section */}
-                {showSellers && (
+                {showSellers && !showSavedOnly && (
                   <div className="pb-4">
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-sm font-medium text-foreground">
