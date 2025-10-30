@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Share2, Bookmark, MoreVertical } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, ChevronLeft } from "lucide-react";
 
 interface Reel {
   id: string;
@@ -87,14 +87,11 @@ const mockReels: Reel[] = [
 
 const Reels = () => {
   const navigate = useNavigate();
-  const [currentReelIndex, setCurrentReelIndex] = useState(0);
   const [reels, setReels] = useState(mockReels);
 
-  const currentReel = reels[currentReelIndex];
-
-  const handleLike = () => {
+  const handleLike = (index: number) => {
     setReels(prev => prev.map((reel, idx) => 
-      idx === currentReelIndex 
+      idx === index 
         ? { 
             ...reel, 
             isLiked: !reel.isLiked,
@@ -104,16 +101,16 @@ const Reels = () => {
     ));
   };
 
-  const handleSave = () => {
+  const handleSave = (index: number) => {
     setReels(prev => prev.map((reel, idx) => 
-      idx === currentReelIndex 
+      idx === index 
         ? { ...reel, isSaved: !reel.isSaved }
         : reel
     ));
   };
 
-  const handleProfileClick = () => {
-    navigate(`/company/${currentReel.companyId}`);
+  const handleProfileClick = (companyId: string) => {
+    navigate(`/company/${companyId}`);
   };
 
   const formatNumber = (num: number) => {
@@ -124,149 +121,118 @@ const Reels = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-background">
-      {/* Full-screen vertical reel */}
-      <div className="relative w-full h-full">
-        {/* Video/Image background */}
-        <div className="absolute inset-0">
-          <img
-            src={currentReel.videoUrl}
-            alt={currentReel.companyName}
-            className="w-full h-full object-cover"
-          />
-          {/* Gradient overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
-        </div>
+    <div className="fixed inset-0 bg-black">
+      {/* Top back button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed top-4 left-4 z-50 text-white drop-shadow-lg"
+      >
+        <ChevronLeft size={32} strokeWidth={2} />
+      </button>
 
-        {/* Right side action buttons */}
-        <div className="absolute right-3 bottom-24 flex flex-col gap-6 z-10">
-          {/* Like button */}
-          <button 
-            onClick={handleLike}
-            className="flex flex-col items-center gap-1"
+      {/* Scrollable reels container with snap */}
+      <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
+        {reels.map((reel, index) => (
+          <div
+            key={reel.id}
+            className="relative h-screen w-full snap-start snap-always flex-shrink-0"
           >
-            <Heart
-              size={32}
-              className={`${currentReel.isLiked ? 'fill-red-500 text-red-500' : 'text-white'} drop-shadow-lg`}
-              strokeWidth={1.5}
-            />
-            <span className="text-white text-xs font-medium drop-shadow-lg">
-              {formatNumber(currentReel.likes)}
-            </span>
-          </button>
+            {/* Video/Image background */}
+            <div className="absolute inset-0">
+              <img
+                src={reel.videoUrl}
+                alt={reel.companyName}
+                className="w-full h-full object-cover"
+              />
+              {/* Gradient overlay for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+            </div>
 
-          {/* Comment button */}
-          <button className="flex flex-col items-center gap-1">
-            <MessageCircle
-              size={32}
-              className="text-white drop-shadow-lg"
-              strokeWidth={1.5}
-            />
-            <span className="text-white text-xs font-medium drop-shadow-lg">
-              {formatNumber(currentReel.comments)}
-            </span>
-          </button>
+            {/* Right side action buttons */}
+            <div className="absolute right-3 bottom-24 flex flex-col gap-6 z-10">
+              {/* Like button */}
+              <button 
+                onClick={() => handleLike(index)}
+                className="flex flex-col items-center gap-1"
+              >
+                <Heart
+                  size={32}
+                  className={`${reel.isLiked ? 'fill-red-500 text-red-500' : 'text-white'} drop-shadow-lg transition-all`}
+                  strokeWidth={1.5}
+                />
+                <span className="text-white text-xs font-medium drop-shadow-lg">
+                  {formatNumber(reel.likes)}
+                </span>
+              </button>
 
-          {/* Share button */}
-          <button className="flex flex-col items-center gap-1">
-            <Share2
-              size={32}
-              className="text-white drop-shadow-lg"
-              strokeWidth={1.5}
-            />
-            <span className="text-white text-xs font-medium drop-shadow-lg">
-              {formatNumber(currentReel.shares)}
-            </span>
-          </button>
+              {/* Comment button */}
+              <button className="flex flex-col items-center gap-1">
+                <MessageCircle
+                  size={32}
+                  className="text-white drop-shadow-lg"
+                  strokeWidth={1.5}
+                />
+                <span className="text-white text-xs font-medium drop-shadow-lg">
+                  {formatNumber(reel.comments)}
+                </span>
+              </button>
 
-          {/* Save button */}
-          <button onClick={handleSave}>
-            <Bookmark
-              size={32}
-              className={`${currentReel.isSaved ? 'fill-white text-white' : 'text-white'} drop-shadow-lg`}
-              strokeWidth={1.5}
-            />
-          </button>
+              {/* Share button */}
+              <button className="flex flex-col items-center gap-1">
+                <Share2
+                  size={32}
+                  className="text-white drop-shadow-lg"
+                  strokeWidth={1.5}
+                />
+                <span className="text-white text-xs font-medium drop-shadow-lg">
+                  {formatNumber(reel.shares)}
+                </span>
+              </button>
 
-          {/* More options */}
-          <button>
-            <MoreVertical
-              size={32}
-              className="text-white drop-shadow-lg"
-              strokeWidth={1.5}
-            />
-          </button>
-        </div>
+              {/* Save button */}
+              <button onClick={() => handleSave(index)}>
+                <Bookmark
+                  size={32}
+                  className={`${reel.isSaved ? 'fill-white text-white' : 'text-white'} drop-shadow-lg transition-all`}
+                  strokeWidth={1.5}
+                />
+              </button>
 
-        {/* Bottom company info */}
-        <div className="absolute bottom-24 left-4 right-20 z-10">
-          {/* Company profile */}
-          <button 
-            onClick={handleProfileClick}
-            className="flex items-center gap-3 mb-3"
-          >
-            <Avatar className="w-10 h-10 border-2 border-white">
-              <AvatarImage src={currentReel.companyLogo} alt={currentReel.companyName} />
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {currentReel.companyName[0]}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-white font-semibold drop-shadow-lg">
-              {currentReel.companyName}
-            </span>
-          </button>
+              {/* More options */}
+              <button>
+                <MoreVertical
+                  size={32}
+                  className="text-white drop-shadow-lg"
+                  strokeWidth={1.5}
+                />
+              </button>
+            </div>
 
-          {/* Description */}
-          <p className="text-white text-sm drop-shadow-lg line-clamp-2">
-            {currentReel.description}
-          </p>
-        </div>
+            {/* Bottom company info */}
+            <div className="absolute bottom-24 left-4 right-20 z-10">
+              {/* Company profile */}
+              <button 
+                onClick={() => handleProfileClick(reel.companyId)}
+                className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity"
+              >
+                <Avatar className="w-10 h-10 border-2 border-white">
+                  <AvatarImage src={reel.companyLogo} alt={reel.companyName} />
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {reel.companyName[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-white font-semibold drop-shadow-lg">
+                  {reel.companyName}
+                </span>
+              </button>
 
-        {/* Top back button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 z-10 text-white drop-shadow-lg"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        {/* Reel indicator */}
-        <div className="absolute top-4 right-4 z-10 text-white text-sm font-medium drop-shadow-lg">
-          {currentReelIndex + 1} / {reels.length}
-        </div>
-
-        {/* Swipe areas for navigation */}
-        <div className="absolute inset-0 flex">
-          {/* Previous reel */}
-          {currentReelIndex > 0 && (
-            <div 
-              className="w-1/3 h-full cursor-pointer"
-              onClick={() => setCurrentReelIndex(prev => Math.max(0, prev - 1))}
-            />
-          )}
-          
-          {/* Center area */}
-          <div className="flex-1 h-full" />
-          
-          {/* Next reel */}
-          {currentReelIndex < reels.length - 1 && (
-            <div 
-              className="w-1/3 h-full cursor-pointer"
-              onClick={() => setCurrentReelIndex(prev => Math.min(reels.length - 1, prev + 1))}
-            />
-          )}
-        </div>
+              {/* Description */}
+              <p className="text-white text-sm drop-shadow-lg line-clamp-2">
+                {reel.description}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
