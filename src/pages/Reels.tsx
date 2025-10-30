@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import BottomNav from "@/components/BottomNav";
 import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, ChevronLeft } from "lucide-react";
 
 interface Reel {
@@ -121,7 +122,7 @@ const Reels = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="fixed inset-0 bg-black pb-16">
       {/* Top back button */}
       <button
         onClick={() => navigate(-1)}
@@ -131,7 +132,7 @@ const Reels = () => {
       </button>
 
       {/* Scrollable reels container with snap */}
-      <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory">
+      <div className="h-full w-full overflow-y-scroll snap-y snap-mandatory pb-16">
         {reels.map((reel, index) => (
           <div
             key={reel.id}
@@ -234,6 +235,8 @@ const Reels = () => {
           </div>
         ))}
       </div>
+
+      <BottomNav />
     </div>
   );
 };
