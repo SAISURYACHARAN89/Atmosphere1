@@ -124,6 +124,7 @@ const sellerAds: SellerAd[] = [
 ];
 
 const Trade = () => {
+  const [activeView, setActiveView] = useState<'buy' | 'sell'>('sell');
   const [savedAds, setSavedAds] = useState<number[]>([1, 3, 5]);
 
   const handleToggleSave = (adId: number) => {
@@ -143,22 +144,25 @@ const Trade = () => {
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <Button 
             size="sm" 
-            variant="default"
+            variant={activeView === 'buy' ? 'default' : 'secondary'}
             className="h-8 px-4 text-xs font-semibold"
+            onClick={() => setActiveView('buy')}
           >
             BUY
           </Button>
           <Button 
             size="sm" 
-            variant="secondary"
+            variant={activeView === 'sell' ? 'default' : 'secondary'}
             className="h-8 px-4 text-xs font-semibold"
+            onClick={() => setActiveView('sell')}
           >
             SELL
           </Button>
         </div>
 
-        {/* Scrollable Sell Ads Feed */}
-        <ScrollArea className="h-[calc(100vh-8rem)]">
+        {activeView === 'sell' ? (
+          /* Scrollable Sell Ads Feed */
+          <ScrollArea className="h-[calc(100vh-8rem)]">
           <div className="px-4 py-4 space-y-4">
             {sellerAds.map((ad) => (
               <div
@@ -259,6 +263,15 @@ const Trade = () => {
             ))}
           </div>
         </ScrollArea>
+        ) : (
+          /* Buy View - Coming Soon or Previous Buy Page */
+          <div className="flex items-center justify-center h-[calc(100vh-8rem)] px-4">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-2">Buy Page</h2>
+              <p className="text-muted-foreground">Browse and purchase equity from sellers</p>
+            </div>
+          </div>
+        )}
       </main>
 
       <BottomNav />
