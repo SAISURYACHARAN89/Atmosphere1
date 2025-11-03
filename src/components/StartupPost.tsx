@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Crown, MessageCircle, Bookmark, Share2 } from "lucide-react";
+import { Heart, Crown, MessageCircle, Bookmark, Share2, ShieldCheck } from "lucide-react";
 
 interface StartupPostProps {
   company: {
@@ -55,7 +55,10 @@ const StartupPost = ({ company }: StartupPostProps) => {
           <AvatarFallback>{company.name[0]}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <h3 className="font-semibold text-sm">{company.name}</h3>
+          <div className="flex items-center gap-1">
+            <h3 className="font-semibold text-sm">{company.name}</h3>
+            <ShieldCheck className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+          </div>
           <p className="text-xs text-muted-foreground">{company.postedTime}</p>
         </div>
       </div>
