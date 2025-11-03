@@ -57,7 +57,7 @@ const StartupPost = ({ company }: StartupPostProps) => {
         <div className="flex-1">
           <div className="flex items-center gap-1">
             <h3 className="font-semibold text-sm">{company.name}</h3>
-            <ShieldCheck className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+            <ShieldCheck className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
           </div>
           <p className="text-xs text-muted-foreground">{company.postedTime}</p>
         </div>
