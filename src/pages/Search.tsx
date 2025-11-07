@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search as SearchIcon, X, Plus } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
+import StartupPost from "@/components/StartupPost";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,6 +115,100 @@ const startupData = [
     logo: "/placeholder.svg",
     tagline: "Industrial automation made simple",
     tags: ["Robotics", "Manufacturing", "B2B"]
+  }
+];
+
+const forYouPosts = [
+  {
+    id: "airbound-co",
+    name: "Airbound.co",
+    logo: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=100&h=100&fit=crop",
+    tagline: "Revolutionary drone delivery for urban logistics",
+    preValuation: "$5M",
+    postValuation: "$12M",
+    fundsRaised: "$2M",
+    currentInvestors: ["Y Combinator", "Sequoia", "a16z"],
+    lookingToDilute: true,
+    dilutionAmount: "15% for $3M",
+    fundingGoal: "$3M Series A",
+    images: [
+      "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1508614999368-9260051292e5?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&h=600&fit=crop"
+    ],
+    postedTime: "2 hr"
+  },
+  {
+    id: "neuralhealth",
+    name: "NeuralHealth",
+    logo: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&h=100&fit=crop",
+    tagline: "AI diagnostics for early disease detection",
+    preValuation: "$15M",
+    postValuation: "$35M",
+    fundsRaised: "$8M",
+    currentInvestors: ["Founders Fund", "Khosla Ventures"],
+    lookingToDilute: true,
+    dilutionAmount: "12% for $6M",
+    fundingGoal: "$6M Series B",
+    images: [
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=800&h=600&fit=crop"
+    ],
+    postedTime: "5 hr"
+  },
+  {
+    id: "greencharge",
+    name: "GreenCharge",
+    logo: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=100&h=100&fit=crop",
+    tagline: "Solar-powered EV charging network for highways",
+    preValuation: "$10M",
+    postValuation: "$25M",
+    fundsRaised: "$5M",
+    currentInvestors: ["Tesla Ventures", "Climate Fund"],
+    lookingToDilute: false,
+    images: [
+      "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1617704548623-340376564e68?w=800&h=600&fit=crop"
+    ],
+    postedTime: "8 hr"
+  },
+  {
+    id: "codementor-ai",
+    name: "CodeMentor AI",
+    logo: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=100&h=100&fit=crop",
+    tagline: "AI-powered coding education and mentorship",
+    preValuation: "$12M",
+    postValuation: "$28M",
+    fundsRaised: "$6M",
+    currentInvestors: ["Accel", "Index Ventures"],
+    lookingToDilute: true,
+    dilutionAmount: "10% for $5M",
+    fundingGoal: "$5M Series A",
+    images: [
+      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&h=600&fit=crop"
+    ],
+    postedTime: "12 hr"
+  },
+  {
+    id: "urbanfarm",
+    name: "UrbanFarm",
+    logo: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=100&h=100&fit=crop",
+    tagline: "Vertical farming solutions for city buildings",
+    preValuation: "$9M",
+    postValuation: "$22M",
+    fundsRaised: "$4.5M",
+    currentInvestors: ["Y Combinator", "Climate Capital"],
+    lookingToDilute: true,
+    dilutionAmount: "15% for $4M",
+    fundingGoal: "$4M Seed Round",
+    images: [
+      "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop"
+    ],
+    postedTime: "1 day"
   }
 ];
 
@@ -326,13 +421,18 @@ const Search = () => {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* For You Feed - Default View */}
         {!searchQuery && selectedCategories.length === 0 && (
-          <div className="text-center py-16">
-            <SearchIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
-            <p className="text-muted-foreground">
-              Start typing or select categories to find investors and startups
-            </p>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">For You</h2>
+            </div>
+            
+            {forYouPosts.map((startup, index) => (
+              <div key={startup.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                <StartupPost company={startup} />
+              </div>
+            ))}
           </div>
         )}
       </main>
