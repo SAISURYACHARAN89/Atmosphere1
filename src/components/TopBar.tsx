@@ -1,6 +1,6 @@
 import { User, Search, MessageCircle, ChevronLeft, Briefcase } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GrantsSheet from "./GrantsSheet";
 
 const TopBar = () => {
@@ -10,9 +10,30 @@ const TopBar = () => {
   const isCompanyProfile = location.pathname.startsWith('/company/');
   const fromPath = location.state?.from;
   const [grantsOpen, setGrantsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down and past 50px
+        setIsVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b border-border/50 z-50 shadow-sm">
+    <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b border-border/50 z-50 shadow-sm transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
         {/* Left side - Profile Icon or Back Button */}
         <div className="flex items-center gap-3">
