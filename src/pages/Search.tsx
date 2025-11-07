@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Search as SearchIcon, X, Plus } from "lucide-react";
+import { Search as SearchIcon, X, Plus, Play } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
-import StartupPost from "@/components/StartupPost";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,97 +117,96 @@ const startupData = [
   }
 ];
 
-const forYouPosts = [
+const forYouContent = [
   {
-    id: "airbound-co",
-    name: "Airbound.co",
-    logo: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=100&h=100&fit=crop",
-    tagline: "Revolutionary drone delivery for urban logistics",
-    preValuation: "$5M",
-    postValuation: "$12M",
-    fundsRaised: "$2M",
-    currentInvestors: ["Y Combinator", "Sequoia", "a16z"],
-    lookingToDilute: true,
-    dilutionAmount: "15% for $3M",
-    fundingGoal: "$3M Series A",
-    images: [
-      "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1508614999368-9260051292e5?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&h=600&fit=crop"
-    ],
-    postedTime: "2 hr"
+    id: 1,
+    type: "image",
+    thumbnail: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=400&h=400&fit=crop",
+    author: "Airbound.co",
+    likes: "2.4K"
   },
   {
-    id: "neuralhealth",
-    name: "NeuralHealth",
-    logo: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&h=100&fit=crop",
-    tagline: "AI diagnostics for early disease detection",
-    preValuation: "$15M",
-    postValuation: "$35M",
-    fundsRaised: "$8M",
-    currentInvestors: ["Founders Fund", "Khosla Ventures"],
-    lookingToDilute: true,
-    dilutionAmount: "12% for $6M",
-    fundingGoal: "$6M Series B",
-    images: [
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=800&h=600&fit=crop"
-    ],
-    postedTime: "5 hr"
+    id: 2,
+    type: "reel",
+    thumbnail: "https://images.unsplash.com/photo-1508614999368-9260051292e5?w=400&h=400&fit=crop",
+    author: "TechVentures",
+    likes: "5.1K",
+    views: "12K"
   },
   {
-    id: "greencharge",
-    name: "GreenCharge",
-    logo: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=100&h=100&fit=crop",
-    tagline: "Solar-powered EV charging network for highways",
-    preValuation: "$10M",
-    postValuation: "$25M",
-    fundsRaised: "$5M",
-    currentInvestors: ["Tesla Ventures", "Climate Fund"],
-    lookingToDilute: false,
-    images: [
-      "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1617704548623-340376564e68?w=800&h=600&fit=crop"
-    ],
-    postedTime: "8 hr"
+    id: 3,
+    type: "image",
+    thumbnail: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=400&fit=crop",
+    author: "NeuralHealth",
+    likes: "3.8K"
   },
   {
-    id: "codementor-ai",
-    name: "CodeMentor AI",
-    logo: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=100&h=100&fit=crop",
-    tagline: "AI-powered coding education and mentorship",
-    preValuation: "$12M",
-    postValuation: "$28M",
-    fundsRaised: "$6M",
-    currentInvestors: ["Accel", "Index Ventures"],
-    lookingToDilute: true,
-    dilutionAmount: "10% for $5M",
-    fundingGoal: "$5M Series A",
-    images: [
-      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&h=600&fit=crop"
-    ],
-    postedTime: "12 hr"
+    id: 4,
+    type: "reel",
+    thumbnail: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&h=400&fit=crop",
+    author: "GreenCharge",
+    likes: "4.2K",
+    views: "18K"
   },
   {
-    id: "urbanfarm",
-    name: "UrbanFarm",
-    logo: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=100&h=100&fit=crop",
-    tagline: "Vertical farming solutions for city buildings",
-    preValuation: "$9M",
-    postValuation: "$22M",
-    fundsRaised: "$4.5M",
-    currentInvestors: ["Y Combinator", "Climate Capital"],
-    lookingToDilute: true,
-    dilutionAmount: "15% for $4M",
-    fundingGoal: "$4M Seed Round",
-    images: [
-      "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop"
-    ],
-    postedTime: "1 day"
+    id: 5,
+    type: "image",
+    thumbnail: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=400&fit=crop",
+    author: "CodeMentor AI",
+    likes: "1.9K"
+  },
+  {
+    id: 6,
+    type: "reel",
+    thumbnail: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=400&h=400&fit=crop",
+    author: "UrbanFarm",
+    likes: "6.3K",
+    views: "25K"
+  },
+  {
+    id: 7,
+    type: "image",
+    thumbnail: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=400&h=400&fit=crop",
+    author: "SkyTech",
+    likes: "2.1K"
+  },
+  {
+    id: 8,
+    type: "reel",
+    thumbnail: "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=400&h=400&fit=crop",
+    author: "HealthAI",
+    likes: "7.5K",
+    views: "32K"
+  },
+  {
+    id: 9,
+    type: "image",
+    thumbnail: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=400&fit=crop",
+    author: "FoodFlow",
+    likes: "3.2K"
+  },
+  {
+    id: 10,
+    type: "reel",
+    thumbnail: "https://images.unsplash.com/photo-1617704548623-340376564e68?w=400&h=400&fit=crop",
+    author: "CleanTech",
+    likes: "5.8K",
+    views: "21K"
+  },
+  {
+    id: 11,
+    type: "image",
+    thumbnail: "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=400&h=400&fit=crop",
+    author: "AgriTech",
+    likes: "2.7K"
+  },
+  {
+    id: 12,
+    type: "reel",
+    thumbnail: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=400&h=400&fit=crop",
+    author: "DevTools",
+    likes: "4.9K",
+    views: "15K"
   }
 ];
 
@@ -428,36 +426,33 @@ const Search = () => {
               <h2 className="text-lg font-semibold text-foreground">For You</h2>
             </div>
             
-            <div className="grid grid-cols-3 gap-3">
-              {forYouPosts.map((startup) => (
+            <div className="grid grid-cols-3 gap-2">
+              {forYouContent.map((content) => (
                 <div 
-                  key={startup.id} 
-                  className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 transition-all cursor-pointer group"
+                  key={content.id} 
+                  className="relative aspect-square bg-card border border-border rounded-lg overflow-hidden hover:opacity-90 transition-opacity cursor-pointer group"
                 >
-                  <div className="aspect-square relative overflow-hidden bg-muted">
-                    <img 
-                      src={startup.images[0]} 
-                      alt={startup.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <img 
-                        src={startup.logo} 
-                        alt={startup.name}
-                        className="w-5 h-5 rounded object-cover"
-                      />
-                      <h3 className="text-xs font-semibold text-foreground truncate">
-                        {startup.name}
-                      </h3>
+                  <img 
+                    src={content.thumbnail} 
+                    alt={content.author}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Video indicator for reels */}
+                  {content.type === "reel" && (
+                    <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full p-1">
+                      <Play className="w-3 h-3 text-white fill-white" />
                     </div>
-                    <p className="text-[10px] text-muted-foreground line-clamp-2 mb-1.5">
-                      {startup.tagline}
-                    </p>
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-muted-foreground">{startup.postedTime}</span>
-                      <span className="font-semibold text-foreground">{startup.preValuation}</span>
+                  )}
+                  
+                  {/* Overlay with info on hover */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="text-white text-center px-2">
+                      <p className="text-xs font-semibold mb-1 truncate">{content.author}</p>
+                      <p className="text-[10px]">{content.likes} likes</p>
+                      {content.type === "reel" && (
+                        <p className="text-[10px]">{content.views} views</p>
+                      )}
                     </div>
                   </div>
                 </div>
