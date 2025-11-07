@@ -53,17 +53,12 @@ const BottomNav = () => {
                 </div>
               ) : (
                 // Regular nav icons
-                <>
-                  <Icon
-                    className={`transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
-                    strokeWidth={isActive ? 2.5 : 2}
-                    size={24}
-                    fill={isActive ? "currentColor" : "none"}
-                  />
-                  <span className={`text-[10px] font-semibold transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {tab.label}
-                  </span>
-                </>
+                <Icon
+                  className={`transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  size={24}
+                  fill={isActive ? "currentColor" : "none"}
+                />
               )}
             </button>
           );
