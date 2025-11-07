@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Rocket, Plus, Film, Wallet } from "lucide-react";
+import { Home, Rocket, TrendingUp, Film, Wallet } from "lucide-react";
 
 type TabType = "home" | "launch" | "trade" | "reels" | "assets";
 
@@ -15,7 +15,7 @@ const BottomNav = () => {
   const tabs = [
     { id: "home" as TabType, icon: Home, label: "Home", path: "/" },
     { id: "launch" as TabType, icon: Rocket, label: "Launch", path: "/launch" },
-    { id: "trade" as TabType, icon: Plus, label: "Trade", path: "/trade" },
+    { id: "trade" as TabType, icon: TrendingUp, label: "Trade", path: "/trade" },
     { id: "reels" as TabType, icon: Film, label: "Reels", path: "/reels" },
     { id: "assets" as TabType, icon: Wallet, label: "Assets", path: "/assets" },
   ];
@@ -33,7 +33,6 @@ const BottomNav = () => {
           const isActive = isCompanyProfile && fromPath
             ? tab.path === fromPath
             : location.pathname === tab.path;
-          const isMainAction = tab.id === "trade";
 
           return (
             <button
@@ -42,24 +41,12 @@ const BottomNav = () => {
               className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300 active:scale-95 hover:bg-muted/30 rounded-lg py-2"
               aria-label={tab.label}
             >
-              {isMainAction ? (
-                // Trade button - larger with gradient background
-                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-primary hover:shadow-xl transition-all duration-300 -mt-3">
-                  <Icon
-                    className="text-white"
-                    strokeWidth={2}
-                    size={24}
-                  />
-                </div>
-              ) : (
-                // Regular nav icons
-                <Icon
-                  className={`transition-colors duration-300 ${isActive ? 'text-white' : 'text-muted-foreground'}`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  size={24}
-                  fill={isActive ? "currentColor" : "none"}
-                />
-              )}
+              <Icon
+                className={`transition-colors duration-300 ${isActive ? 'text-white' : 'text-muted-foreground'}`}
+                strokeWidth={isActive ? 2.5 : 2}
+                size={24}
+                fill={isActive ? "currentColor" : "none"}
+              />
             </button>
           );
         })}
