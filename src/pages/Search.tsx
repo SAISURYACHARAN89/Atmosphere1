@@ -423,16 +423,46 @@ const Search = () => {
 
         {/* For You Feed - Default View */}
         {!searchQuery && selectedCategories.length === 0 && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">For You</h2>
             </div>
             
-            {forYouPosts.map((startup, index) => (
-              <div key={startup.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <StartupPost company={startup} />
-              </div>
-            ))}
+            <div className="grid grid-cols-3 gap-3">
+              {forYouPosts.map((startup) => (
+                <div 
+                  key={startup.id} 
+                  className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 transition-all cursor-pointer group"
+                >
+                  <div className="aspect-square relative overflow-hidden bg-muted">
+                    <img 
+                      src={startup.images[0]} 
+                      alt={startup.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <img 
+                        src={startup.logo} 
+                        alt={startup.name}
+                        className="w-5 h-5 rounded object-cover"
+                      />
+                      <h3 className="text-xs font-semibold text-foreground truncate">
+                        {startup.name}
+                      </h3>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 mb-1.5">
+                      {startup.tagline}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground">{startup.postedTime}</span>
+                      <span className="font-semibold text-foreground">{startup.preValuation}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </main>
