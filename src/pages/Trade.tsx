@@ -293,7 +293,7 @@ const Trade = () => {
       
       <main className="pt-14 max-w-2xl mx-auto">
         {/* Compact Buy/Scan/Sell Buttons at Top */}
-        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border">
+        <div className="sticky top-14 z-40 flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-background/95 backdrop-blur-sm">
           <Button 
             size="sm" 
             variant={activeView === 'buy' ? 'default' : 'secondary'}
