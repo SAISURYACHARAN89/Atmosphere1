@@ -1,16 +1,12 @@
 import { useState } from "react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
   TrendingUp, 
   TrendingDown, 
-  DollarSign, 
-  PieChart, 
-  BarChart3,
   Activity,
   Calendar,
   ArrowUpRight,
@@ -116,14 +112,6 @@ const Assets = () => {
     });
   };
 
-  const sectorAllocation = investments.reduce((acc, inv) => {
-    acc[inv.sector] = (acc[inv.sector] || 0) + inv.currentValue;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const topSectors = Object.entries(sectorAllocation)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
 
   return (
     <div className="min-h-screen bg-background">
@@ -176,235 +164,87 @@ const Assets = () => {
             </div>
           </div>
 
-          {/* Tabs Navigation */}
-          <div className="mt-6">
-            <Tabs defaultValue="holdings" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 mb-6">
-                <TabsTrigger value="holdings">Holdings</TabsTrigger>
-                <TabsTrigger value="allocation">Allocation</TabsTrigger>
-                <TabsTrigger value="performance">Performance</TabsTrigger>
-              </TabsList>
+          {/* Active Investments */}
+          <div className="mt-6 space-y-3 px-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-foreground">
+                Active Investments ({investments.length})
+              </h2>
+              <Badge variant="outline" className="text-xs">
+                <Activity className="h-3 w-3 mr-1" />
+                Live
+              </Badge>
+            </div>
 
-              {/* Holdings Tab */}
-              <TabsContent value="holdings" className="space-y-3 px-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-semibold text-foreground">
-                    Active Investments ({investments.length})
-                  </h2>
-                  <Badge variant="outline" className="text-xs">
-                    <Activity className="h-3 w-3 mr-1" />
-                    Live
-                  </Badge>
-                </div>
-
-                {investments.map((investment) => (
-                  <Card key={investment.id} className="hover:border-primary/50 transition-colors cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-12 w-12 border">
-                            <AvatarImage src={investment.companyLogo} alt={investment.companyName} />
-                            <AvatarFallback>{investment.companyName[0]}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-semibold text-foreground text-sm">
-                              {investment.companyName}
-                            </h3>
-                            <p className="text-xs text-muted-foreground">{investment.sector}</p>
-                          </div>
-                        </div>
-                        <Badge 
-                          variant={investment.returnPercentage >= 0 ? "default" : "destructive"}
-                          className="text-xs"
-                        >
-                          {investment.returnPercentage >= 0 ? '+' : ''}
-                          {investment.returnPercentage.toFixed(1)}%
-                        </Badge>
+            {investments.map((investment) => (
+              <Card key={investment.id} className="hover:border-primary/50 transition-colors cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12 border">
+                        <AvatarImage src={investment.companyLogo} alt={investment.companyName} />
+                        <AvatarFallback>{investment.companyName[0]}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-foreground text-sm">
+                          {investment.companyName}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">{investment.sector}</p>
                       </div>
+                    </div>
+                    <Badge 
+                      variant={investment.returnPercentage >= 0 ? "default" : "destructive"}
+                      className="text-xs"
+                    >
+                      {investment.returnPercentage >= 0 ? '+' : ''}
+                      {investment.returnPercentage.toFixed(1)}%
+                    </Badge>
+                  </div>
 
-                      <div className="grid grid-cols-3 gap-4 text-xs">
-                        <div>
-                          <p className="text-muted-foreground mb-1">Invested</p>
-                          <p className="font-semibold text-foreground">
-                            {formatCurrency(investment.investmentAmount)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">Current Value</p>
-                          <p className="font-semibold text-foreground">
-                            {formatCurrency(investment.currentValue)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">Shares</p>
-                          <p className="font-semibold text-foreground">
-                            {investment.shares.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <p className="text-muted-foreground mb-1">Invested</p>
+                      <p className="font-semibold text-foreground">
+                        {formatCurrency(investment.investmentAmount)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground mb-1">Current Value</p>
+                      <p className="font-semibold text-foreground">
+                        {formatCurrency(investment.currentValue)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground mb-1">Shares</p>
+                      <p className="font-semibold text-foreground">
+                        {investment.shares.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
 
-                      <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(investment.investmentDate)}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {investment.currentValue > investment.investmentAmount ? (
-                            <ArrowUpRight className="h-3 w-3 text-green-600" />
-                          ) : (
-                            <ArrowDownRight className="h-3 w-3 text-red-600" />
-                          )}
-                          <span className={`text-xs font-semibold ${
-                            investment.currentValue > investment.investmentAmount 
-                              ? 'text-green-600' 
-                              : 'text-red-600'
-                          }`}>
-                            {formatCurrency(Math.abs(investment.currentValue - investment.investmentAmount))}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </TabsContent>
-
-              {/* Allocation Tab */}
-              <TabsContent value="allocation" className="space-y-4 px-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <PieChart className="h-4 w-4 text-primary" />
-                      Sector Allocation
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {topSectors.map(([sector, value]) => {
-                      const percentage = ((value / currentPortfolioValue) * 100).toFixed(1);
-                      return (
-                        <div key={sector} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium text-foreground">{sector}</span>
-                            <div className="text-right">
-                              <p className="text-sm font-semibold text-foreground">
-                                {formatCurrency(value)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{percentage}%</p>
-                            </div>
-                          </div>
-                          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-primary rounded-full transition-all"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-primary" />
-                      Investment Distribution
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-sm text-muted-foreground">Number of Investments</span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {investments.length}
+                  <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      {formatDate(investment.investmentDate)}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {investment.currentValue > investment.investmentAmount ? (
+                        <ArrowUpRight className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <ArrowDownRight className="h-3 w-3 text-red-600" />
+                      )}
+                      <span className={`text-xs font-semibold ${
+                        investment.currentValue > investment.investmentAmount 
+                          ? 'text-green-600' 
+                          : 'text-red-600'
+                      }`}>
+                        {formatCurrency(Math.abs(investment.currentValue - investment.investmentAmount))}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-sm text-muted-foreground">Average Investment</span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(totalInvested / investments.length)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-sm text-muted-foreground">Largest Position</span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(Math.max(...investments.map(i => i.currentValue)))}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Performance Tab */}
-              <TabsContent value="performance" className="space-y-4 px-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-primary" />
-                      Top Performers
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {investments
-                      .sort((a, b) => b.returnPercentage - a.returnPercentage)
-                      .slice(0, 3)
-                      .map((investment) => (
-                        <div key={investment.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={investment.companyLogo} alt={investment.companyName} />
-                              <AvatarFallback>{investment.companyName[0]}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">
-                                {investment.companyName}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{investment.sector}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-green-600">
-                              +{investment.returnPercentage.toFixed(1)}%
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatCurrency(investment.currentValue - investment.investmentAmount)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-primary" />
-                      Financial Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-sm text-muted-foreground">Total Capital Deployed</span>
-                      <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(totalInvested)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-sm text-muted-foreground">Unrealized Gains</span>
-                      <span className="text-sm font-semibold text-green-600">
-                        {formatCurrency(totalReturn)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b">
-                      <span className="text-sm text-muted-foreground">Portfolio IRR</span>
-                      <span className="text-sm font-semibold text-foreground">42.3%</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-sm text-muted-foreground">Average Hold Period</span>
-                      <span className="text-sm font-semibold text-foreground">14 months</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </main>
