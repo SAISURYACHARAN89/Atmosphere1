@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Calendar, Clock, Users, Code, TrendingUp, Filter } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type MeetingType = "public" | "followers" | "private";
 type FilterDay = "today" | "yesterday";
@@ -23,6 +24,25 @@ const Launch = () => {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [valuationRange, setValuationRange] = useState([0, 100]);
   const [filterDay, setFilterDay] = useState<FilterDay>("today");
+  const [timeRemaining, setTimeRemaining] = useState({ hours: 2, minutes: 30, seconds: 45 });
+
+  useEffect(() => {
+    if (filterDay === "today") {
+      const timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev.seconds > 0) {
+            return { ...prev, seconds: prev.seconds - 1 };
+          } else if (prev.minutes > 0) {
+            return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+          } else if (prev.hours > 0) {
+            return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+          }
+          return prev;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [filterDay]);
 
   const toggleIndustry = (industry: string) => {
     setSelectedIndustries(prev =>
@@ -297,46 +317,100 @@ const Launch = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
-              {dummyStartups.map(startup => (
-                <div key={startup.id} className="bg-card border rounded-lg p-4 shadow-sm space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`w-12 h-12 rounded-lg ${startup.color} flex items-center justify-center text-white font-bold flex-shrink-0`}>
-                      {startup.initials}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base">{startup.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{startup.tagline}</p>
-                    </div>
-                  </div>
+            {filterDay === "today" ? (
+              <div className="bg-card border rounded-lg p-6 shadow-sm">
+                <Tabs defaultValue="upcoming" className="w-full">
+                  <TabsList className="w-full grid grid-cols-2">
+                    <TabsTrigger value="upcoming">Upcoming Launches</TabsTrigger>
+                    <TabsTrigger value="live">Live Now</TabsTrigger>
+                  </TabsList>
                   
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Valuation:</span>
-                      <span className="font-medium">{startup.valuation}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Revenue:</span>
-                      <span className="font-medium">{startup.revenue}</span>
-                    </div>
-                  </div>
+                  <TabsContent value="upcoming" className="space-y-4 mt-4">
+                    <div className="text-center space-y-6 py-8">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Next Launch Starting In</h3>
+                        <p className="text-sm text-muted-foreground">Airbound Pvt. Ltd. - Drone Delivery Platform</p>
+                      </div>
+                      
+                      <div className="flex justify-center gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
+                            <span className="text-3xl font-bold text-primary">{String(timeRemaining.hours).padStart(2, '0')}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-2">Hours</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
+                            <span className="text-3xl font-bold text-primary">{String(timeRemaining.minutes).padStart(2, '0')}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-2">Minutes</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
+                            <span className="text-3xl font-bold text-primary">{String(timeRemaining.seconds).padStart(2, '0')}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-2">Seconds</span>
+                        </div>
+                      </div>
 
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Funding Rounds: </span>
-                      <span className="font-medium">{startup.fundingRounds}</span>
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-3">3 more launches scheduled today</p>
+                        <Button className="w-full">Set Reminder</Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Looking for Funds:</span>
-                      <span className={`font-medium ${startup.lookingForFunds ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        {startup.lookingForFunds ? "Yes" : "No"}
-                      </span>
+                  </TabsContent>
+
+                  <TabsContent value="live" className="mt-4">
+                    <div className="text-center py-12 space-y-3">
+                      <Clock className="w-12 h-12 mx-auto text-muted-foreground" />
+                      <p className="text-muted-foreground">No live launches at the moment</p>
+                      <p className="text-sm text-muted-foreground">Check back soon!</p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {dummyStartups.map(startup => (
+                  <div key={startup.id} className="bg-card border rounded-lg p-4 shadow-sm space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-12 h-12 rounded-lg ${startup.color} flex items-center justify-center text-white font-bold flex-shrink-0`}>
+                        {startup.initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base">{startup.name}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{startup.tagline}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Valuation:</span>
+                        <span className="font-medium">{startup.valuation}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Revenue:</span>
+                        <span className="font-medium">{startup.revenue}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Funding Rounds: </span>
+                        <span className="font-medium">{startup.fundingRounds}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Looking for Funds:</span>
+                        <span className={`font-medium ${startup.lookingForFunds ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {startup.lookingForFunds ? "Yes" : "No"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>
