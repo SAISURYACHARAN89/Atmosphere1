@@ -44,7 +44,7 @@ const BottomNav = () => {
             >
               {isMainAction ? (
                 // Trade button - larger with gradient background
-                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-primary hover:shadow-xl transition-all duration-300 -mt-6">
+                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-primary hover:shadow-xl transition-all duration-300 -mt-3">
                   <Icon
                     className="text-white"
                     strokeWidth={2}
