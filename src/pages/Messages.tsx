@@ -1,7 +1,8 @@
-import { User } from "lucide-react";
+import { User, Plus } from "lucide-react";
 import { useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import TopBar from "@/components/TopBar";
+import { Button } from "@/components/ui/button";
 
 type TabType = "all" | "groups";
 
@@ -113,6 +114,17 @@ const Messages = () => {
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-foreground" />
             )}
           </button>
+          
+          {/* Create/Join Group Button - Only show in Groups tab */}
+          {activeTab === "groups" && (
+            <Button 
+              size="sm" 
+              className="ml-2"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              New Group
+            </Button>
+          )}
         </div>
       </div>
 
@@ -153,11 +165,6 @@ const Messages = () => {
           ) : (
             // Groups View
             <div className="px-4">
-              {/* Create/Join Group Button */}
-              <button className="w-full mb-4 py-3 px-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors">
-                Create or Join Group
-              </button>
-
               {/* Groups List */}
               {groups.map((group, index) => (
                 <div key={group.id}>
