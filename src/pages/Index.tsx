@@ -135,15 +135,24 @@ const mockStartups = [
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background-subtle">
       {/* Top Bar */}
       <TopBar />
 
       {/* Main Feed Area */}
       <main className="pt-14 pb-16">
-        <div className="max-w-2xl mx-auto px-4 py-4 overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-4 py-6 overflow-y-auto space-y-6">
+          {/* Welcome Header with Gradient */}
+          <div className="bg-gradient-card rounded-xl p-6 border border-border/50 shadow-lg">
+            <h1 className="text-2xl font-bold text-gradient mb-2">Discover Startups</h1>
+            <p className="text-muted-foreground">Connect with innovative companies and investment opportunities</p>
+          </div>
+
+          {/* Startup Posts */}
           {mockStartups.map((startup, index) => (
-            <StartupPost key={index} company={startup} />
+            <div key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+              <StartupPost company={startup} />
+            </div>
           ))}
         </div>
       </main>

@@ -25,8 +25,8 @@ const BottomNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
-      <div className="max-w-2xl mx-auto flex items-center justify-around h-16">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border/50 z-50 shadow-lg">
+      <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           // Keep the original tab active if we're on company profile from that tab
@@ -39,26 +39,31 @@ const BottomNav = () => {
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab)}
-              className="flex flex-col items-center justify-center gap-1 flex-1 hover:opacity-70"
+              className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300 active:scale-95 hover:bg-muted/30 rounded-lg py-2"
               aria-label={tab.label}
             >
               {isMainAction ? (
-                // Trade button - larger with square background
-                <div className="w-10 h-10 rounded-lg border border-foreground flex items-center justify-center">
+                // Trade button - larger with gradient background
+                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-primary hover:shadow-xl transition-all duration-300 -mt-6">
                   <Icon
-                    className="text-foreground"
-                    strokeWidth={isActive ? 2 : 1.5}
+                    className="text-white"
+                    strokeWidth={2}
                     size={24}
                   />
                 </div>
               ) : (
                 // Regular nav icons
-                <Icon
-                  className="text-foreground"
-                  strokeWidth={isActive ? 2 : 1.5}
-                  size={24}
-                  fill={isActive ? "currentColor" : "none"}
-                />
+                <>
+                  <Icon
+                    className={`transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    size={24}
+                    fill={isActive ? "currentColor" : "none"}
+                  />
+                  <span className={`text-[10px] font-semibold transition-colors duration-300 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {tab.label}
+                  </span>
+                </>
               )}
             </button>
           );
