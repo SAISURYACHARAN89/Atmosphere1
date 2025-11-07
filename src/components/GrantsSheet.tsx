@@ -3,7 +3,8 @@ import { X, Filter, Building2, MapPin, Calendar, ExternalLink } from "lucide-rea
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface Grant {
   id: string;
@@ -18,12 +19,51 @@ interface Grant {
   url: string;
 }
 
+const sectors = [
+  "All Sectors",
+  "Artificial Intelligence",
+  "Machine Learning",
+  "Blockchain",
+  "Cybersecurity",
+  "Cloud Computing",
+  "IoT",
+  "Healthcare",
+  "Biotechnology",
+  "Medical Devices",
+  "Green Energy",
+  "Renewable Energy",
+  "Clean Tech",
+  "Manufacturing",
+  "Robotics",
+  "Automation",
+  "Finance",
+  "FinTech",
+  "InsurTech",
+  "Education",
+  "EdTech",
+  "E-Learning",
+  "Agriculture",
+  "AgriTech",
+  "FoodTech",
+  "Retail",
+  "E-commerce",
+  "SaaS",
+  "Space Tech",
+  "Mobility",
+  "Transportation",
+  "Real Estate",
+  "PropTech",
+  "Entertainment",
+  "Gaming",
+  "Media",
+];
+
 const grantsData: Grant[] = [
   {
     id: "1",
     name: "Tech Innovation Grant 2024",
     organization: "National Science Foundation",
-    sector: "Technology",
+    sector: "Artificial Intelligence",
     location: "USA",
     amount: "$50,000 - $250,000",
     deadline: "Dec 31, 2024",
@@ -35,7 +75,7 @@ const grantsData: Grant[] = [
     id: "2",
     name: "Green Energy Accelerator",
     organization: "CleanTech Ventures",
-    sector: "Energy",
+    sector: "Green Energy",
     location: "Global",
     amount: "$100,000 + Mentorship",
     deadline: "Jan 15, 2025",
@@ -59,7 +99,7 @@ const grantsData: Grant[] = [
     id: "4",
     name: "FinTech Growth Fund",
     organization: "Finance Innovation Lab",
-    sector: "Finance",
+    sector: "FinTech",
     location: "Asia",
     amount: "$200,000 - $500,000",
     deadline: "Dec 15, 2024",
@@ -71,7 +111,7 @@ const grantsData: Grant[] = [
     id: "5",
     name: "EdTech Accelerator Program",
     organization: "Learn Ventures",
-    sector: "Education",
+    sector: "EdTech",
     location: "USA",
     amount: "$150,000",
     deadline: "Jan 31, 2025",
@@ -83,7 +123,7 @@ const grantsData: Grant[] = [
     id: "6",
     name: "AgriTech Innovation Grant",
     organization: "FarmFuture Foundation",
-    sector: "Agriculture",
+    sector: "AgriTech",
     location: "Global",
     amount: "$80,000 - $300,000",
     deadline: "Feb 28, 2025",
@@ -95,7 +135,7 @@ const grantsData: Grant[] = [
     id: "7",
     name: "AI Research Incubator",
     organization: "DeepMind Labs",
-    sector: "Technology",
+    sector: "Machine Learning",
     location: "UK",
     amount: "$120,000 + Resources",
     deadline: "Dec 20, 2024",
@@ -107,12 +147,36 @@ const grantsData: Grant[] = [
     id: "8",
     name: "Retail Innovation Fund",
     organization: "Commerce Accelerators",
-    sector: "Retail",
+    sector: "E-commerce",
     location: "USA",
     amount: "$90,000",
     deadline: "Jan 10, 2025",
     type: "accelerator",
     description: "Supporting e-commerce and retail technology innovations.",
+    url: "#"
+  },
+  {
+    id: "9",
+    name: "Manufacturing Excellence Grant",
+    organization: "Industrial Innovation Fund",
+    sector: "Manufacturing",
+    location: "Germany",
+    amount: "$180,000",
+    deadline: "Jan 20, 2025",
+    type: "grant",
+    description: "Supporting advanced manufacturing and Industry 4.0 innovations.",
+    url: "#"
+  },
+  {
+    id: "10",
+    name: "Blockchain Innovation Hub",
+    organization: "Crypto Ventures",
+    sector: "Blockchain",
+    location: "Singapore",
+    amount: "$200,000 + Equity",
+    deadline: "Feb 10, 2025",
+    type: "incubator",
+    description: "6-month program for blockchain and Web3 startups.",
     url: "#"
   }
 ];
@@ -123,14 +187,13 @@ interface GrantsSheetProps {
 }
 
 const GrantsSheet = ({ open, onOpenChange }: GrantsSheetProps) => {
-  const [selectedSector, setSelectedSector] = useState<string>("all");
+  const [selectedSector, setSelectedSector] = useState<string>("All Sectors");
   const [selectedType, setSelectedType] = useState<string>("all");
 
-  const sectors = ["all", ...Array.from(new Set(grantsData.map(g => g.sector)))];
   const types = ["all", "grant", "incubator", "accelerator"];
 
   const filteredGrants = grantsData.filter(grant => {
-    const sectorMatch = selectedSector === "all" || grant.sector === selectedSector;
+    const sectorMatch = selectedSector === "All Sectors" || grant.sector === selectedSector;
     const typeMatch = selectedType === "all" || grant.type === selectedType;
     return sectorMatch && typeMatch;
   });
@@ -161,38 +224,48 @@ const GrantsSheet = ({ open, onOpenChange }: GrantsSheetProps) => {
             Filters
           </div>
           
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Sector</label>
-              <Select value={selectedSector} onValueChange={setSelectedSector}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {sectors.map(sector => (
-                    <SelectItem key={sector} value={sector}>
-                      {sector.charAt(0).toUpperCase() + sector.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Type Filter */}
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Type</label>
+            <div className="flex gap-2">
+              {types.map(type => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedType(type)}
+                  className={cn(
+                    "px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                    selectedType === type
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted hover:bg-muted/80"
+                  )}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground">Type</label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {types.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Sector Filter - Scrollable */}
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Sector</label>
+            <ScrollArea className="h-[200px] border rounded-md p-3">
+              <div className="grid grid-cols-2 gap-2">
+                {sectors.map(sector => (
+                  <button
+                    key={sector}
+                    onClick={() => setSelectedSector(sector)}
+                    className={cn(
+                      "px-3 py-2 rounded-md text-xs font-medium transition-colors text-left",
+                      selectedSector === sector
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted hover:bg-muted/80"
+                    )}
+                  >
+                    {sector}
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         </div>
 
@@ -246,7 +319,7 @@ const GrantsSheet = ({ open, onOpenChange }: GrantsSheetProps) => {
                 variant="link" 
                 size="sm" 
                 onClick={() => {
-                  setSelectedSector("all");
+                  setSelectedSector("All Sectors");
                   setSelectedType("all");
                 }}
                 className="mt-2"
