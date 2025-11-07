@@ -9,34 +9,34 @@
 @layer base {
   :root {
     /* Premium Background System */
-    --background: 222 47% 11%;
-    --background-subtle: 222 47% 13%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 8%;
+    --background-subtle: 0 0% 10%;
+    --foreground: 0 0% 95%;
     
     /* Elevated Card System with depth */
-    --card: 222 47% 13%;
-    --card-hover: 222 47% 15%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-hover: 0 0% 14%;
+    --card-foreground: 0 0% 95%;
     
     /* Sophisticated Primary - Greyish Black */
-    --primary: 220 10% 25%;
-    --primary-hover: 220 10% 30%;
-    --primary-light: 220 10% 95%;
+    --primary: 0 0% 25%;
+    --primary-hover: 0 0% 30%;
+    --primary-light: 0 0% 20%;
     --primary-foreground: 0 0% 100%;
     
     /* Refined Secondary System */
-    --secondary: 217 19% 27%;
-    --secondary-hover: 217 19% 30%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 18%;
+    --secondary-hover: 0 0% 22%;
+    --secondary-foreground: 0 0% 95%;
     
     /* Elegant Muted Palette */
-    --muted: 217 19% 27%;
-    --muted-hover: 217 19% 30%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 18%;
+    --muted-hover: 0 0% 22%;
+    --muted-foreground: 0 0% 65%;
     
     /* Vibrant Accent - Greyish Black */
-    --accent: 220 10% 30%;
-    --accent-light: 220 10% 95%;
+    --accent: 0 0% 30%;
+    --accent-light: 0 0% 20%;
     --accent-foreground: 0 0% 100%;
     
     /* Success - Growth & Positive */
@@ -55,14 +55,14 @@
     --destructive-foreground: 0 0% 100%;
     
     /* Refined Border System */
-    --border: 217 19% 27%;
-    --border-subtle: 217 19% 20%;
-    --input: 217 19% 27%;
-    --ring: 220 10% 35%;
+    --border: 0 0% 20%;
+    --border-subtle: 0 0% 15%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 35%;
     
     /* Popover System */
-    --popover: 222 47% 13%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
     
     /* Professional Radius System */
     --radius-sm: 0.5rem;
@@ -74,42 +74,42 @@
     --notification: 0 84% 60%;
     
     /* Gradient System */
-    --gradient-primary: linear-gradient(135deg, hsl(220 10% 25%), hsl(220 10% 35%));
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 25%), hsl(0 0% 30%));
     --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(158 64% 52%));
-    --gradient-card: linear-gradient(180deg, hsl(222 47% 13%), hsl(222 47% 15%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 12%), hsl(0 0% 14%));
     --gradient-shine: linear-gradient(135deg, hsla(0 0% 100% / 0.1), hsla(0 0% 100% / 0));
     
     /* Shadow System - Depth & Elevation */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-    --shadow-primary: 0 10px 25px -5px hsl(220 10% 25% / 0.3);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+    --shadow-primary: 0 10px 25px -5px hsl(0 0% 25% / 0.5);
     --shadow-success: 0 10px 25px -5px hsl(142 71% 45% / 0.2);
   }
   
   .dark {
-    --background: 222 47% 11%;
-    --background-subtle: 222 47% 13%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 6%;
+    --background-subtle: 0 0% 8%;
+    --foreground: 0 0% 95%;
     
-    --card: 222 47% 13%;
-    --card-hover: 222 47% 15%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 10%;
+    --card-hover: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
     
-    --primary: 220 10% 35%;
-    --primary-hover: 220 10% 40%;
-    --primary-light: 220 10% 20%;
+    --primary: 0 0% 30%;
+    --primary-hover: 0 0% 35%;
+    --primary-light: 0 0% 20%;
     --primary-foreground: 0 0% 100%;
     
-    --muted: 217 19% 27%;
-    --muted-hover: 217 19% 30%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 20%;
+    --muted-hover: 0 0% 24%;
+    --muted-foreground: 0 0% 65%;
     
-    --border: 217 19% 27%;
-    --border-subtle: 217 19% 20%;
+    --border: 0 0% 20%;
+    --border-subtle: 0 0% 15%;
   }
 }
 
