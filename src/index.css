@@ -14,8 +14,8 @@
     --foreground: 0 0% 95%;
     
     /* Elevated Card System with depth */
-    --card: 0 0% 12%;
-    --card-hover: 0 0% 14%;
+    --card: 0 0% 22%;
+    --card-hover: 0 0% 24%;
     --card-foreground: 0 0% 95%;
     
     /* Sophisticated Primary - Greyish Black */
@@ -95,8 +95,8 @@
     --background-subtle: 0 0% 8%;
     --foreground: 0 0% 95%;
     
-    --card: 0 0% 10%;
-    --card-hover: 0 0% 12%;
+    --card: 0 0% 20%;
+    --card-hover: 0 0% 22%;
     --card-foreground: 0 0% 95%;
     
     --primary: 0 0% 30%;
