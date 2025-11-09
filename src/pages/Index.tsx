@@ -1,6 +1,11 @@
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import StartupPost from "@/components/StartupPost";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 const mockStartups = [
   {
@@ -140,20 +145,33 @@ const Index = () => {
       <TopBar />
 
       {/* Main Feed Area */}
-      <main className="pt-14 pb-16">
-        <div className="max-w-2xl mx-auto px-4 py-6 overflow-y-auto space-y-6">
+      <main className="pt-14 pb-16 h-screen">
+        <div className="max-w-2xl mx-auto h-full flex flex-col">
           {/* Welcome Header with Gradient */}
-          <div className="bg-gradient-card rounded-xl p-6 border border-border/50 shadow-lg">
+          <div className="bg-gradient-card rounded-xl p-6 border border-border/50 shadow-lg mx-4 mt-6">
             <h1 className="text-2xl font-bold text-gradient mb-2">Discover Startups</h1>
             <p className="text-muted-foreground">Connect with innovative companies and investment opportunities</p>
           </div>
 
-          {/* Startup Posts */}
-          {mockStartups.map((startup, index) => (
-            <div key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-              <StartupPost company={startup} />
-            </div>
-          ))}
+          {/* Startup Posts Carousel */}
+          <div className="flex-1 overflow-hidden">
+            <Carousel 
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              orientation="vertical"
+              className="h-full"
+            >
+              <CarouselContent className="h-full">
+                {mockStartups.map((startup, index) => (
+                  <CarouselItem key={index} className="pt-6 px-4">
+                    <StartupPost company={startup} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          </div>
         </div>
       </main>
 
