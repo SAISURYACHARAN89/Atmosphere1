@@ -35,7 +35,7 @@ const TopBar = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b border-border/50 z-50 shadow-sm transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
-        {/* Left side - Back Button and Briefcase */}
+        {/* Left side - Back Button */}
         <div className="flex items-center gap-3">
           {isCompanyProfile && fromPath && (
             <button 
@@ -45,14 +45,6 @@ const TopBar = () => {
               <ChevronLeft className="w-5 h-5 text-foreground" strokeWidth={2} />
             </button>
           )}
-          
-          {/* Grants Button */}
-          <button 
-            onClick={() => setGrantsOpen(true)}
-            className="transition-all duration-300 hover:scale-110 active:scale-95"
-          >
-            <Briefcase className="w-5 h-5 text-foreground" strokeWidth={2} />
-          </button>
         </div>
 
         {/* Right Icons */}
@@ -63,6 +55,14 @@ const TopBar = () => {
             className="p-2 rounded-lg hover:bg-muted/80 transition-all duration-300 active:scale-95"
           >
             <Search className="w-5 h-5 text-foreground" strokeWidth={2} />
+          </button>
+
+          {/* Grants Button */}
+          <button 
+            onClick={() => setGrantsOpen(true)}
+            className="transition-all duration-300 hover:scale-110 active:scale-95"
+          >
+            <Briefcase className="w-5 h-5 text-foreground" strokeWidth={2} />
           </button>
 
           {/* Messages with notification badge */}
