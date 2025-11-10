@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import BottomNav from "@/components/BottomNav";
-import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, ChevronLeft } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, ChevronLeft, Crown } from "lucide-react";
 
 interface Reel {
   id: string;
@@ -16,6 +16,7 @@ interface Reel {
   shares: number;
   isLiked: boolean;
   isSaved: boolean;
+  isFeatured?: boolean;
 }
 
 const mockReels: Reel[] = [
@@ -31,6 +32,7 @@ const mockReels: Reel[] = [
     shares: 89,
     isLiked: false,
     isSaved: false,
+    isFeatured: true,
   },
   {
     id: "2",
@@ -57,6 +59,7 @@ const mockReels: Reel[] = [
     shares: 156,
     isLiked: false,
     isSaved: true,
+    isFeatured: true,
   },
   {
     id: "4",
@@ -216,14 +219,24 @@ const Reels = () => {
                 onClick={() => handleProfileClick(reel.companyId)}
                 className="flex items-center gap-3 mb-3 hover:opacity-80 transition-opacity"
               >
-                <Avatar className="w-10 h-10 border-2 border-white">
-                  <AvatarImage src={reel.companyLogo} alt={reel.companyName} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {reel.companyName[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-white font-semibold drop-shadow-lg">
+                <div className="relative">
+                  <Avatar className="w-10 h-10 border-2 border-white">
+                    <AvatarImage src={reel.companyLogo} alt={reel.companyName} />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {reel.companyName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  {reel.isFeatured && (
+                    <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5">
+                      <Crown className="w-3 h-3 text-yellow-900 fill-yellow-900" />
+                    </div>
+                  )}
+                </div>
+                <span className="text-white font-semibold drop-shadow-lg flex items-center gap-1.5">
                   {reel.companyName}
+                  {reel.isFeatured && (
+                    <Crown className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                  )}
                 </span>
               </button>
 
