@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search as SearchIcon, X, Plus, Play } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search as SearchIcon, X, Plus, Play, Clock } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Badge } from "@/components/ui/badge";
@@ -216,17 +216,60 @@ const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("reels");
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    const history = localStorage.getItem("searchHistory");
+    if (history) {
+      setSearchHistory(JSON.parse(history));
+    }
+  }, []);
+
+  const saveToHistory = (query: string) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return;
+
+    const updatedHistory = [
+      trimmedQuery,
+      ...searchHistory.filter(item => item !== trimmedQuery)
+    ].slice(0, 10); // Keep only last 10 searches
+
+    setSearchHistory(updatedHistory);
+    localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
+  };
 
   const clearSearch = () => {
     setSearchQuery("");
     setInputValue("");
     setActiveFilter("reels");
+    setShowHistory(false);
   };
 
   const handleSearch = () => {
     if (inputValue.trim()) {
+      saveToHistory(inputValue);
       setSearchQuery(inputValue);
+      setShowHistory(false);
     }
+  };
+
+  const handleHistoryClick = (query: string) => {
+    setInputValue(query);
+    setSearchQuery(query);
+    setShowHistory(false);
+  };
+
+  const clearHistory = () => {
+    setSearchHistory([]);
+    localStorage.removeItem("searchHistory");
+  };
+
+  const removeHistoryItem = (query: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updatedHistory = searchHistory.filter(item => item !== query);
+    setSearchHistory(updatedHistory);
+    localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -251,6 +294,8 @@ const Search = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
+              onFocus={() => !searchQuery && setShowHistory(true)}
+              onBlur={() => setTimeout(() => setShowHistory(false), 200)}
               placeholder="Search investors, startups, founders…"
               className="pl-10 pr-10 h-12 rounded-full bg-muted border-0"
             />
@@ -263,6 +308,39 @@ const Search = () => {
               </button>
             )}
           </div>
+
+          {/* Search History Dropdown */}
+          {showHistory && searchHistory.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-lg overflow-hidden z-10">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">Recent</h3>
+                <button
+                  onClick={clearHistory}
+                  className="text-xs text-primary hover:text-primary/80 font-medium"
+                >
+                  Clear all
+                </button>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                {searchHistory.map((query, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleHistoryClick(query)}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer group"
+                  >
+                    <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-sm text-foreground">{query}</span>
+                    <button
+                      onClick={(e) => removeHistoryItem(query, e)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Filter Tabs - Only visible when searching */}
