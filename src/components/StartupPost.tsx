@@ -41,7 +41,7 @@ const StartupPost = ({ company }: StartupPostProps) => {
   };
 
   return (
-    <Card className="overflow-hidden border-0 bg-card shadow-none">
+    <Card className="overflow-hidden border-0 bg-background shadow-none">
       {/* Header - Clickable */}
       <div 
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-card-hover transition-colors"
@@ -170,7 +170,7 @@ const StartupPost = ({ company }: StartupPostProps) => {
       </div>
 
       {/* Company Info - Bottom Section */}
-      <div className="px-4 pb-4 space-y-2.5 border-t border-border pt-3">
+      <div className="px-4 pb-4 space-y-2.5 pt-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
             company.revenueGenerating 
