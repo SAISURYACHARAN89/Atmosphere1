@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type MeetingType = "public" | "followers" | "private";
 type FilterDay = "today" | "yesterday";
@@ -25,6 +27,8 @@ const Launch = () => {
   const [valuationRange, setValuationRange] = useState([0, 100]);
   const [filterDay, setFilterDay] = useState<FilterDay>("today");
   const [timeRemaining, setTimeRemaining] = useState({ hours: 2, minutes: 30, seconds: 45 });
+  const [filterEligibility, setFilterEligibility] = useState(false);
+  const [filterMeetingIndustries, setFilterMeetingIndustries] = useState<string[]>([]);
 
   useEffect(() => {
     if (filterDay === "today") {
@@ -53,10 +57,49 @@ const Launch = () => {
   };
 
   const dummyMeetings = [
-    { id: 1, host: "Rahul Mehta", title: "SaaS Growth Strategies", industries: ["SaaS", "AI"], startsIn: "15 mins" },
-    { id: 2, host: "Priya Sharma", title: "HealthTech Innovation Summit", industries: ["HealthTech"], startsIn: "1 hour" },
-    { id: 3, host: "Arjun Patel", title: "EV Market Analysis", industries: ["EV", "CleanTech"], startsIn: "2 hours" },
+    { 
+      id: 1, 
+      host: "Rahul Mehta", 
+      hostAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul",
+      title: "SaaS Growth Strategies", 
+      industries: ["SaaS", "AI"], 
+      startsIn: "15 mins",
+      eligible: true 
+    },
+    { 
+      id: 2, 
+      host: "Priya Sharma", 
+      hostAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya",
+      title: "HealthTech Innovation Summit", 
+      industries: ["HealthTech"], 
+      startsIn: "1 hour",
+      eligible: false 
+    },
+    { 
+      id: 3, 
+      host: "Arjun Patel", 
+      hostAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun",
+      title: "EV Market Analysis", 
+      industries: ["EV", "CleanTech"], 
+      startsIn: "2 hours",
+      eligible: true 
+    },
   ];
+
+  const toggleMeetingIndustry = (industry: string) => {
+    setFilterMeetingIndustries(prev =>
+      prev.includes(industry) 
+        ? prev.filter(i => i !== industry)
+        : [...prev, industry]
+    );
+  };
+
+  const filteredMeetings = dummyMeetings.filter(meeting => {
+    const eligibilityMatch = !filterEligibility || meeting.eligible;
+    const industryMatch = filterMeetingIndustries.length === 0 || 
+      meeting.industries.some(ind => filterMeetingIndustries.includes(ind));
+    return eligibilityMatch && industryMatch;
+  });
 
   const dummyStartups = [
     {
@@ -264,31 +307,107 @@ const Launch = () => {
             {joinExpanded && (
                 <div className="border border-border rounded-lg p-4 space-y-4 bg-card animate-in slide-in-from-top-2 duration-300">
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-sm">Search Public Meetings</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-sm">Search Public Meetings</h3>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Filter className="h-4 w-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72">
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <h4 className="font-semibold text-sm">Filters</h4>
+                              <div className="flex items-center justify-between">
+                                <Label htmlFor="eligibility" className="text-sm">
+                                  Show Only Eligible
+                                </Label>
+                                <input
+                                  id="eligibility"
+                                  type="checkbox"
+                                  checked={filterEligibility}
+                                  onChange={(e) => setFilterEligibility(e.target.checked)}
+                                  className="h-4 w-4 rounded border-input"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-sm">Industries</Label>
+                              <ScrollArea className="h-32">
+                                <div className="flex flex-wrap gap-2">
+                                  {industryTags.map(industry => (
+                                    <button
+                                      key={industry}
+                                      onClick={() => toggleMeetingIndustry(industry)}
+                                      className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                                        filterMeetingIndustries.includes(industry)
+                                          ? "bg-primary text-primary-foreground"
+                                          : "bg-muted text-foreground hover:bg-muted/80"
+                                      }`}
+                                    >
+                                      {industry}
+                                    </button>
+                                  ))}
+                                </div>
+                              </ScrollArea>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full"
+                              onClick={() => {
+                                setFilterEligibility(false);
+                                setFilterMeetingIndustries([]);
+                              }}
+                            >
+                              Clear Filters
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                     <ScrollArea className="h-96">
                       <div className="space-y-3">
-                        {dummyMeetings.map(meeting => (
-                          <div key={meeting.id} className="bg-background rounded-lg p-4 border shadow-sm space-y-2">
-                            <div className="flex items-start justify-between">
-                              <div className="space-y-1">
-                                <p className="text-sm text-muted-foreground">Hosted by {meeting.host}</p>
-                                <h4 className="font-semibold">{meeting.title}</h4>
+                        {filteredMeetings.length > 0 ? (
+                          filteredMeetings.map(meeting => (
+                            <div key={meeting.id} className="bg-background rounded-lg p-4 border shadow-sm space-y-2">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3 flex-1">
+                                  <Avatar className="h-10 w-10 flex-shrink-0">
+                                    <AvatarImage src={meeting.hostAvatar} alt={meeting.host} />
+                                    <AvatarFallback>{meeting.host.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="space-y-1 flex-1 min-w-0">
+                                    <p className="text-sm text-muted-foreground">Hosted by {meeting.host}</p>
+                                    <h4 className="font-semibold">{meeting.title}</h4>
+                                  </div>
+                                </div>
+                                <Button size="sm" className="flex-shrink-0">Join</Button>
                               </div>
-                              <Button size="sm">Join</Button>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {meeting.industries.map(ind => (
+                                  <span key={ind} className="px-2 py-1 bg-muted rounded-full text-xs">
+                                    {ind}
+                                  </span>
+                                ))}
+                                {meeting.eligible && (
+                                  <span className="px-2 py-1 bg-green-500/10 text-green-600 rounded-full text-xs font-medium">
+                                    Eligible
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                Starts in {meeting.startsIn}
+                              </p>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {meeting.industries.map(ind => (
-                                <span key={ind} className="px-2 py-1 bg-muted rounded-full text-xs">
-                                  {ind}
-                                </span>
-                              ))}
-                            </div>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              Starts in {meeting.startsIn}
-                            </p>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground text-sm">
+                            No meetings match your filters
                           </div>
-                        ))}
+                        )}
                       </div>
                     </ScrollArea>
                   </div>
