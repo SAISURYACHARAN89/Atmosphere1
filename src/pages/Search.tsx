@@ -214,23 +214,25 @@ type FilterType = "investors" | "startups" | "posts" | "reels";
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<FilterType | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("reels");
 
   const clearSearch = () => {
     setSearchQuery("");
-    setActiveFilter(null);
-    setShowSuggestions(false);
+    setInputValue("");
+    setActiveFilter("reels");
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setShowSuggestions(e.target.value.length > 0);
+  const handleSearch = () => {
+    if (inputValue.trim()) {
+      setSearchQuery(inputValue);
+    }
   };
 
-  const handleFilterSelect = (filter: FilterType) => {
-    setActiveFilter(filter);
-    setShowSuggestions(false);
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -241,58 +243,95 @@ const Search = () => {
         {/* Search Bar */}
         <div className="mt-6 mb-4">
           <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+            <SearchIcon 
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer"
+              onClick={handleSearch}
+            />
             <Input
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => searchQuery && setShowSuggestions(true)}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
               placeholder="Search investors, startups, founders…"
               className="pl-10 pr-10 h-12 rounded-full bg-muted border-0"
             />
             {searchQuery && (
               <button
                 onClick={clearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2"
               >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             )}
-            
-            {/* Category Suggestions Dropdown */}
-            {showSuggestions && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-20">
-                <button
-                  onClick={() => handleFilterSelect("investors")}
-                  className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-2 text-foreground"
-                >
-                  <span className="text-sm font-medium">Investors</span>
-                </button>
-                <button
-                  onClick={() => handleFilterSelect("startups")}
-                  className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-2 text-foreground border-t border-border"
-                >
-                  <span className="text-sm font-medium">Startups</span>
-                </button>
-                <button
-                  onClick={() => handleFilterSelect("posts")}
-                  className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-2 text-foreground border-t border-border"
-                >
-                  <span className="text-sm font-medium">Posts</span>
-                </button>
-                <button
-                  onClick={() => handleFilterSelect("reels")}
-                  className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-center gap-2 text-foreground border-t border-border"
-                >
-                  <span className="text-sm font-medium">Reels</span>
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
+        {/* Filter Tabs - Only visible when searching */}
+        {searchQuery && (
+          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
+            <button
+              onClick={() => setActiveFilter("reels")}
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                activeFilter === "reels"
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-foreground hover:bg-muted/80"
+              }`}
+            >
+              Reels
+            </button>
+            <button
+              onClick={() => setActiveFilter("posts")}
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                activeFilter === "posts"
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-foreground hover:bg-muted/80"
+              }`}
+            >
+              Posts
+            </button>
+            <button
+              onClick={() => setActiveFilter("investors")}
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                activeFilter === "investors"
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-foreground hover:bg-muted/80"
+              }`}
+            >
+              Investors
+            </button>
+            <button
+              onClick={() => setActiveFilter("startups")}
+              className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                activeFilter === "startups"
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-foreground hover:bg-muted/80"
+              }`}
+            >
+              Startups
+            </button>
+          </div>
+        )}
+
         {/* Search Results */}
-        {searchQuery && activeFilter && (
+        {searchQuery && (
           <div className="space-y-6">
+            {/* Reels Section */}
+            {activeFilter === "reels" && (
+              <div className="text-center py-16">
+                <p className="text-muted-foreground">
+                  Reels search coming soon
+                </p>
+              </div>
+            )}
+
+            {/* Posts Section */}
+            {activeFilter === "posts" && (
+              <div className="text-center py-16">
+                <p className="text-muted-foreground">
+                  Posts search coming soon
+                </p>
+              </div>
+            )}
+
             {/* Investors Section */}
             {activeFilter === "investors" && (
             <div>
@@ -387,23 +426,6 @@ const Search = () => {
             </div>
             )}
 
-            {/* Posts Section */}
-            {activeFilter === "posts" && (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground">
-                  Posts search coming soon
-                </p>
-              </div>
-            )}
-
-            {/* Reels Section */}
-            {activeFilter === "reels" && (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground">
-                  Reels search coming soon
-                </p>
-              </div>
-            )}
           </div>
         )}
 
