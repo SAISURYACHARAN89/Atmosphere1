@@ -579,7 +579,7 @@ const Search = () => {
         )}
 
         {/* For You Feed - Default View */}
-        {!searchQuery && (
+        {!searchQuery && !showHistory && (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
               {forYouContent.map((content) => (
