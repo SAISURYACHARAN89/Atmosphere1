@@ -121,7 +121,11 @@ const Launch = () => {
                   if (joinExpanded) setJoinExpanded(false);
                 }}
                 variant="outline"
-                className="h-12 text-base bg-muted hover:bg-muted/80"
+                className={`h-12 text-base transition-all ${
+                  launchExpanded 
+                    ? "bg-primary/10 border-primary/50 hover:bg-primary/15" 
+                    : "bg-muted hover:bg-muted/80"
+                }`}
               >
                 Launch Meeting
               </Button>
@@ -131,7 +135,11 @@ const Launch = () => {
                   if (launchExpanded) setLaunchExpanded(false);
                 }}
                 variant="outline"
-                className="h-12 text-base bg-muted hover:bg-muted/80"
+                className={`h-12 text-base transition-all ${
+                  joinExpanded 
+                    ? "bg-primary/10 border-primary/50 hover:bg-primary/15" 
+                    : "bg-muted hover:bg-muted/80"
+                }`}
               >
                 Join Meeting
               </Button>
@@ -257,7 +265,7 @@ const Launch = () => {
                 <div className="border border-border rounded-lg p-4 space-y-4 bg-card animate-in slide-in-from-top-2 duration-300">
                   <div className="space-y-3">
                     <h3 className="font-semibold text-sm">Search Public Meetings</h3>
-                    <ScrollArea className="h-64">
+                    <ScrollArea className="h-96">
                       <div className="space-y-3">
                         {dummyMeetings.map(meeting => (
                           <div key={meeting.id} className="bg-background rounded-lg p-4 border shadow-sm space-y-2">
