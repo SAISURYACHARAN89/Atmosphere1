@@ -12,7 +12,14 @@ const Settings = () => {
       icon: BarChart3,
       title: "Professional Dashboard",
       description: "View your analytics and insights",
-      onClick: () => navigate("/profile", { state: { openTab: "insights" } })
+      onClick: () => {
+        const userMode = localStorage.getItem("userMode");
+        if (userMode === "startup") {
+          navigate("/startup-profile");
+        } else {
+          navigate("/profile");
+        }
+      }
     },
     {
       icon: Bookmark,
@@ -138,7 +145,11 @@ const Settings = () => {
           <Card className="border-destructive/20">
             <CardContent className="p-4">
               <button
-                onClick={() => {/* Logout logic */}}
+                onClick={() => {
+                  localStorage.removeItem("userMode");
+                  localStorage.removeItem("isVerified");
+                  navigate("/login");
+                }}
                 className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-destructive/10 transition-colors text-left"
               >
                 <LogOut className="h-5 w-5 text-destructive" />

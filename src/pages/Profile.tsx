@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
+import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CheckCircle2 } from "lucide-react";
 
 interface Investment {
   id: string;
@@ -24,6 +24,7 @@ interface Investment {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const isVerified = localStorage.getItem("isVerified") === "true";
 
   // Mock investor data
   const investorData = {
@@ -152,9 +153,14 @@ const Profile = () => {
                   </Avatar>
                   
                   <div>
-                    <h1 className="text-xl font-semibold text-foreground mb-1">
-                      {investorData.name}
-                    </h1>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h1 className="text-xl font-semibold text-foreground">
+                        {investorData.name}
+                      </h1>
+                      {isVerified && (
+                        <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground mb-2">
                       {investorData.username}
                     </p>
