@@ -20,23 +20,33 @@ interface Milestone {
 const StartupProfile = () => {
   const navigate = useNavigate();
   const isVerified = localStorage.getItem("isVerified") === "true";
+  const userName = localStorage.getItem("userName") || "Airbound";
+  const userId = localStorage.getItem("userId") || "airbound";
 
-  // Mock startup data
+  // Mock startup data based on selected user
   const startupData = {
-    name: "TechVenture AI",
-    username: "@techventureai",
-    logo: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=400&fit=crop",
-    tagline: "AI-powered business intelligence for modern enterprises",
-    description: "Building the next generation of AI tools to help businesses make data-driven decisions faster and more accurately.",
-    location: "San Francisco, CA",
-    founded: "2023",
-    industry: "AI & ML",
-    stage: "Seed",
+    name: userName === "Airbound" ? "Airbound" : "Zlyft",
+    username: userName === "Airbound" ? "@airbound" : "@zlyft",
+    logo: userId === "airbound"
+      ? "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=400&fit=crop"
+      : "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=400&fit=crop",
+    tagline: userName === "Airbound" 
+      ? "Revolutionizing air travel with sustainable technology"
+      : "Next-gen ride-sharing platform",
+    description: userName === "Airbound"
+      ? "Building the next generation of electric aircraft for urban air mobility. Making sustainable air travel accessible to everyone."
+      : "Creating a seamless ride-sharing experience with AI-powered route optimization and driver matching.",
+    location: userName === "Airbound" ? "San Francisco, CA" : "Bangalore, India",
+    founded: userName === "Airbound" ? "2023" : "2024",
+    industry: userName === "Airbound" ? "Aviation Tech" : "Transportation",
+    stage: userName === "Airbound" ? "Seed" : "Pre-Seed",
     stats: {
-      followers: 1247,
-      teamSize: 12,
-      fundingRaised: 2500000,
-      valuation: 15000000
+      followers: userName === "Airbound" ? 1247 : 342,
+      teamSize: userName === "Airbound" ? 12 : 5,
+      fundingRaised: userName === "Airbound" ? 2500000 : 0,
+      valuation: userName === "Airbound" ? 15000000 : 0,
+      equityLeft: userName === "Airbound" ? 75 : 100,
+      investorAllocation: userName === "Airbound" ? 25 : 0
     }
   };
 
@@ -180,11 +190,28 @@ const StartupProfile = () => {
 
           {/* Tabbed Content Section */}
           <div className="mt-6">
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 mb-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="milestones">Milestones</TabsTrigger>
-              </TabsList>
+            {!isVerified ? (
+              <Card className="mx-4">
+                <CardContent className="py-8 text-center space-y-4">
+                  <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center">
+                    <Target className="h-8 w-8 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Company Portfolio Not Available
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Get verified to display your company's equity distribution and valuation
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="w-full grid grid-cols-2 mb-6">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="milestones">Milestones</TabsTrigger>
+                </TabsList>
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-4 px-4">
@@ -216,12 +243,12 @@ const StartupProfile = () => {
                   </CardContent>
                 </Card>
 
-                {/* Funding Info */}
+                {/* Equity & Funding Info */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-primary" />
-                      Funding Overview
+                      Equity & Valuation
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -232,7 +259,22 @@ const StartupProfile = () => {
                       </h2>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Equity Left</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {startupData.stats.equityLeft}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Investor Allocation</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {startupData.stats.investorAllocation}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t">
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">Total Raised</p>
                         <p className="text-sm font-semibold text-foreground">
@@ -313,7 +355,8 @@ const StartupProfile = () => {
                   ))}
                 </div>
               </TabsContent>
-            </Tabs>
+              </Tabs>
+            )}
           </div>
         </div>
       </main>

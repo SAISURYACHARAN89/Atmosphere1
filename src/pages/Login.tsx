@@ -1,137 +1,111 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, User, CheckCircle, XCircle } from "lucide-react";
+import { Building2, User, CheckCircle2 } from "lucide-react";
+
+const users = [
+  {
+    id: "john",
+    name: "John",
+    type: "investor" as const,
+    verified: true,
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
+  },
+  {
+    id: "ramesh",
+    name: "Ramesh",
+    type: "investor" as const,
+    verified: false,
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
+  },
+  {
+    id: "airbound",
+    name: "Airbound",
+    type: "startup" as const,
+    verified: true,
+    avatar: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=400&fit=crop",
+  },
+  {
+    id: "zlyft",
+    name: "Zlyft",
+    type: "startup" as const,
+    verified: false,
+    avatar: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=400&fit=crop",
+  },
+];
 
 const Login = () => {
   const navigate = useNavigate();
-  const [selectedMode, setSelectedMode] = useState<"investor" | "startup" | null>(null);
 
-  const handleLogin = (mode: "investor" | "startup", verified: boolean) => {
-    localStorage.setItem("userMode", mode);
-    localStorage.setItem("isVerified", verified.toString());
+  const handleLogin = (user: typeof users[0]) => {
+    localStorage.setItem("userId", user.id);
+    localStorage.setItem("userName", user.name);
+    localStorage.setItem("userMode", user.type);
+    localStorage.setItem("isVerified", user.verified.toString());
     
-    if (mode === "investor") {
+    if (user.type === "investor") {
       navigate("/profile");
     } else {
       navigate("/startup-profile");
     }
   };
 
-  if (!selectedMode) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">Welcome</h1>
-            <p className="text-muted-foreground">Select your account type</p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <Card 
-              className="cursor-pointer hover:border-primary transition-all hover:shadow-lg"
-              onClick={() => setSelectedMode("investor")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <User className="h-6 w-6 text-primary" />
-                  </div>
-                  <span>Investor</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Browse startups, manage investments, and track your portfolio
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="cursor-pointer hover:border-primary transition-all hover:shadow-lg"
-              onClick={() => setSelectedMode("startup")}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <Building2 className="h-6 w-6 text-primary" />
-                  </div>
-                  <span>Startup</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Showcase your company, connect with investors, and raise funds
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-6">
+      <div className="max-w-2xl w-full space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">
-            {selectedMode === "investor" ? "Investor" : "Startup"} Login
-          </h1>
-          <p className="text-muted-foreground">Select your verification status</p>
+          <h1 className="text-3xl font-bold text-foreground">Select Your Profile</h1>
+          <p className="text-muted-foreground">Choose an account to continue</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          <Card 
-            className="cursor-pointer hover:border-green-500 transition-all hover:shadow-lg"
-            onClick={() => handleLogin(selectedMode, true)}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                  <span>Verified Account</span>
-                </div>
-                <Badge variant="default" className="bg-green-600">Active</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Full access to all features and verified badge on your profile
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="cursor-pointer hover:border-orange-500 transition-all hover:shadow-lg"
-            onClick={() => handleLogin(selectedMode, false)}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <XCircle className="h-6 w-6 text-orange-600" />
-                  <span>Unverified Account</span>
-                </div>
-                <Badge variant="secondary">Limited</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Basic access with option to verify later
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {users.map((user) => (
+            <Card 
+              key={user.id}
+              className="cursor-pointer hover:border-primary transition-all hover:shadow-lg"
+              onClick={() => handleLogin(user)}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img 
+                        src={user.avatar} 
+                        alt={user.name}
+                        className="h-12 w-12 rounded-full object-cover"
+                      />
+                      {user.type === "investor" && (
+                        <User className="absolute -bottom-1 -right-1 h-5 w-5 bg-primary text-primary-foreground rounded-full p-1" />
+                      )}
+                      {user.type === "startup" && (
+                        <Building2 className="absolute -bottom-1 -right-1 h-5 w-5 bg-primary text-primary-foreground rounded-full p-1" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{user.name}</span>
+                        {user.verified && (
+                          <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {user.type}
+                      </p>
+                    </div>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Badge 
+                  variant={user.verified ? "default" : "secondary"}
+                  className={user.verified ? "bg-green-600" : ""}
+                >
+                  {user.verified ? "Verified" : "Unverified"}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-
-        <Button 
-          variant="ghost" 
-          className="w-full"
-          onClick={() => setSelectedMode(null)}
-        >
-          Back to mode selection
-        </Button>
       </div>
     </div>
   );

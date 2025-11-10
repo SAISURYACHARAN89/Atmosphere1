@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CheckCircle2 } from "lucide-react";
+import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CheckCircle2, XCircle } from "lucide-react";
 
 interface Investment {
   id: string;
@@ -25,6 +25,8 @@ interface Investment {
 const Profile = () => {
   const navigate = useNavigate();
   const isVerified = localStorage.getItem("isVerified") === "true";
+  const userName = localStorage.getItem("userName") || "John";
+  const userId = localStorage.getItem("userId") || "john";
 
   // Mock investor data
   const investorData = {
@@ -216,11 +218,28 @@ const Profile = () => {
 
           {/* Tabbed Content Section */}
           <div className="mt-6">
-            <Tabs defaultValue="portfolio" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 mb-6">
-                <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-                <TabsTrigger value="criteria">Criteria</TabsTrigger>
-              </TabsList>
+            {!isVerified ? (
+              <Card className="mx-4">
+                <CardContent className="py-8 text-center space-y-4">
+                  <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center">
+                    <XCircle className="h-8 w-8 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Portfolio Not Visible
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Verify your account to showcase your portfolio to others
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Tabs defaultValue="portfolio" className="w-full">
+                <TabsList className="w-full grid grid-cols-2 mb-6">
+                  <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+                  <TabsTrigger value="criteria">Criteria</TabsTrigger>
+                </TabsList>
 
               {/* Portfolio Tab */}
               <TabsContent value="portfolio" className="space-y-4 px-4">
@@ -418,7 +437,8 @@ const Profile = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
+              </Tabs>
+            )}
           </div>
         </div>
       </main>

@@ -148,6 +148,8 @@ const Settings = () => {
                 onClick={() => {
                   localStorage.removeItem("userMode");
                   localStorage.removeItem("isVerified");
+                  localStorage.removeItem("userId");
+                  localStorage.removeItem("userName");
                   navigate("/login");
                 }}
                 className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-destructive/10 transition-colors text-left"

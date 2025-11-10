@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Trash2, Edit, Bookmark, Zap, Heart } from "lucide-react";
+import { Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Trash2, Edit, Bookmark, Zap, Heart, AlertCircle } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
 
 
 interface ActiveTrade {
@@ -332,6 +333,8 @@ const portfolio = [
 
 const Trade = () => {
   const navigate = useNavigate();
+  const isVerified = localStorage.getItem("isVerified") === "true";
+  const userMode = localStorage.getItem("userMode");
   const [activeView, setActiveView] = useState<'scan' | 'buy' | 'sell'>('scan');
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -433,6 +436,32 @@ const Trade = () => {
     );
   };
 
+  // Verification Block Component
+  const VerificationBlock = () => (
+    <div className="px-4 py-8">
+      <Card className="border-orange-500/50">
+        <CardContent className="py-12 text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center">
+            <AlertCircle className="h-8 w-8 text-orange-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Verification Required
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {userMode === "startup" 
+                ? "Get your startup verified to access trading features and showcase your equity to investors"
+                : "Verify your investor account to access buy/sell trading features and view all opportunities"}
+            </p>
+          </div>
+          <Button className="mt-4">
+            Start Verification Process
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background pb-16">
       <TopBar />
@@ -479,7 +508,12 @@ const Trade = () => {
         </div>
 
         <div className="pt-[52px]">
-        {activeView === 'scan' ? (
+        {/* Show verification block for unverified users on buy/sell */}
+        {!isVerified && (activeView === 'buy' || activeView === 'sell') ? (
+          <VerificationBlock />
+        ) : (
+          <>
+          {activeView === 'scan' ? (
           /* Scan View - All Ads with Sponsored */
           <ScrollArea className="h-[calc(100vh-8rem)]">
             <div className="px-4 py-4 space-y-4">
@@ -1086,6 +1120,8 @@ const Trade = () => {
               </div>
             )}
           </div>
+        )}
+        </>
         )}
         </div>
       </main>
