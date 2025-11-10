@@ -28,28 +28,11 @@ const Launch = () => {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedFundingStages, setSelectedFundingStages] = useState<string[]>([]);
   const [selectedRevenueStatus, setSelectedRevenueStatus] = useState<string[]>([]);
-  const [filterDay, setFilterDay] = useState<FilterDay>("today");
-  const [timeRemaining, setTimeRemaining] = useState({ hours: 2, minutes: 30, seconds: 45 });
   const [filterEligibility, setFilterEligibility] = useState(false);
   const [filterMeetingIndustries, setFilterMeetingIndustries] = useState<string[]>([]);
+  const [startupTypeFilters, setStartupTypeFilters] = useState<string[]>([]);
+  const [startupIndustryFilters, setStartupIndustryFilters] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (filterDay === "today") {
-      const timer = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev.seconds > 0) {
-            return { ...prev, seconds: prev.seconds - 1 };
-          } else if (prev.minutes > 0) {
-            return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-          } else if (prev.hours > 0) {
-            return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-          }
-          return prev;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [filterDay]);
 
   const toggleIndustry = (industry: string) => {
     setSelectedIndustries(prev =>
@@ -72,6 +55,22 @@ const Launch = () => {
       prev.includes(status) 
         ? prev.filter(s => s !== status)
         : [...prev, status]
+    );
+  };
+
+  const toggleStartupType = (type: string) => {
+    setStartupTypeFilters(prev =>
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  const toggleStartupIndustry = (industry: string) => {
+    setStartupIndustryFilters(prev =>
+      prev.includes(industry) 
+        ? prev.filter(i => i !== industry)
+        : [...prev, industry]
     );
   };
 
@@ -120,6 +119,9 @@ const Launch = () => {
     return eligibilityMatch && industryMatch;
   });
 
+  const startupTypes = ["Revenue Generating", "Pre-seed", "Seed", "Series A", "Series B", "Series C"];
+  const startupMainFilters = ["AI", "ML", "SaaS", "Manufacturing", "SpaceTech", "Fintech", "HealthTech", "CleanTech"];
+
   const dummyStartups = [
     {
       id: 1,
@@ -130,7 +132,9 @@ const Launch = () => {
       valuation: "$5M",
       revenue: "$200K MRR",
       fundingRounds: "Pre-seed, Seed",
-      lookingForFunds: true
+      lookingForFunds: true,
+      type: "Seed",
+      industries: ["AI", "Manufacturing"]
     },
     {
       id: 2,
@@ -141,7 +145,9 @@ const Launch = () => {
       valuation: "$12M",
       revenue: "$500K MRR",
       fundingRounds: "Seed, Series A",
-      lookingForFunds: false
+      lookingForFunds: false,
+      type: "Series A",
+      industries: ["AI", "ML", "SaaS"]
     },
     {
       id: 3,
@@ -152,7 +158,9 @@ const Launch = () => {
       valuation: "$8M",
       revenue: "Pre-revenue",
       fundingRounds: "Pre-seed",
-      lookingForFunds: true
+      lookingForFunds: true,
+      type: "Pre-seed",
+      industries: ["CleanTech"]
     },
     {
       id: 4,
@@ -163,9 +171,44 @@ const Launch = () => {
       valuation: "$15M",
       revenue: "$1M MRR",
       fundingRounds: "Seed, Series A, Series B",
-      lookingForFunds: false
+      lookingForFunds: false,
+      type: "Series B",
+      industries: ["HealthTech", "SaaS"]
+    },
+    {
+      id: 5,
+      name: "Stellar Dynamics",
+      initials: "SD",
+      color: "bg-indigo-500",
+      tagline: "Next-gen satellite communication systems",
+      valuation: "$20M",
+      revenue: "$800K MRR",
+      fundingRounds: "Series A",
+      lookingForFunds: true,
+      type: "Series A",
+      industries: ["SpaceTech", "Manufacturing"]
+    },
+    {
+      id: 6,
+      name: "PayFlow Solutions",
+      initials: "PF",
+      color: "bg-amber-500",
+      tagline: "Digital payment infrastructure for emerging markets",
+      valuation: "$10M",
+      revenue: "$600K MRR",
+      fundingRounds: "Seed",
+      lookingForFunds: false,
+      type: "Revenue Generating",
+      industries: ["Fintech", "SaaS"]
     },
   ];
+
+  const filteredStartups = dummyStartups.filter(startup => {
+    const typeMatch = startupTypeFilters.length === 0 || startupTypeFilters.includes(startup.type);
+    const industryMatch = startupIndustryFilters.length === 0 || 
+      startup.industries.some(ind => startupIndustryFilters.includes(ind));
+    return typeMatch && industryMatch;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -450,75 +493,75 @@ const Launch = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Startup Launches</h2>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setFilterDay(filterDay === "today" ? "yesterday" : "today")}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  {filterDay === "today" ? "Today" : "Yesterday"}
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                <button className="p-2 hover:bg-muted rounded-md transition-colors">
-                  <Filter className="w-5 h-5 text-muted-foreground" />
-                </button>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Filter className="w-5 h-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Filters</h4>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Type</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {startupTypes.map(type => (
+                          <button
+                            key={type}
+                            onClick={() => toggleStartupType(type)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                              startupTypeFilters.includes(type)
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Main Filters</Label>
+                      <ScrollArea className="h-32">
+                        <div className="flex flex-wrap gap-2">
+                          {startupMainFilters.map(industry => (
+                            <button
+                              key={industry}
+                              onClick={() => toggleStartupIndustry(industry)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                startupIndustryFilters.includes(industry)
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted text-foreground hover:bg-muted/80"
+                              }`}
+                            >
+                              {industry}
+                            </button>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => {
+                        setStartupTypeFilters([]);
+                        setStartupIndustryFilters([]);
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
-            {filterDay === "today" ? (
-              <div className="bg-card border rounded-lg p-6 shadow-sm">
-                <Tabs defaultValue="upcoming" className="w-full">
-                  <TabsList className="w-full grid grid-cols-2">
-                    <TabsTrigger value="upcoming">Upcoming Launches</TabsTrigger>
-                    <TabsTrigger value="live">Live Now</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="upcoming" className="space-y-4 mt-4">
-                    <div className="text-center space-y-6 py-8">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2">Next Launch Starting In</h3>
-                        <p className="text-sm text-muted-foreground">Airbound Pvt. Ltd. - Drone Delivery Platform</p>
-                      </div>
-                      
-                      <div className="flex justify-center gap-4">
-                        <div className="flex flex-col items-center">
-                          <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
-                            <span className="text-3xl font-bold text-primary">{String(timeRemaining.hours).padStart(2, '0')}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-2">Hours</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
-                            <span className="text-3xl font-bold text-primary">{String(timeRemaining.minutes).padStart(2, '0')}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-2">Minutes</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
-                            <span className="text-3xl font-bold text-primary">{String(timeRemaining.seconds).padStart(2, '0')}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-2">Seconds</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-3">3 more launches scheduled today</p>
-                        <Button className="w-full">Set Reminder</Button>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="live" className="mt-4">
-                    <div className="text-center py-12 space-y-3">
-                      <Clock className="w-12 h-12 mx-auto text-muted-foreground" />
-                      <p className="text-muted-foreground">No live launches at the moment</p>
-                      <p className="text-sm text-muted-foreground">Check back soon!</p>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {dummyStartups.map(startup => (
+            <div className="space-y-4">
+              {filteredStartups.length > 0 ? (
+                filteredStartups.map(startup => (
                   <div key={startup.id} className="bg-card border rounded-lg p-4 shadow-sm space-y-3">
                     <div className="flex items-start gap-3">
                       <div className={`w-12 h-12 rounded-lg ${startup.color} flex items-center justify-center text-white font-bold flex-shrink-0`}>
@@ -528,6 +571,17 @@ const Launch = () => {
                         <h3 className="font-semibold text-base">{startup.name}</h3>
                         <p className="text-sm text-muted-foreground mt-1">{startup.tagline}</p>
                       </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                        {startup.type}
+                      </span>
+                      {startup.industries.map(ind => (
+                        <span key={ind} className="px-2 py-1 bg-muted rounded-full text-xs">
+                          {ind}
+                        </span>
+                      ))}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-sm">
@@ -555,9 +609,13 @@ const Launch = () => {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No startups match your filters
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
