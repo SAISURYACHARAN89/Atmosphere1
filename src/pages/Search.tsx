@@ -13,6 +13,19 @@ const categories = [
   "E-commerce", "BlockChain", "IoT", "DeepTech", "Hyderabad", "Pune"
 ];
 
+const dummySuggestions = [
+  { name: "Ankit Mehra", type: "investor", subtitle: "Angel Investor" },
+  { name: "Priya Sharma", type: "investor", subtitle: "VC Partner" },
+  { name: "Rahul Verma", type: "founder", subtitle: "CEO at TechCorp" },
+  { name: "Sneha Kapoor", type: "investor", subtitle: "Invested in 15 startups" },
+  { name: "Vikram Singh", type: "founder", subtitle: "Founder, HealthAI" },
+  { name: "Neha Gupta", type: "investor", subtitle: "Angel Investor" },
+  { name: "Arjun Malhotra", type: "founder", subtitle: "CEO at GreenTech" },
+  { name: "Anjali Reddy", type: "investor", subtitle: "VC Partner at XYZ Ventures" },
+  { name: "Rohan Joshi", type: "founder", subtitle: "Founder, EduVerse" },
+  { name: "Kavya Nair", type: "investor", subtitle: "Invested in 20 startups" }
+];
+
 const investorData = [
   {
     id: 1,
@@ -218,6 +231,7 @@ const Search = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>("reels");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<typeof dummySuggestions>([]);
 
   useEffect(() => {
     const history = localStorage.getItem("searchHistory");
@@ -225,6 +239,17 @@ const Search = () => {
       setSearchHistory(JSON.parse(history));
     }
   }, []);
+
+  useEffect(() => {
+    if (inputValue.trim()) {
+      const filtered = dummySuggestions.filter(suggestion =>
+        suggestion.name.toLowerCase().includes(inputValue.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+    } else {
+      setFilteredSuggestions([]);
+    }
+  }, [inputValue]);
 
   const saveToHistory = (query: string) => {
     const trimmedQuery = query.trim();
@@ -257,6 +282,13 @@ const Search = () => {
   const handleHistoryClick = (query: string) => {
     setInputValue(query);
     setSearchQuery(query);
+    setShowHistory(false);
+  };
+
+  const handleSuggestionClick = (name: string) => {
+    setInputValue(name);
+    saveToHistory(name);
+    setSearchQuery(name);
     setShowHistory(false);
   };
 
@@ -294,7 +326,7 @@ const Search = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              onFocus={() => !searchQuery && setShowHistory(true)}
+              onFocus={() => setShowHistory(true)}
               onBlur={() => setTimeout(() => setShowHistory(false), 200)}
               placeholder="Search investors, startups, founders…"
               className="pl-10 pr-10 h-12 rounded-full bg-muted border-0"
@@ -309,39 +341,78 @@ const Search = () => {
             )}
           </div>
 
-          {/* Search History Dropdown */}
-          {showHistory && searchHistory.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-lg overflow-hidden z-10">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <h3 className="text-sm font-semibold text-foreground">Recent</h3>
-                <button
-                  onClick={clearHistory}
-                  className="text-xs text-primary hover:text-primary/80 font-medium"
-                >
-                  Clear all
-                </button>
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {searchHistory.map((query, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleHistoryClick(query)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted cursor-pointer group"
-                  >
-                    <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-sm text-foreground">{query}</span>
-                    <button
-                      onClick={(e) => removeHistoryItem(query, e)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Search History & Suggestions - Full Screen */}
+        {showHistory && (
+          <div className="space-y-6">
+            {/* Search History Section */}
+            {searchHistory.length > 0 && !inputValue && (
+              <div className="bg-background">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-foreground">Recent</h3>
+                  <button
+                    onClick={clearHistory}
+                    className="text-sm text-primary hover:text-primary/80 font-medium"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  {searchHistory.map((query, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleHistoryClick(query)}
+                      className="flex items-center gap-3 px-2 py-3 hover:bg-muted rounded-lg cursor-pointer group"
+                    >
+                      <Clock className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      <span className="flex-1 text-sm text-foreground">{query}</span>
+                      <button
+                        onClick={(e) => removeHistoryItem(query, e)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Live Suggestions as User Types */}
+            {inputValue && filteredSuggestions.length > 0 && (
+              <div className="bg-background">
+                <div className="space-y-1">
+                  {filteredSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion.name)}
+                      className="flex items-center gap-3 px-2 py-3 hover:bg-muted rounded-lg cursor-pointer"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-muted flex-shrink-0 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-foreground">
+                          {suggestion.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{suggestion.name}</p>
+                        <p className="text-xs text-muted-foreground">{suggestion.subtitle}</p>
+                      </div>
+                      <SearchIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* No Results */}
+            {inputValue && filteredSuggestions.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No results found for "{inputValue}"</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Filter Tabs - Only visible when searching */}
         {searchQuery && (
