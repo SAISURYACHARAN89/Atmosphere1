@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Trash2, Edit, Bookmark, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Trash2, Edit, Bookmark, Zap, Info, Heart } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface ActiveTrade {
   id: number;
@@ -27,6 +29,7 @@ interface ScanAd {
   name: string;
   avatar: string;
   companyName: string;
+  companyTagline: string;
   preMoneyValuation: string;
   postMoneyValuation: string;
   minRange: number;
@@ -50,6 +53,7 @@ const scanAds: ScanAd[] = [
     name: "Rajesh Mukarji", 
     avatar: "https://i.pravatar.cc/150?img=12",
     companyName: "Airbound Pvt Ltd",
+    companyTagline: "Revolutionizing logistics with AI-powered drone delivery solutions",
     preMoneyValuation: "₹35,00,000",
     postMoneyValuation: "₹50,00,000",
     minRange: 15,
@@ -61,6 +65,7 @@ const scanAds: ScanAd[] = [
     name: "Joshua Paul", 
     avatar: "https://i.pravatar.cc/150?img=33",
     companyName: "Zlyft Autonomy Pvt Ltd",
+    companyTagline: "Building next-gen autonomous vehicles for urban transportation",
     preMoneyValuation: "₹80,00,000",
     postMoneyValuation: "₹1,20,00,000",
     minRange: 10,
@@ -71,6 +76,7 @@ const scanAds: ScanAd[] = [
     name: "Priya Sharma", 
     avatar: "https://i.pravatar.cc/150?img=47",
     companyName: "TechFlow Solutions",
+    companyTagline: "Streamlining enterprise workflows with intelligent automation",
     preMoneyValuation: "₹60,00,000",
     postMoneyValuation: "₹90,00,000",
     minRange: 20,
@@ -81,6 +87,7 @@ const scanAds: ScanAd[] = [
     name: "Alex Chen", 
     avatar: "https://i.pravatar.cc/150?img=68",
     companyName: "CloudSync Systems",
+    companyTagline: "Seamless multi-cloud data synchronization and management platform",
     preMoneyValuation: "₹45,00,000",
     postMoneyValuation: "₹70,00,000",
     minRange: 12,
@@ -92,6 +99,7 @@ const scanAds: ScanAd[] = [
     name: "Sarah Williams", 
     avatar: "https://i.pravatar.cc/150?img=25",
     companyName: "GreenTech Innovations",
+    companyTagline: "Sustainable energy solutions for a carbon-neutral future",
     preMoneyValuation: "₹55,00,000",
     postMoneyValuation: "₹85,00,000",
     minRange: 18,
@@ -102,6 +110,7 @@ const scanAds: ScanAd[] = [
     name: "Michael Rodriguez", 
     avatar: "https://i.pravatar.cc/150?img=52",
     companyName: "FinNext Solutions",
+    companyTagline: "Digital banking infrastructure for the next generation",
     preMoneyValuation: "₹70,00,000",
     postMoneyValuation: "₹1,05,00,000",
     minRange: 25,
@@ -112,6 +121,7 @@ const scanAds: ScanAd[] = [
     name: "Aisha Patel", 
     avatar: "https://i.pravatar.cc/150?img=38",
     companyName: "EduTech Pro",
+    companyTagline: "Personalized learning experiences powered by AI",
     preMoneyValuation: "₹42,00,000",
     postMoneyValuation: "₹65,00,000",
     minRange: 15,
@@ -122,6 +132,7 @@ const scanAds: ScanAd[] = [
     name: "David Kim", 
     avatar: "https://i.pravatar.cc/150?img=61",
     companyName: "HealthSync AI",
+    companyTagline: "AI-driven healthcare coordination and patient management",
     preMoneyValuation: "₹95,00,000",
     postMoneyValuation: "₹1,40,00,000",
     minRange: 20,
@@ -132,6 +143,7 @@ const scanAds: ScanAd[] = [
     name: "Emma Thompson", 
     avatar: "https://i.pravatar.cc/150?img=29",
     companyName: "LogiChain Systems",
+    companyTagline: "Blockchain-based supply chain transparency solutions",
     preMoneyValuation: "₹52,00,000",
     postMoneyValuation: "₹78,00,000",
     minRange: 12,
@@ -142,6 +154,7 @@ const scanAds: ScanAd[] = [
     name: "Arjun Mehta", 
     avatar: "https://i.pravatar.cc/150?img=15",
     companyName: "FoodTech Ventures",
+    companyTagline: "Farm-to-table technology for sustainable food systems",
     preMoneyValuation: "₹48,00,000",
     postMoneyValuation: "₹72,00,000",
     minRange: 16,
@@ -155,6 +168,7 @@ const sellers = [
     name: "Rajesh Mukarji", 
     avatar: "https://i.pravatar.cc/150?img=12",
     companyName: "Airbound Pvt Ltd",
+    companyTagline: "Revolutionizing logistics with AI-powered drone delivery solutions",
     preMoneyValuation: "₹35,00,000",
     postMoneyValuation: "₹50,00,000",
     minRange: 15,
@@ -165,6 +179,7 @@ const sellers = [
     name: "Joshua Paul", 
     avatar: "https://i.pravatar.cc/150?img=33",
     companyName: "Zlyft Autonomy Pvt Ltd",
+    companyTagline: "Building next-gen autonomous vehicles for urban transportation",
     preMoneyValuation: "₹80,00,000",
     postMoneyValuation: "₹1,20,00,000",
     minRange: 10,
@@ -175,6 +190,7 @@ const sellers = [
     name: "Priya Sharma", 
     avatar: "https://i.pravatar.cc/150?img=47",
     companyName: "TechFlow Solutions",
+    companyTagline: "Streamlining enterprise workflows with intelligent automation",
     preMoneyValuation: "₹60,00,000",
     postMoneyValuation: "₹90,00,000",
     minRange: 20,
@@ -185,6 +201,7 @@ const sellers = [
     name: "Alex Chen", 
     avatar: "https://i.pravatar.cc/150?img=68",
     companyName: "CloudSync Systems",
+    companyTagline: "Seamless multi-cloud data synchronization and management platform",
     preMoneyValuation: "₹45,00,000",
     postMoneyValuation: "₹70,00,000",
     minRange: 12,
@@ -195,6 +212,7 @@ const sellers = [
     name: "Sarah Williams", 
     avatar: "https://i.pravatar.cc/150?img=25",
     companyName: "GreenTech Innovations",
+    companyTagline: "Sustainable energy solutions for a carbon-neutral future",
     preMoneyValuation: "₹55,00,000",
     postMoneyValuation: "₹85,00,000",
     minRange: 18,
@@ -208,6 +226,7 @@ const portfolio = [
 ];
 
 const Trade = () => {
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'scan' | 'buy' | 'sell'>('scan');
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -361,7 +380,7 @@ const Trade = () => {
               {scanAds.map((ad) => (
                 <div
                   key={ad.id}
-                  className={`border rounded-xl p-5 transition-all ${
+                  className={`border rounded-xl p-4 transition-all ${
                     ad.isSponsored
                       ? 'border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg ring-2 ring-primary/20'
                       : 'border-border bg-card hover:bg-muted/50'
@@ -377,82 +396,74 @@ const Trade = () => {
                     </div>
                   )}
 
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
+                  {/* Main Content */}
+                  <div className="flex items-start gap-3">
+                    {/* Profile Pic - Clickable */}
+                    <button onClick={() => navigate('/profile')}>
                       <Avatar className={ad.isSponsored ? "w-14 h-14 ring-2 ring-primary" : "w-12 h-12"}>
                         <AvatarImage src={ad.avatar} />
                         <AvatarFallback className="bg-muted text-foreground font-semibold">
                           {ad.name.split(" ").map((n) => n[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <h3 className={`font-semibold text-foreground ${ad.isSponsored ? 'text-base' : 'text-sm'}`}>
-                          {ad.name}
-                        </h3>
-                        <p className={`text-muted-foreground mt-0.5 ${ad.isSponsored ? 'text-sm' : 'text-xs'}`}>
+                    </button>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      {/* Name - Clickable */}
+                      <button 
+                        onClick={() => navigate('/profile')}
+                        className="font-semibold text-foreground hover:text-primary transition-colors text-left"
+                      >
+                        {ad.name}
+                      </button>
+
+                      {/* Company Name with Info Icon - Clickable */}
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <button 
+                          onClick={() => navigate('/company-profile')}
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
                           {ad.companyName}
-                        </p>
+                        </button>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="p-0.5 hover:bg-muted rounded-full transition-colors">
+                              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64 text-sm">
+                            {ad.companyTagline}
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Buying Range - Text Only */}
+                      <div className="mt-2 text-sm">
+                        <span className="text-muted-foreground">Range: </span>
+                        <span className="font-semibold text-foreground">{ad.minRange}% - {ad.maxRange}%</span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleToggleSaveScanAd(ad.id)}
-                      className="p-2 hover:bg-background/80 rounded-lg transition-colors"
-                      title={savedScanAds.includes(ad.id) ? "Unsave" : "Save"}
-                    >
-                      <Bookmark 
-                        className={`w-4 h-4 ${savedScanAds.includes(ad.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
-                      />
-                    </button>
-                  </div>
 
-                  {/* Valuation Details */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className={`${ad.isSponsored ? 'bg-background/60' : 'bg-muted/50'} rounded-lg p-3`}>
-                      <span className="text-xs text-muted-foreground block mb-1">Pre Money</span>
-                      <p className={`font-bold text-foreground ${ad.isSponsored ? 'text-base' : 'text-sm'}`}>
-                        {ad.preMoneyValuation}
-                      </p>
-                    </div>
-                    <div className={`${ad.isSponsored ? 'bg-background/60' : 'bg-muted/50'} rounded-lg p-3`}>
-                      <span className="text-xs text-muted-foreground block mb-1">Post Money</span>
-                      <p className={`font-bold text-foreground ${ad.isSponsored ? 'text-base' : 'text-sm'}`}>
-                        {ad.postMoneyValuation}
-                      </p>
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => handleToggleSaveScanAd(ad.id)}
+                        className="p-2 hover:bg-background/80 rounded-lg transition-colors"
+                        title={savedScanAds.includes(ad.id) ? "Unsave" : "Save"}
+                      >
+                        <Bookmark 
+                          className={`w-4 h-4 ${savedScanAds.includes(ad.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
+                        />
+                      </button>
+                      <button
+                        className="p-2 hover:bg-background/80 rounded-lg transition-colors"
+                        title="Show interest"
+                      >
+                        <Heart className="w-4 h-4 text-muted-foreground hover:fill-primary hover:text-primary transition-all" />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Buying Range */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground font-medium">Buying Range</span>
-                      <span className={`font-bold text-foreground ${ad.isSponsored ? 'text-sm' : 'text-xs'}`}>
-                        {ad.minRange}% - {ad.maxRange}%
-                      </span>
-                    </div>
-                    
-                    <div className={`relative rounded-full overflow-hidden ${ad.isSponsored ? 'h-3' : 'h-2'} bg-background`}>
-                      <div
-                        className={`absolute h-full ${ad.isSponsored ? 'bg-gradient-to-r from-primary to-primary/70' : 'bg-primary'}`}
-                        style={{
-                          left: `${ad.minRange}%`,
-                          width: `${ad.maxRange - ad.minRange}%`,
-                        }}
-                      />
-                    </div>
-                    
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>0%</span>
-                      <span>100%</span>
-                    </div>
-                  </div>
-
-                  {/* CTA Button for Sponsored */}
-                  {ad.isSponsored && (
-                    <Button className="w-full mt-4 font-semibold" size="sm">
-                      View Details
-                    </Button>
-                  )}
                 </div>
               ))}
             </div>
@@ -721,64 +732,73 @@ const Trade = () => {
                     .map((seller) => (
                     <div
                       key={seller.id}
-                      className="border border-border rounded-lg p-6 bg-card hover:bg-muted/50 transition-all"
+                      className="border border-border rounded-lg p-4 bg-card hover:bg-muted/50 transition-all"
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
+                        {/* Profile Pic - Clickable */}
+                        <button onClick={() => navigate('/profile')}>
                           <Avatar className="w-12 h-12">
                             <AvatarImage src={seller.avatar} />
                             <AvatarFallback className="bg-muted text-foreground">
                               {seller.name.split(" ").map((n) => n[0]).join("")}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <h3 className="font-semibold text-foreground">{seller.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-0.5">{seller.companyName}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleToggleSaveSeller(seller.id)}
-                          className="p-2 hover:bg-background rounded-lg transition-colors"
-                          title={savedSellers.includes(seller.id) ? "Unsave" : "Save"}
-                        >
-                          <Bookmark 
-                            className={`w-5 h-5 ${savedSellers.includes(seller.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
-                          />
                         </button>
-                      </div>
 
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Pre Money:</span>
-                            <p className="font-medium text-foreground mt-1">{seller.preMoneyValuation}</p>
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          {/* Name - Clickable */}
+                          <button 
+                            onClick={() => navigate('/profile')}
+                            className="font-semibold text-foreground hover:text-primary transition-colors text-left"
+                          >
+                            {seller.name}
+                          </button>
+
+                          {/* Company Name with Info Icon - Clickable */}
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <button 
+                              onClick={() => navigate('/company-profile')}
+                              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              {seller.companyName}
+                            </button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="p-0.5 hover:bg-muted rounded-full transition-colors">
+                                  <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 text-sm">
+                                {seller.companyTagline}
+                              </PopoverContent>
+                            </Popover>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Post Money:</span>
-                            <p className="font-medium text-foreground mt-1">{seller.postMoneyValuation}</p>
+
+                          {/* Buying Range - Text Only */}
+                          <div className="mt-2 text-sm">
+                            <span className="text-muted-foreground">Range: </span>
+                            <span className="font-semibold text-foreground">{seller.minRange}% - {seller.maxRange}%</span>
                           </div>
                         </div>
 
-                        <div className="pt-2">
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Buying Range:</span>
-                            <span className="font-medium text-foreground">{seller.minRange}% - {seller.maxRange}%</span>
-                          </div>
-                          
-                          <div className="relative h-2 bg-background rounded-full overflow-hidden">
-                            <div
-                              className="absolute h-full bg-primary"
-                              style={{
-                                left: `${seller.minRange}%`,
-                                width: `${seller.maxRange - seller.minRange}%`,
-                              }}
+                        {/* Action Buttons */}
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => handleToggleSaveSeller(seller.id)}
+                            className="p-2 hover:bg-background rounded-lg transition-colors"
+                            title={savedSellers.includes(seller.id) ? "Unsave" : "Save"}
+                          >
+                            <Bookmark 
+                              className={`w-4 h-4 ${savedSellers.includes(seller.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
                             />
-                          </div>
-                          
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>0%</span>
-                            <span>100%</span>
-                          </div>
+                          </button>
+                          <button
+                            className="p-2 hover:bg-background rounded-lg transition-colors"
+                            title="Show interest"
+                          >
+                            <Heart className="w-4 h-4 text-muted-foreground hover:fill-primary hover:text-primary transition-all" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -802,64 +822,73 @@ const Trade = () => {
                   {sellers.map((seller) => (
                     <div
                       key={seller.id}
-                      className="border border-border rounded-lg p-6 bg-card hover:bg-muted/50 transition-all"
+                      className="border border-border rounded-lg p-4 bg-card hover:bg-muted/50 transition-all"
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
+                        {/* Profile Pic - Clickable */}
+                        <button onClick={() => navigate('/profile')}>
                           <Avatar className="w-12 h-12">
                             <AvatarImage src={seller.avatar} />
                             <AvatarFallback className="bg-muted text-foreground">
                               {seller.name.split(" ").map((n) => n[0]).join("")}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <h3 className="font-semibold text-foreground">{seller.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-0.5">{seller.companyName}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleToggleSaveSeller(seller.id)}
-                          className="p-2 hover:bg-background rounded-lg transition-colors"
-                          title={savedSellers.includes(seller.id) ? "Unsave" : "Save"}
-                        >
-                          <Bookmark 
-                            className={`w-5 h-5 ${savedSellers.includes(seller.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
-                          />
                         </button>
-                      </div>
 
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Pre Money:</span>
-                            <p className="font-medium text-foreground mt-1">{seller.preMoneyValuation}</p>
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          {/* Name - Clickable */}
+                          <button 
+                            onClick={() => navigate('/profile')}
+                            className="font-semibold text-foreground hover:text-primary transition-colors text-left"
+                          >
+                            {seller.name}
+                          </button>
+
+                          {/* Company Name with Info Icon - Clickable */}
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <button 
+                              onClick={() => navigate('/company-profile')}
+                              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              {seller.companyName}
+                            </button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="p-0.5 hover:bg-muted rounded-full transition-colors">
+                                  <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 text-sm">
+                                {seller.companyTagline}
+                              </PopoverContent>
+                            </Popover>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Post Money:</span>
-                            <p className="font-medium text-foreground mt-1">{seller.postMoneyValuation}</p>
+
+                          {/* Buying Range - Text Only */}
+                          <div className="mt-2 text-sm">
+                            <span className="text-muted-foreground">Range: </span>
+                            <span className="font-semibold text-foreground">{seller.minRange}% - {seller.maxRange}%</span>
                           </div>
                         </div>
 
-                        <div className="pt-2">
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Buying Range:</span>
-                            <span className="font-medium text-foreground">{seller.minRange}% - {seller.maxRange}%</span>
-                          </div>
-                          
-                          <div className="relative h-2 bg-background rounded-full overflow-hidden">
-                            <div
-                              className="absolute h-full bg-primary"
-                              style={{
-                                left: `${seller.minRange}%`,
-                                width: `${seller.maxRange - seller.minRange}%`,
-                              }}
+                        {/* Action Buttons */}
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => handleToggleSaveSeller(seller.id)}
+                            className="p-2 hover:bg-background rounded-lg transition-colors"
+                            title={savedSellers.includes(seller.id) ? "Unsave" : "Save"}
+                          >
+                            <Bookmark 
+                              className={`w-4 h-4 ${savedSellers.includes(seller.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
                             />
-                          </div>
-                          
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>0%</span>
-                            <span>100%</span>
-                          </div>
+                          </button>
+                          <button
+                            className="p-2 hover:bg-background rounded-lg transition-colors"
+                            title="Show interest"
+                          >
+                            <Heart className="w-4 h-4 text-muted-foreground hover:fill-primary hover:text-primary transition-all" />
+                          </button>
                         </div>
                       </div>
                     </div>
