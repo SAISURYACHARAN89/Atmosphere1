@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, User, CheckCircle2 } from "lucide-react";
@@ -36,6 +37,21 @@ const users = [
 
 const Login = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const userId = localStorage.getItem("userId");
+    const userMode = localStorage.getItem("userMode");
+    
+    if (userId && userMode) {
+      // Redirect to appropriate profile
+      if (userMode === "investor") {
+        navigate("/profile");
+      } else {
+        navigate("/startup-profile");
+      }
+    }
+  }, [navigate]);
 
   const handleLogin = (user: typeof users[0]) => {
     localStorage.setItem("userId", user.id);

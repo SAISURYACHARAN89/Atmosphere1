@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import StartupPost from "@/components/StartupPost";
@@ -123,6 +125,16 @@ const mockStartups = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-background-subtle">
       {/* Top Bar */}
