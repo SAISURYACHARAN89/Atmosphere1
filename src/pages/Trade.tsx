@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Trash2, Edit, Bookmark, Zap } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
@@ -218,6 +218,27 @@ const Trade = () => {
   const [savedSellers, setSavedSellers] = useState<number[]>([1, 3, 5]);
   const [savedScanAds, setSavedScanAds] = useState<number[]>([1, 4]);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down and past 50px
+        setIsHeaderVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   const handleToggleSaveScanAd = (adId: number) => {
     setSavedScanAds(prev => 
@@ -293,7 +314,7 @@ const Trade = () => {
       
       <main className="pt-14 max-w-2xl mx-auto">
         {/* Compact Buy/Scan/Sell Buttons at Top */}
-        <div className="sticky top-14 z-40 flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-background/95 backdrop-blur-sm">
+        <div className={`fixed top-14 left-0 right-0 z-40 flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-background/95 backdrop-blur-sm max-w-2xl mx-auto transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
           <Button 
             size="sm" 
             variant="outline"
@@ -332,6 +353,7 @@ const Trade = () => {
           </Button>
         </div>
 
+        <div className="pt-[52px]">
         {activeView === 'scan' ? (
           /* Scan View - All Ads with Sponsored */
           <ScrollArea className="h-[calc(100vh-8rem)]">
@@ -847,6 +869,7 @@ const Trade = () => {
             )}
           </div>
         )}
+        </div>
       </main>
 
       <BottomNav />
