@@ -552,46 +552,31 @@ const Trade = () => {
                         {ad.companyName}
                       </button>
 
-                      {/* Expanded Tagline and Photos */}
-                      {expandedInfoId === ad.id && (
-                        <div className="mt-3 space-y-3">
-                          <div className="text-xs text-muted-foreground italic bg-muted/30 p-2 rounded">
-                            {ad.companyTagline}
+                      {/* Revenue, Funds Raised, and Age - Only when NOT expanded */}
+                      {!expandedInfoId || expandedInfoId !== ad.id ? (
+                        <>
+                          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Revenue: </span>
+                              <span className="font-medium text-foreground">{ad.revenue}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Funds: </span>
+                              <span className="font-medium text-foreground">{ad.fundsRaised}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Age: </span>
+                              <span className="font-medium text-foreground">{ad.companyAge}</span>
+                            </div>
                           </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            {ad.companyPhotos.map((photo, index) => (
-                              <img 
-                                key={index}
-                                src={photo} 
-                                alt={`${ad.companyName} ${index + 1}`}
-                                className="w-full h-20 object-cover rounded-md border border-border"
-                              />
-                            ))}
+
+                          {/* Buying Range - Text Only */}
+                          <div className="mt-2 text-sm">
+                            <span className="text-muted-foreground">Range: </span>
+                            <span className="font-semibold text-foreground">{ad.minRange}% - {ad.maxRange}%</span>
                           </div>
-                        </div>
-                      )}
-
-                      {/* Revenue, Funds Raised, and Age */}
-                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                        <div>
-                          <span className="text-muted-foreground">Revenue: </span>
-                          <span className="font-medium text-foreground">{ad.revenue}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Funds: </span>
-                          <span className="font-medium text-foreground">{ad.fundsRaised}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Age: </span>
-                          <span className="font-medium text-foreground">{ad.companyAge}</span>
-                        </div>
-                      </div>
-
-                      {/* Buying Range - Text Only */}
-                      <div className="mt-2 text-sm">
-                        <span className="text-muted-foreground">Range: </span>
-                        <span className="font-semibold text-foreground">{ad.minRange}% - {ad.maxRange}%</span>
-                      </div>
+                        </>
+                      ) : null}
                     </div>
 
                     {/* Action Buttons */}
@@ -617,6 +602,57 @@ const Trade = () => {
                       </button>
                     </div>
                   </div>
+
+                  {/* Expanded Section - Full Width */}
+                  {expandedInfoId === ad.id && (
+                    <div className="mt-4 animate-accordion-down">
+                      {/* Tagline */}
+                      <div className="mb-4 px-1">
+                        <p className="text-sm text-muted-foreground italic leading-relaxed">
+                          "{ad.companyTagline}"
+                        </p>
+                      </div>
+
+                      {/* Company Photos - Full Width */}
+                      <div className="-mx-4 mb-4 px-2">
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {ad.companyPhotos.map((photo, index) => (
+                            <div 
+                              key={index}
+                              className="relative overflow-hidden rounded-lg aspect-[4/3] group"
+                            >
+                              <img 
+                                src={photo} 
+                                alt={`${ad.companyName} ${index + 1}`}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3 px-1">
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          <div className="text-xs text-muted-foreground mb-1">Revenue</div>
+                          <div className="font-semibold text-sm text-foreground">{ad.revenue}</div>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          <div className="text-xs text-muted-foreground mb-1">Funds Raised</div>
+                          <div className="font-semibold text-sm text-foreground">{ad.fundsRaised}</div>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          <div className="text-xs text-muted-foreground mb-1">Company Age</div>
+                          <div className="font-semibold text-sm text-foreground">{ad.companyAge}</div>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          <div className="text-xs text-muted-foreground mb-1">Buying Range</div>
+                          <div className="font-semibold text-sm text-foreground">{ad.minRange}% - {ad.maxRange}%</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
