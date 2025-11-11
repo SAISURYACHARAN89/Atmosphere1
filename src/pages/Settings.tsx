@@ -1,171 +1,157 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BarChart3, Bookmark, Activity, UserPen, LogOut, Bell, Shield, HelpCircle, Info } from "lucide-react";
+import { ArrowLeft, User, AtSign, BarChart3, Bookmark, Activity, Settings as SettingsIcon, MessageSquare, Lock, Briefcase, Crown, HelpCircle, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 const Settings = () => {
   const navigate = useNavigate();
 
-  const menuItems = [
-    {
-      icon: BarChart3,
-      title: "Professional Dashboard",
-      description: "View your analytics and insights",
-      onClick: () => {
-        const userMode = localStorage.getItem("userMode");
-        if (userMode === "startup") {
-          navigate("/startup-profile");
-        } else {
-          navigate("/profile");
-        }
-      }
-    },
-    {
-      icon: Bookmark,
-      title: "Saved Content",
-      description: "Access your saved startups and posts",
-      onClick: () => {/* Navigate to saved */}
-    },
-    {
-      icon: Activity,
-      title: "Recent Activity",
-      description: "See your recent interactions and views",
-      onClick: () => {/* Navigate to activity */}
-    },
-    {
-      icon: UserPen,
-      title: "Edit Profile",
-      description: "Update your personal information",
-      onClick: () => {/* Edit profile logic */}
-    }
-  ];
-
-  const accountItems = [
-    {
-      icon: Bell,
-      title: "Notifications",
-      description: "Manage notification preferences",
-      onClick: () => {/* Notifications settings */}
-    },
-    {
-      icon: Shield,
-      title: "Privacy & Security",
-      description: "Control your privacy settings",
-      onClick: () => {/* Privacy settings */}
-    },
-    {
-      icon: HelpCircle,
-      title: "Help & Support",
-      description: "Get help or contact support",
-      onClick: () => {/* Help page */}
-    },
-    {
-      icon: Info,
-      title: "About",
-      description: "App version and information",
-      onClick: () => {/* About page */}
-    }
-  ];
+  const SettingItem = ({ icon: Icon, title, subtitle, onClick, showArrow = true }: any) => (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors active:scale-[0.98]"
+    >
+      <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+      <div className="flex-1 text-left">
+        <p className="font-medium text-foreground text-sm">{title}</p>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
+      {showArrow && <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-card border-b">
-        <div className="flex items-center gap-4 px-4 py-3">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border/50">
+        <div className="flex items-center gap-4 px-4 py-3 max-w-2xl mx-auto">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
+            className="hover:bg-muted/80"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">Settings & Menu</h1>
+          <h1 className="text-lg font-semibold text-foreground">Settings</h1>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="pb-20">
-        <div className="max-w-2xl mx-auto p-4 space-y-6">
-          {/* Main Options */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Main</CardTitle>
-              <CardDescription>Access your key features and content</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {menuItems.map((item, index) => (
-                <div key={index}>
-                  <button
-                    onClick={item.onClick}
-                    className="w-full flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
-                  >
-                    <div className="mt-0.5">
-                      <item.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground text-sm">{item.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                    </div>
-                  </button>
-                  {index < menuItems.length - 1 && <Separator className="my-1" />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+      <main className="pb-24 px-4">
+        <div className="max-w-2xl mx-auto space-y-6 pt-6">
+          {/* Profile Section */}
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Profile</h2>
+            <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+              <SettingItem
+                icon={User}
+                title="Edit Name"
+                subtitle="Change your display name"
+                onClick={() => {}}
+              />
+              <Separator />
+              <SettingItem
+                icon={AtSign}
+                title="Edit Username"
+                subtitle="Update your username"
+                onClick={() => {}}
+              />
+            </div>
+          </div>
 
-          {/* Account Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Account Settings</CardTitle>
-              <CardDescription>Manage your account preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {accountItems.map((item, index) => (
-                <div key={index}>
-                  <button
-                    onClick={item.onClick}
-                    className="w-full flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left"
-                  >
-                    <div className="mt-0.5">
-                      <item.icon className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground text-sm">{item.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                    </div>
-                  </button>
-                  {index < accountItems.length - 1 && <Separator className="my-1" />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {/* Content Section */}
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Content</h2>
+            <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+              <SettingItem
+                icon={BarChart3}
+                title="Professional Dashboard"
+                subtitle="View analytics and insights"
+                onClick={() => navigate("/profile")}
+              />
+              <Separator />
+              <SettingItem
+                icon={Bookmark}
+                title="Saved Content"
+                subtitle="Access your saved posts and startups"
+                onClick={() => {}}
+              />
+              <Separator />
+              <SettingItem
+                icon={Activity}
+                title="Recent Activity"
+                subtitle="See your recent interactions"
+                onClick={() => {}}
+              />
+              <Separator />
+              <SettingItem
+                icon={SettingsIcon}
+                title="Content Preference"
+                subtitle="Customize your feed"
+                onClick={() => {}}
+              />
+            </div>
+          </div>
 
-          {/* Logout */}
-          <Card className="border-destructive/20">
-            <CardContent className="p-4">
-              <button
-                onClick={() => {
-                  localStorage.removeItem("userMode");
-                  localStorage.removeItem("isVerified");
-                  localStorage.removeItem("userId");
-                  localStorage.removeItem("userName");
-                  navigate("/login");
-                }}
-                className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-destructive/10 transition-colors text-left"
-              >
-                <LogOut className="h-5 w-5 text-destructive" />
-                <div className="flex-1">
-                  <p className="font-medium text-destructive text-sm">Log Out</p>
-                  <p className="text-xs text-destructive/70 mt-0.5">Sign out of your account</p>
-                </div>
-              </button>
-            </CardContent>
-          </Card>
+          {/* Privacy Section */}
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Privacy</h2>
+            <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+              <SettingItem
+                icon={MessageSquare}
+                title="Comments"
+                subtitle="Control who can comment on your posts"
+                onClick={() => {}}
+              />
+              <Separator />
+              <SettingItem
+                icon={Lock}
+                title="Connect"
+                subtitle="Manage direct message permissions"
+                onClick={() => {}}
+              />
+            </div>
+          </div>
 
-          {/* App Version */}
-          <div className="text-center py-4">
-            <p className="text-xs text-muted-foreground">Version 1.0.0</p>
+          {/* Account Section */}
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Account</h2>
+            <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+              <SettingItem
+                icon={Briefcase}
+                title="Portfolio & KYC"
+                subtitle="Update portfolio or verify identity"
+                onClick={() => {}}
+              />
+              <Separator />
+              <SettingItem
+                icon={Crown}
+                title="Get Premium"
+                subtitle="Unlock exclusive features"
+                onClick={() => {}}
+              />
+            </div>
+          </div>
+
+          {/* Help Section */}
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Help</h2>
+            <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
+              <SettingItem
+                icon={HelpCircle}
+                title="Support"
+                subtitle="Get help or contact us"
+                onClick={() => {}}
+              />
+              <Separator />
+              <SettingItem
+                icon={Info}
+                title="About"
+                subtitle="Version 1.0.0"
+                onClick={() => {}}
+              />
+            </div>
           </div>
         </div>
       </main>
