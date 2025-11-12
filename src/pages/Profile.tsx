@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CheckCircle2, XCircle, Plus } from "lucide-react";
+import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CheckCircle2, XCircle, Plus, ChevronLeft } from "lucide-react";
 
 interface Investment {
   id: string;
@@ -140,10 +140,21 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       {/* Instagram-style Header */}
       <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border/50 z-50">
-        <div className="max-w-2xl mx-auto flex items-center justify-center px-4 h-14">
+        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
+          <button 
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-muted/80 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="h-5 w-5 text-foreground" />
+          </button>
+          
           <h2 className="font-medium text-base text-foreground">
             {investorData.username.replace('@', '')}
           </h2>
+          
+          <button className="p-2 hover:bg-muted/80 rounded-lg transition-colors">
+            <Plus className="h-5 w-5 text-foreground" />
+          </button>
         </div>
       </header>
       
@@ -151,7 +162,8 @@ const Profile = () => {
         <div className="max-w-2xl mx-auto">
           {/* Instagram-style Profile Header */}
           <div className="px-4 pt-4 pb-2">
-            <div className="flex items-start gap-4 mb-4">
+            {/* Avatar and Name Row */}
+            <div className="flex items-center gap-3 mb-4">
               {/* Avatar with Story Ring */}
               <div className="relative">
                 <Avatar className="h-20 w-20 border-2 border-primary">
@@ -165,58 +177,47 @@ const Profile = () => {
                 </button>
               </div>
 
-              {/* Stats in a row */}
-              <div className="flex-1 flex justify-around items-center pt-2">
-                <button className="flex flex-col items-center">
-                  <p className="text-base font-semibold text-foreground">
-                    {formatNumber(investorData.stats.postsSaved)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Posts</p>
-                </button>
-                <button className="flex flex-col items-center">
-                  <p className="text-base font-semibold text-foreground">
-                    {formatNumber(investorData.stats.followers)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Followers</p>
-                </button>
-                <button className="flex flex-col items-center">
-                  <p className="text-base font-semibold text-foreground">
-                    {formatNumber(investorData.stats.following)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Following</p>
-                </button>
-              </div>
-
-              {/* Action Icons */}
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate("/settings")}
-                  className="h-8 w-8"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
+              {/* Name with Verification and Menu */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-semibold text-foreground">
+                    {investorData.name}
+                  </h1>
+                  {isVerified && (
+                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate("/settings")}
+                    className="h-8 w-8 ml-auto"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            {/* Name with Verification */}
-            <div className="mb-1">
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-semibold text-foreground">
-                  {investorData.name}
-                </h1>
-                {isVerified && (
-                  <CheckCircle2 className="h-4 w-4 text-blue-500" />
-                )}
-              </div>
+            {/* Stats Row */}
+            <div className="flex gap-6 mb-4">
+              <button className="flex items-center gap-1">
+                <p className="text-sm font-semibold text-foreground">
+                  {formatNumber(investorData.stats.postsSaved)}
+                </p>
+                <p className="text-sm text-muted-foreground">posts</p>
+              </button>
+              <button className="flex items-center gap-1">
+                <p className="text-sm font-semibold text-foreground">
+                  {formatNumber(investorData.stats.followers)}
+                </p>
+                <p className="text-sm text-muted-foreground">followers</p>
+              </button>
+              <button className="flex items-center gap-1">
+                <p className="text-sm font-semibold text-foreground">
+                  {formatNumber(investorData.stats.following)}
+                </p>
+                <p className="text-sm text-muted-foreground">following</p>
+              </button>
             </div>
 
             {/* Location */}
