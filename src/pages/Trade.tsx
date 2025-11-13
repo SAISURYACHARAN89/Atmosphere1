@@ -470,7 +470,7 @@ const Trade = () => {
       
       <main className="pt-14 max-w-2xl mx-auto">
         {/* Compact Buy/Sell Buttons at Top */}
-        <div className={`fixed top-14 left-0 right-0 z-40 flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-background/95 backdrop-blur-sm max-w-2xl mx-auto transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className={`fixed top-14 left-0 right-0 z-40 flex items-center justify-between gap-3 px-4 py-3 bg-background/95 backdrop-blur-sm max-w-2xl mx-auto transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
           <Button 
             size="sm" 
             variant="outline"
@@ -733,8 +733,8 @@ const Trade = () => {
                 </Button>
               </div>
 
-              {/* Category Tags */}
-              {!showSavedOnly && (searchValue || selectedCategories.length > 0) && (
+              {/* Category Tags - Always Show Below Search */}
+              {!showSavedOnly && (
                 <div className="bg-muted/50 rounded-xl p-3 mb-4 max-h-48 overflow-y-auto">
                   <div className="flex flex-wrap gap-2">
                     {categories.map((category) => {
