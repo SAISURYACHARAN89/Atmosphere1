@@ -7,8 +7,6 @@ type AppMode = "left" | "right";
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [lastLeftPage, setLastLeftPage] = useState("/");
-  const [lastRightPage, setLastRightPage] = useState("/launch");
 
   // Check if we're on a company profile that was navigated from home or reels
   const fromPath = location.state?.from;
@@ -20,6 +18,14 @@ const BottomNav = () => {
   
   const appMode: AppMode = rightModePages.includes(location.pathname) ? "right" : "left";
 
+  // Initialize with current page if it matches a mode, otherwise use defaults
+  const [lastLeftPage, setLastLeftPage] = useState(() => {
+    return leftModePages.includes(location.pathname) ? location.pathname : "/";
+  });
+  const [lastRightPage, setLastRightPage] = useState(() => {
+    return rightModePages.includes(location.pathname) ? location.pathname : "/launch";
+  });
+
   // Track the last visited page for each mode
   useEffect(() => {
     if (leftModePages.includes(location.pathname)) {
@@ -27,7 +33,7 @@ const BottomNav = () => {
     } else if (rightModePages.includes(location.pathname)) {
       setLastRightPage(location.pathname);
     }
-  }, [location.pathname]);
+  }, [location.pathname, leftModePages, rightModePages]);
   
   const leftModeTabs = [
     { id: "home", icon: Home, label: "Home", path: "/" },
