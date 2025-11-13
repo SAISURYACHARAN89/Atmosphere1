@@ -246,7 +246,7 @@ const CompanyProfile = () => {
               </Avatar>
               
               <div className="flex-1 pt-1">
-                <h2 className="font-normal text-sm mb-1">{company.name}</h2>
+                <h2 className="font-normal text-sm mb-1.5">{company.name}</h2>
                 
                 <div className="flex gap-6 text-xs">
                   <div className="text-center">
