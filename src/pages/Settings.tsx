@@ -45,8 +45,7 @@ const Settings = () => {
   const [connectEnabled, setConnectEnabled] = useState(true);
   
   // Content Preferences
-  const [keywords, setKeywords] = useState<string[]>(["AI", "Technology", "Startups"]);
-  const [currentKeyword, setCurrentKeyword] = useState("");
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(["AI", "Technology", "Startups"]);
 
   const handleSaveName = () => {
     toast.success("Name updated successfully");
@@ -82,23 +81,20 @@ const Settings = () => {
     setPhoneCode("");
   };
 
-  const handleAddKeyword = () => {
-    if (currentKeyword.trim() && !keywords.includes(currentKeyword.trim())) {
-      setKeywords([...keywords, currentKeyword.trim()]);
-      setCurrentKeyword("");
-    }
+  const handleToggleFilter = (filter: string) => {
+    setSelectedFilters(prev => 
+      prev.includes(filter) 
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
   };
 
-  const handleRemoveKeyword = (keyword: string) => {
-    setKeywords(keywords.filter((k) => k !== keyword));
-  };
-
-  const handleKeywordKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddKeyword();
-    }
-  };
+  const availableFilters = [
+    { category: "Industry", items: ["AI", "SaaS", "FinTech", "HealthTech", "EdTech", "E-commerce"] },
+    { category: "Stage", items: ["Seed", "Series A", "Series B", "Growth", "Pre-IPO"] },
+    { category: "Topic", items: ["Technology", "Startups", "Funding", "Marketing", "Product", "Design"] },
+    { category: "Location", items: ["San Francisco", "New York", "London", "Berlin", "Singapore", "Remote"] },
+  ];
 
   const SettingItem = ({ icon: Icon, title, subtitle, onClick, showArrow = true }: any) => (
     <button
@@ -487,66 +483,48 @@ const Settings = () => {
 
       {/* Content Preferences Drawer */}
       <Drawer open={preferencesDrawerOpen} onOpenChange={setPreferencesDrawerOpen}>
-        <DrawerContent className="h-[60vh] md:max-w-lg md:mx-auto">
+        <DrawerContent className="h-[70vh] md:max-w-lg md:mx-auto">
           <DrawerHeader>
-            <DrawerTitle>Content Preferences</DrawerTitle>
-            <DrawerDescription>Add keywords to filter your feed</DrawerDescription>
+            <DrawerTitle>Content Filters</DrawerTitle>
+            <DrawerDescription>
+              {selectedFilters.length} {selectedFilters.length === 1 ? 'filter' : 'filters'} selected
+            </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 py-6 space-y-6 overflow-y-auto">
-            <div className="space-y-2">
-              <Label htmlFor="keyword">Add Keyword</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="keyword"
-                  value={currentKeyword}
-                  onChange={(e) => setCurrentKeyword(e.target.value)}
-                  onKeyPress={handleKeywordKeyPress}
-                  placeholder="Enter keyword (e.g., AI, SaaS)"
-                  className="h-12"
-                />
-                <Button 
-                  onClick={handleAddKeyword}
-                  className="h-12 px-6"
-                  disabled={!currentKeyword.trim()}
-                >
-                  Add
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Press Enter or click Add to include keyword
-              </p>
-            </div>
-
-            {/* Keywords Display */}
-            {keywords.length > 0 && (
-              <div className="space-y-3">
-                <Label>Active Keywords</Label>
-                <div className="flex flex-wrap gap-2">
-                  {keywords.map((keyword, index) => (
-                    <div
-                      key={index}
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary border border-primary/20"
-                    >
-                      <span className="text-sm font-medium">{keyword}</span>
+            {availableFilters.map((filterGroup, groupIndex) => (
+              <div key={groupIndex} className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                  {filterGroup.category}
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {filterGroup.items.map((filter, index) => {
+                    const isSelected = selectedFilters.includes(filter);
+                    return (
                       <button
-                        onClick={() => handleRemoveKeyword(keyword)}
-                        className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                        key={index}
+                        onClick={() => handleToggleFilter(filter)}
+                        className={`p-3 rounded-lg border text-left transition-all ${
+                          isSelected
+                            ? 'bg-primary/10 border-primary text-primary font-medium'
+                            : 'bg-card border-border/50 text-foreground hover:bg-muted/50'
+                        }`}
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <span className="text-sm">{filter}</span>
                       </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
-            )}
-
-            {keywords.length === 0 && (
-              <div className="text-center py-8 bg-muted/30 rounded-lg">
-                <p className="text-sm text-muted-foreground">No keywords added yet</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Add keywords to personalize your content feed
-                </p>
-              </div>
+            ))}
+            
+            {selectedFilters.length > 0 && (
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedFilters([])}
+                className="w-full"
+              >
+                Clear All Filters
+              </Button>
             )}
           </div>
         </DrawerContent>
