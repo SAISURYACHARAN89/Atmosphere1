@@ -197,3 +197,22 @@
     animation: pulse-glow 2s ease-in-out infinite;
   }
 }
+
+@layer utilities {
+  /* Top Bar State Classes */
+  .top-bar-visible .top-bar-hidden\:pt-0 {
+    padding-top: 0;
+  }
+
+  .top-bar-visible .top-bar-visible\:pt-14 {
+    padding-top: 3.5rem;
+  }
+
+  .top-bar-hidden .top-bar-hidden\:pt-0 {
+    padding-top: 0;
+  }
+
+  .top-bar-hidden .top-bar-visible\:pt-14 {
+    padding-top: 0;
+  }
+}

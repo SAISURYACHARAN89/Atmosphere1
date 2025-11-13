@@ -442,7 +442,7 @@ const Trade = () => {
     <div className="min-h-screen bg-background pb-16">
       <TopBar />
       
-      <main className="pt-14 max-w-2xl mx-auto">
+      <main className="max-w-2xl mx-auto transition-[padding] duration-500 ease-out top-bar-hidden:pt-0 top-bar-visible:pt-14">
         {/* Compact Buy/Sell Buttons at Top */}
         <div className={`fixed top-14 left-0 right-0 z-40 flex items-center justify-between gap-3 px-4 py-3 bg-background/95 backdrop-blur-sm max-w-2xl mx-auto transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
           <Button 

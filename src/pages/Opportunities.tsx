@@ -474,7 +474,7 @@ const Opportunities = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20 pt-14">
+    <div className="min-h-screen bg-background pb-20 transition-[padding] duration-500 ease-out top-bar-hidden:pt-0 top-bar-visible:pt-14">
       <TopBar />
       
       {/* Main Content */}

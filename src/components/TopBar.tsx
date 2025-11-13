@@ -27,6 +27,22 @@ const TopBar = () => {
     setIsVisible(!isSecondMode);
   }, [isSecondMode]);
 
+  // Update document body class for padding control
+  useEffect(() => {
+    if (isSecondMode) {
+      if (isVisible) {
+        document.body.classList.add('top-bar-visible');
+        document.body.classList.remove('top-bar-hidden');
+      } else {
+        document.body.classList.remove('top-bar-visible');
+        document.body.classList.add('top-bar-hidden');
+      }
+    } else {
+      document.body.classList.add('top-bar-visible');
+      document.body.classList.remove('top-bar-hidden');
+    }
+  }, [isVisible, isSecondMode]);
+
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;

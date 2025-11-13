@@ -152,7 +152,7 @@ const Launch = () => {
     <div className="min-h-screen bg-background">
       <TopBar />
 
-      <main className="pt-14 pb-16">
+      <main className="pb-16 transition-[padding] duration-500 ease-out top-bar-hidden:pt-0 top-bar-visible:pt-14">
         <div className="max-w-2xl mx-auto px-4 py-6">
           {/* Startup Launches Section */}
           <div className="space-y-4">

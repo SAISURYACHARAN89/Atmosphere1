@@ -86,7 +86,7 @@ const Meetings = () => {
     <div className="min-h-screen bg-background pb-16">
       <TopBar />
 
-      <main className="pt-14 max-w-2xl mx-auto">
+      <main className="max-w-2xl mx-auto transition-[padding] duration-500 ease-out top-bar-hidden:pt-0 top-bar-visible:pt-14">
         <div className="p-4 space-y-4">
           {/* Launch Meeting Section */}
           <div>
