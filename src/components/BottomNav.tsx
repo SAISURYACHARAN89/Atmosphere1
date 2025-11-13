@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Rocket, TrendingUp, Film, User, Search, Briefcase, Calendar } from "lucide-react";
+import { Home, Rocket, TrendingUp, Film, User, Search, Briefcase, Calendar, Heart, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 
 type AppMode = "left" | "right";
@@ -38,6 +38,8 @@ const BottomNav = () => {
   const leftModeTabs = [
     { id: "home", icon: Home, label: "Home", path: "/" },
     { id: "search", icon: Search, label: "Search", path: "/search" },
+    { id: "likes", icon: Heart, label: "Likes", path: "/notifications" },
+    { id: "messages", icon: MessageCircle, label: "Messages", path: "/messages" },
     { id: "reels", icon: Film, label: "Reels", path: "/reels" },
     { id: "profile", icon: User, label: "Profile", path: "/profile" },
   ];
@@ -45,6 +47,8 @@ const BottomNav = () => {
   const rightModeTabs = [
     { id: "launch", icon: Rocket, label: "Launch", path: "/launch" },
     { id: "trade", icon: TrendingUp, label: "Trade", path: "/trade" },
+    { id: "likes", icon: Heart, label: "Likes", path: "/notifications" },
+    { id: "messages", icon: MessageCircle, label: "Messages", path: "/messages" },
     { id: "opportunities", icon: Briefcase, label: "Opportunities", path: "/opportunities" },
     { id: "meetings", icon: Calendar, label: "Meetings", path: "/meetings" },
   ];
@@ -63,11 +67,6 @@ const BottomNav = () => {
       navigate(lastLeftPage);
     }
   };
-
-  const allTabs = [
-    ...leftModeTabs,
-    ...rightModeTabs,
-  ];
 
   return (
     <>
@@ -148,9 +147,10 @@ const BottomNav = () => {
       </nav>
 
       {/* iPad/Desktop left sidebar */}
-      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-20 bg-background/80 backdrop-blur-lg border-r border-border/50 z-50 shadow-lg">
+      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-20 bg-background/80 backdrop-blur-lg z-50">
         <div className="flex flex-col items-center justify-center gap-6 w-full py-4">
-          {allTabs.map((tab) => {
+          {/* First 2 tabs */}
+          {tabs.slice(0, 2).map((tab) => {
             const Icon = tab.icon;
             const isActive = isCompanyProfile && fromPath
               ? tab.path === fromPath
@@ -177,10 +177,39 @@ const BottomNav = () => {
             );
           })}
 
+          {/* Likes (3rd tab) */}
+          {tabs[2] && (() => {
+            const tab = tabs[2];
+            const Icon = tab.icon;
+            const isActive = isCompanyProfile && fromPath
+              ? tab.path === fromPath
+              : location.pathname === tab.path;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab)}
+                className="flex items-center justify-center transition-all duration-300 w-12 h-12"
+                aria-label={tab.label}
+              >
+                <Icon
+                  className={`transition-colors duration-300 ${
+                    isActive 
+                      ? 'text-white fill-white' 
+                      : 'text-muted-foreground'
+                  }`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  size={28}
+                  fill={isActive ? "currentColor" : "none"}
+                />
+              </button>
+            );
+          })()}
+
           {/* Mode toggle switch */}
           <button
             onClick={toggleMode}
-            className="flex items-center justify-center transition-all duration-300 mt-4"
+            className="flex items-center justify-center transition-all duration-300"
             aria-label="Toggle mode"
           >
             <div className="relative w-14 h-7 bg-muted rounded-full p-1">
@@ -191,6 +220,63 @@ const BottomNav = () => {
               />
             </div>
           </button>
+
+          {/* Messages (4th tab) */}
+          {tabs[3] && (() => {
+            const tab = tabs[3];
+            const Icon = tab.icon;
+            const isActive = isCompanyProfile && fromPath
+              ? tab.path === fromPath
+              : location.pathname === tab.path;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab)}
+                className="flex items-center justify-center transition-all duration-300 w-12 h-12"
+                aria-label={tab.label}
+              >
+                <Icon
+                  className={`transition-colors duration-300 ${
+                    isActive 
+                      ? 'text-white fill-white' 
+                      : 'text-muted-foreground'
+                  }`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  size={28}
+                  fill={isActive ? "currentColor" : "none"}
+                />
+              </button>
+            );
+          })()}
+
+          {/* Last 2 tabs (Reels/Profile or Opportunities/Meetings) */}
+          {tabs.slice(4, 6).map((tab) => {
+            const Icon = tab.icon;
+            const isActive = isCompanyProfile && fromPath
+              ? tab.path === fromPath
+              : location.pathname === tab.path;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab)}
+                className="flex items-center justify-center transition-all duration-300 w-12 h-12"
+                aria-label={tab.label}
+              >
+                <Icon
+                  className={`transition-colors duration-300 ${
+                    isActive 
+                      ? 'text-white fill-white' 
+                      : 'text-muted-foreground'
+                  }`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                  size={28}
+                  fill={isActive ? "currentColor" : "none"}
+                />
+              </button>
+            );
+          })}
         </div>
       </nav>
     </>

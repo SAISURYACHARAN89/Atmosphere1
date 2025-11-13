@@ -34,8 +34,8 @@ const TopBar = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 transition-transform duration-500 ease-out ${isVisible || isTradePage ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
-        {/* Left side - Likes or Back Button */}
-        <div className="flex items-center gap-2">
+        {/* Left side - Likes or Back Button (mobile only) */}
+        <div className="flex items-center gap-2 md:hidden">
           {isCompanyProfile && fromPath ? (
             <button 
               onClick={() => navigate(fromPath)}
@@ -61,8 +61,8 @@ const TopBar = () => {
           </h1>
         </div>
 
-        {/* Right Icons - Messages */}
-        <div className="flex items-center gap-2">
+        {/* Right Icons - Messages (mobile only) */}
+        <div className="flex items-center gap-2 md:hidden">
           {/* Messages with notification badge */}
           <button 
             onClick={() => navigate('/messages')}
