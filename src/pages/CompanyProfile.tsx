@@ -216,90 +216,213 @@ const CompanyProfile = () => {
     );
   }
 
+  const [activeSection, setActiveSection] = useState<'posts' | 'expand' | 'trades'>('posts');
+  const [showReels, setShowReels] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
-      <TopBar />
-      
+      {/* Instagram-style Header */}
+      <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-md z-50">
+        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
+          <button 
+            onClick={() => navigate(fromPath || "/")}
+            className="hover:opacity-70 transition-opacity"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <h1 className="font-semibold text-lg">{company.name}</h1>
+          <div className="w-6" />
+        </div>
+      </header>
+
       <main className="pt-14 pb-20">
-        <div className="max-w-2xl mx-auto">
-          {/* Profile Header with gradient background */}
-          <div className="relative bg-gradient-to-br from-primary/5 via-background to-background">
-            <div className="p-6 space-y-6">
-              {/* Avatar and Stats */}
-              <div className="flex items-start gap-4">
-                <Avatar className="h-28 w-28 ring-4 ring-background shadow-xl">
-                  <AvatarImage src={company.logo} alt={company.name} />
-                  <AvatarFallback className="text-2xl">{company.name[0]}</AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 space-y-3 pt-1">
-                  <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                      {company.name}
-                      {!company.isPublic && (
-                        <Lock className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-1">{company.tagline}</p>
-                  </div>
-                  
-                  {company.isPublic && (
-                    <div className="flex gap-8 text-sm">
-                      <button className="hover:opacity-70 transition-opacity">
-                        <div className="font-bold text-base">{company.followers.toLocaleString()}</div>
-                        <div className="text-muted-foreground">followers</div>
-                      </button>
-                      <button className="hover:opacity-70 transition-opacity">
-                        <div className="font-bold text-base">{company.following}</div>
-                        <div className="text-muted-foreground">following</div>
-                      </button>
-                    </div>
-                  )}
+        <div className="max-w-2xl mx-auto bg-background">
+          {/* Profile Section */}
+          <div className="px-4 pt-5 pb-2">
+            <div className="flex items-start justify-between mb-5">
+              <Avatar className="h-20 w-20 border border-border">
+                <AvatarImage src={company.logo} alt={company.name} />
+                <AvatarFallback className="bg-muted text-foreground text-xl">{company.name[0]}</AvatarFallback>
+              </Avatar>
+              
+              <div className="flex gap-8 pt-2">
+                <div className="text-center">
+                  <div className="font-semibold text-base">342</div>
+                  <div className="text-xs text-muted-foreground">posts</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-base">{company.isPublic ? company.followers?.toLocaleString() || '0' : '0'}</div>
+                  <div className="text-xs text-muted-foreground">followers</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-base">{company.isPublic ? company.following?.toLocaleString() || '0' : '0'}</div>
+                  <div className="text-xs text-muted-foreground">following</div>
                 </div>
               </div>
+            </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <Button className="flex-1 h-11 font-semibold shadow-md hover:shadow-lg transition-shadow" variant="default">
-                  Follow
-                </Button>
-                <Button variant="outline" className="flex-1 h-11 font-semibold">
-                  <Send className="h-4 w-4 mr-2" />
-                  Message
-                </Button>
+            <div className="space-y-1 mb-3">
+              <h2 className="font-normal text-sm">{company.name}</h2>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-semibold">@{companyId}</p>
+                <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                  <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
+                </svg>
               </div>
+            </div>
 
-              {/* Company Description */}
-              <div className="space-y-3 text-sm">
-                <p className="text-foreground leading-relaxed">{company.description}</p>
+            {/* Follow and Message Buttons */}
+            <div className="flex gap-2 mb-3">
+              <Button className="flex-1 h-8 text-sm font-semibold" variant="default">
+                Follow
+              </Button>
+              <Button variant="outline" className="flex-1 h-8 text-sm font-semibold">
+                Message
+              </Button>
+            </div>
+
+            {/* Location and Bio */}
+            <div className="space-y-1 text-sm">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{company.location}</span>
               </div>
+              <p className="text-foreground/90 leading-relaxed">{company.description}</p>
             </div>
           </div>
 
-          {/* Company Details */}
-          <div className="px-6 py-4 bg-card/50">
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Building2 className="h-4 w-4 text-primary" />
-                <span>{company.industry}</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span>{company.location}</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span>Founded {company.founded}</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Users className="h-4 w-4 text-primary" />
-                <span>{company.teamSize} employees</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Globe className="h-4 w-4 text-primary" />
-                <a href={`https://${company.website}`} className="hover:text-primary transition-colors">{company.website}</a>
-              </div>
+          {/* Tabs Section */}
+          <div className="mt-3">
+            <div className="grid grid-cols-3 text-center">
+              <button
+                onClick={() => {
+                  if (activeSection === 'posts') {
+                    setShowReels(!showReels);
+                  } else {
+                    setActiveSection('posts');
+                  }
+                }}
+                className={`py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
+                  activeSection === 'posts'
+                    ? 'border-foreground text-foreground'
+                    : 'border-transparent text-muted-foreground'
+                }`}
+              >
+                {activeSection === 'posts' ? (showReels ? 'Reels' : 'Posts') : 'Posts'}
+                {activeSection === 'posts' && (
+                  <ChevronLeft 
+                    className={`h-3.5 w-3.5 transition-transform ${showReels ? '-rotate-90' : 'rotate-90'}`}
+                  />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveSection('expand')}
+                className={`py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeSection === 'expand'
+                    ? 'border-foreground text-foreground'
+                    : 'border-transparent text-muted-foreground'
+                }`}
+              >
+                Expand
+              </button>
+              <button
+                onClick={() => setActiveSection('trades')}
+                className={`py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeSection === 'trades'
+                    ? 'border-foreground text-foreground'
+                    : 'border-transparent text-muted-foreground'
+                }`}
+              >
+                Trades
+              </button>
             </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="px-4 py-4">
+            {activeSection === 'posts' && (
+              <div className="space-y-4">
+                {/* Grid of Posts/Reels */}
+                <div className="grid grid-cols-3 gap-1">
+                  {[1, 2, 3, 4, 5, 6].map((item) => (
+                    <div key={item} className="aspect-square bg-muted rounded-sm" />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'expand' && (
+              <div className="space-y-4">
+                {/* Company Details */}
+                <Card className="border-border/50">
+                  <div className="p-4 space-y-3">
+                    <h3 className="font-semibold text-sm">Company Details</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Building2 className="h-4 w-4 text-primary" />
+                        <span>{company.industry}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <span>Founded {company.founded}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Users className="h-4 w-4 text-primary" />
+                        <span>{company.teamSize} employees</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Globe className="h-4 w-4 text-primary" />
+                        <a href={`https://${company.website}`} className="hover:text-primary transition-colors">{company.website}</a>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Financial Overview */}
+                <Card className="border-border/50">
+                  <div className="p-4 space-y-3">
+                    <h3 className="font-semibold text-sm">Financial Overview</h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <div className="text-muted-foreground">Pre-Valuation</div>
+                        <div className="font-semibold">{company.preValuation}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Post-Valuation</div>
+                        <div className="font-semibold">{company.postValuation}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Funds Raised</div>
+                        <div className="font-semibold">{company.fundsRaised}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground">Goal</div>
+                        <div className="font-semibold">{company.fundingGoal}</div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Current Investors */}
+                <Card className="border-border/50">
+                  <div className="p-4 space-y-3">
+                    <h3 className="font-semibold text-sm">Current Investors</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {company.currentInvestors?.map((investor: string, idx: number) => (
+                        <Badge key={idx} variant="secondary">{investor}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {activeSection === 'trades' && (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">No trades available</p>
+              </div>
+            )}
           </div>
 
           {/* Divider */}
