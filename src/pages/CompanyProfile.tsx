@@ -246,28 +246,20 @@ const CompanyProfile = () => {
               </Avatar>
               
               <div className="flex-1 pt-1">
-                <div className="space-y-1 mb-2">
-                  <h2 className="font-normal text-sm">{company.name}</h2>
-                  <div className="flex items-center gap-1.5">
-                    <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                      <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                  </div>
-                </div>
+                <h2 className="font-normal text-sm mb-1">{company.name}</h2>
                 
                 <div className="flex gap-6 text-xs">
-                  <div>
-                    <span className="font-semibold">342</span>
-                    <span className="text-muted-foreground ml-1">posts</span>
+                  <div className="text-center">
+                    <div className="font-semibold">342</div>
+                    <div className="text-muted-foreground">posts</div>
                   </div>
-                  <div>
-                    <span className="font-semibold">{company.isPublic ? company.followers?.toLocaleString() || '0' : '0'}</span>
-                    <span className="text-muted-foreground ml-1">followers</span>
+                  <div className="text-center">
+                    <div className="font-semibold">{company.isPublic ? company.followers?.toLocaleString() || '0' : '0'}</div>
+                    <div className="text-muted-foreground">followers</div>
                   </div>
-                  <div>
-                    <span className="font-semibold">{company.isPublic ? company.following?.toLocaleString() || '0' : '0'}</span>
-                    <span className="text-muted-foreground ml-1">following</span>
+                  <div className="text-center">
+                    <div className="font-semibold">{company.isPublic ? company.following?.toLocaleString() || '0' : '0'}</div>
+                    <div className="text-muted-foreground">following</div>
                   </div>
                 </div>
               </div>
