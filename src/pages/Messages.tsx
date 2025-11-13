@@ -1,7 +1,8 @@
-import { User, Plus, ArrowLeft } from "lucide-react";
+import { User, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import BottomNav from "@/components/BottomNav";
 
 type TabType = "all" | "groups";
 
@@ -83,22 +84,21 @@ const Messages = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with Back Button */}
-      <div className="fixed top-0 left-0 right-0 bg-background border-b border-border z-50">
-        <div className="max-w-2xl mx-auto flex items-center px-4 h-14">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-muted/50 rounded-lg transition-colors"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-6 h-6 text-foreground" />
-          </button>
-          <h1 className="text-lg font-semibold ml-4">Messages</h1>
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 bg-background z-50">
+        <div className="max-w-2xl mx-auto flex items-center justify-center px-4 h-14">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-lg font-semibold">johnanderson</h1>
+            <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+              <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="fixed top-14 left-0 right-0 bg-background border-b border-border z-40">
+      <div className="fixed top-14 left-0 right-0 bg-background z-40">
         <div className="max-w-2xl mx-auto flex items-center px-4">
           <button
             onClick={() => setActiveTab("all")}
@@ -141,75 +141,61 @@ const Messages = () => {
       </div>
 
       {/* Content */}
-      <main className="pt-28 pb-8">
+      <main className="pt-28 pb-20">
         <div className="max-w-2xl mx-auto">
           {activeTab === "all" ? (
             // All Mail View
             <>
-              {messages.map((message, index) => (
-                <div key={message.id}>
-                  <button className="w-full px-4 py-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left">
-                    {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-success/30 flex items-center justify-center flex-shrink-0">
-                      <User className="w-6 h-6 text-success" strokeWidth={2} />
-                    </div>
+              {messages.map((message) => (
+                <button key={message.id} className="w-full px-4 py-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left">
+                  {/* Avatar */}
+                  <div className="w-12 h-12 rounded-full bg-success/30 flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-success" strokeWidth={2} />
+                  </div>
 
-                    {/* Message Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1">
-                        {message.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {message.preview}
-                      </p>
-                    </div>
-                  </button>
-
-                  {/* Separator - only show if not last item */}
-                  {index < messages.length - 1 && (
-                    <div className="mx-4">
-                      <div className="h-px bg-border" />
-                    </div>
-                  )}
-                </div>
+                  {/* Message Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground mb-1">
+                      {message.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {message.preview}
+                    </p>
+                  </div>
+                </button>
               ))}
             </>
           ) : (
             // Groups View
             <div className="px-4">
               {/* Groups List */}
-              {groups.map((group, index) => (
-                <div key={group.id}>
-                  <button className="w-full py-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left rounded-lg">
-                    {/* Group Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                      <User className="w-6 h-6 text-primary" strokeWidth={2} />
-                    </div>
+              {groups.map((group) => (
+                <button key={group.id} className="w-full py-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left rounded-lg">
+                  {/* Group Avatar */}
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-primary" strokeWidth={2} />
+                  </div>
 
-                    {/* Group Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground mb-1">
-                        {group.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {group.members} members
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {group.lastMessage}
-                      </p>
-                    </div>
-                  </button>
-
-                  {/* Separator - only show if not last item */}
-                  {index < groups.length - 1 && (
-                    <div className="h-px bg-border my-2" />
-                  )}
-                </div>
+                  {/* Group Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground mb-1">
+                      {group.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {group.members} members
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {group.lastMessage}
+                    </p>
+                  </div>
+                </button>
               ))}
             </div>
           )}
         </div>
       </main>
+      
+      <BottomNav />
     </div>
   );
 };
