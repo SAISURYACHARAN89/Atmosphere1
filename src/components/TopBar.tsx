@@ -1,4 +1,4 @@
-import { MessageCircle, ChevronLeft, Heart } from "lucide-react";
+import { MessageCircle, ChevronLeft, Heart, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -10,8 +10,13 @@ const TopBar = () => {
   const isCompanyProfile = location.pathname.startsWith('/company/');
   const isTradePage = location.pathname === '/trade';
   const fromPath = location.state?.from;
+  
+  // Check if we're in second mode (professional mode)
+  const isSecondMode = ['/launch', '/trade', '/opportunities', '/meetings'].includes(location.pathname);
+  
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [manuallyHidden, setManuallyHidden] = useState(false);
 
   // Don't render the top bar on search page
   if (isSearchPage) {
@@ -22,12 +27,22 @@ const TopBar = () => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY < lastScrollY && lastScrollY - currentScrollY > 5) {
-        // Scrolling up with threshold
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down and past 50px
-        setIsVisible(false);
+      if (isSecondMode) {
+        // In second mode, only hide on scroll up, don't auto-show
+        if (currentScrollY < lastScrollY && lastScrollY - currentScrollY > 5) {
+          // Scrolling up
+          setIsVisible(false);
+          setManuallyHidden(true);
+        }
+      } else {
+        // Normal mode behavior
+        if (currentScrollY < lastScrollY && lastScrollY - currentScrollY > 5) {
+          // Scrolling up with threshold
+          setIsVisible(true);
+        } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+          // Scrolling down and past 50px
+          setIsVisible(false);
+        }
       }
       
       setLastScrollY(currentScrollY);
@@ -35,11 +50,27 @@ const TopBar = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, [lastScrollY, isSecondMode]);
+
+  const handleToggleVisibility = () => {
+    setIsVisible(!isVisible);
+    setManuallyHidden(!isVisible);
+  };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 transition-transform duration-500 ease-out ${isVisible || isTradePage ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
+    <>
+      {/* Toggle button for second mode */}
+      {isSecondMode && !isVisible && (
+        <button
+          onClick={handleToggleVisibility}
+          className="fixed top-2 left-1/2 transform -translate-x-1/2 z-[60] bg-background/90 backdrop-blur-sm border border-border/50 rounded-full p-1.5 shadow-lg hover:bg-background transition-all duration-300 active:scale-95"
+        >
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        </button>
+      )}
+      
+      <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 transition-transform duration-500 ease-out ${isVisible || (isTradePage && !isSecondMode) ? 'translate-y-0' : '-translate-y-full'}`}>
+        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
         {/* Left side - Likes or Back Button (mobile and iPad) */}
         <div className="flex items-center gap-2 lg:hidden">
           {isCompanyProfile && fromPath ? (
@@ -85,6 +116,7 @@ const TopBar = () => {
         </div>
       </div>
     </header>
+    </>
   );
 };
 
