@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Clock, Users, Search, Filter } from "lucide-react";
+import { ChevronDown, Clock, Users, Search, Plus, Video } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 
 type MeetingType = "public" | "followers" | "private";
 
@@ -41,7 +40,8 @@ const Meetings = () => {
       title: "SaaS Growth Strategies", 
       industries: ["SaaS", "AI"], 
       startsIn: "15 mins",
-      eligible: true 
+      eligible: true,
+      participants: 24
     },
     { 
       id: 2, 
@@ -50,7 +50,8 @@ const Meetings = () => {
       title: "HealthTech Innovation Summit", 
       industries: ["HealthTech"], 
       startsIn: "1 hour",
-      eligible: true 
+      eligible: true,
+      participants: 18
     },
     { 
       id: 3, 
@@ -59,7 +60,8 @@ const Meetings = () => {
       title: "EV Market Disruption", 
       industries: ["EV", "CleanTech"], 
       startsIn: "2 hours",
-      eligible: true 
+      eligible: true,
+      participants: 31
     },
     { 
       id: 4, 
@@ -68,7 +70,8 @@ const Meetings = () => {
       title: "Blockchain for Enterprise", 
       industries: ["Blockchain", "Fintech"], 
       startsIn: "3 hours",
-      eligible: false 
+      eligible: false,
+      participants: 12
     },
   ];
 
@@ -84,112 +87,99 @@ const Meetings = () => {
       <TopBar />
 
       <main className="pt-14 max-w-2xl mx-auto">
-        <div className="px-4 py-4 space-y-4">
-          {/* Launch Meeting Button */}
-          <div className="space-y-3">
-            <Button
+        <div className="p-4 space-y-4">
+          {/* Launch Meeting Section */}
+          <div>
+            <button
               onClick={() => setLaunchExpanded(!launchExpanded)}
-              variant="outline"
-              className={`w-full h-11 text-base font-semibold border-2 rounded-xl transition-all ${
-                launchExpanded 
-                  ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" 
-                  : "bg-background border-border hover:bg-muted"
-              }`}
+              className="w-full flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-xl hover:from-primary/15 hover:to-primary/10 transition-all group"
             >
-              Launch meeting
-              <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${launchExpanded ? 'rotate-180' : ''}`} />
-            </Button>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                  <Plus className="w-5 h-5 text-primary" />
+                </div>
+                <span className="font-semibold text-foreground">Launch meeting</span>
+              </div>
+              <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${launchExpanded ? 'rotate-180' : ''}`} />
+            </button>
 
-            {/* Launch Meeting Expanded Form */}
+            {/* Launch Form */}
             {launchExpanded && (
-              <div className="border border-border rounded-xl p-4 space-y-3 bg-card animate-in slide-in-from-top-2 duration-300">
-                <div className="space-y-1.5">
-                  <Label htmlFor="meeting-title" className="text-sm">Meeting Title</Label>
-                  <Input id="meeting-title" placeholder="Enter meeting title" className="h-9" />
+              <div className="mt-3 p-4 bg-muted/30 border border-border rounded-xl space-y-3 animate-in slide-in-from-top-2 duration-200">
+                <div>
+                  <Label htmlFor="meeting-title" className="text-xs font-medium text-muted-foreground">Title</Label>
+                  <Input id="meeting-title" placeholder="Meeting title" className="mt-1 h-9 bg-background" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="meeting-date" className="text-sm">Date</Label>
-                    <Input 
-                      id="meeting-date" 
-                      type="date" 
-                      className="h-9" 
-                    />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="meeting-date" className="text-xs font-medium text-muted-foreground">Date</Label>
+                    <Input id="meeting-date" type="date" className="mt-1 h-9 bg-background" />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="meeting-time" className="text-sm">Time</Label>
-                    <Input 
-                      id="meeting-time" 
-                      type="time" 
-                      className="h-9" 
-                    />
+                  <div>
+                    <Label htmlFor="meeting-time" className="text-xs font-medium text-muted-foreground">Time</Label>
+                    <Input id="meeting-time" type="time" className="mt-1 h-9 bg-background" />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-sm">Meeting Type</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">Type</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-1">
                     <Button
                       variant={meetingType === "public" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setMeetingType("public")}
-                      className="justify-start h-8 text-xs"
+                      className="h-8 text-xs"
                     >
-                      <Users className="w-3 h-3 mr-1.5" />
                       Public
                     </Button>
                     <Button
                       variant={meetingType === "followers" ? "default" : "outline"}
                       size="sm"
                       onClick={() => setMeetingType("followers")}
-                      className="justify-start h-8 text-xs"
+                      className="h-8 text-xs"
                     >
-                      <Users className="w-3 h-3 mr-1.5" />
                       Followers
                     </Button>
+                    <Button
+                      variant={meetingType === "private" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setMeetingType("private")}
+                      className="h-8 text-xs"
+                    >
+                      Private
+                    </Button>
                   </div>
-                  <Button
-                    variant={meetingType === "private" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setMeetingType("private")}
-                    className="w-full justify-start h-8 text-xs"
-                  >
-                    <Users className="w-3 h-3 mr-1.5" />
-                    Private
-                  </Button>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-sm">Industries (up to 3)</Label>
-                  <ScrollArea className="h-24 border border-border rounded-lg p-2 bg-background">
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">Industries (max 3)</Label>
+                  <ScrollArea className="h-20 mt-1 border border-border rounded-md p-2 bg-background">
                     <div className="flex flex-wrap gap-1.5">
                       {industryTags.map(tag => (
-                        <Button
+                        <button
                           key={tag}
-                          size="sm"
-                          variant={selectedIndustries.includes(tag) ? "default" : "outline"}
                           onClick={() => toggleIndustry(tag)}
                           disabled={!selectedIndustries.includes(tag) && selectedIndustries.length >= 3}
-                          className="text-xs h-7 px-2"
+                          className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                            selectedIndustries.includes(tag)
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
                           {tag}
-                        </Button>
+                        </button>
                       ))}
                     </div>
                   </ScrollArea>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="max-participants" className="text-sm">Max: 50</Label>
-                  <Slider
-                    id="max-participants"
-                    defaultValue={[50]}
-                    max={100}
-                    min={5}
-                    step={5}
-                    className="w-full"
-                  />
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <Label className="text-xs font-medium text-muted-foreground">Max participants</Label>
+                    <span className="text-xs font-medium text-foreground">50</span>
+                  </div>
+                  <Slider defaultValue={[50]} max={100} min={5} step={5} />
                 </div>
 
                 <Button className="w-full h-9 text-sm">
@@ -199,79 +189,87 @@ const Meetings = () => {
             )}
           </div>
 
-          {/* Search Public Meetings Section */}
-          <div className="border border-border rounded-xl p-4 bg-card space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold">Search Public Meetings</h2>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Filter className="w-4 h-4" />
-              </Button>
+          {/* Public Meetings Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-foreground">Public Meetings</h2>
+              <div className="relative flex-1 max-w-xs ml-3">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className="h-8 pl-8 text-xs bg-muted/50 border-0"
+                />
+              </div>
             </div>
 
-            {/* Public Meetings List - Always Visible */}
-            <div className="space-y-2">
+            {/* Meetings List */}
+            <div className="space-y-2.5">
               {filteredMeetings.map(meeting => (
                 <div 
                   key={meeting.id}
-                  className="border border-border rounded-lg p-3 bg-background hover:bg-muted/50 transition-all"
+                  className="group bg-card border border-border rounded-lg p-3 hover:border-primary/30 hover:shadow-sm transition-all"
                 >
-                  <div className="flex items-start gap-2.5">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={meeting.hostAvatar} alt={meeting.host} />
+                  <div className="flex gap-3">
+                    <Avatar className="w-11 h-11 border-2 border-background ring-1 ring-border">
+                      <AvatarImage src={meeting.hostAvatar} />
                       <AvatarFallback>{meeting.host[0]}</AvatarFallback>
                     </Avatar>
 
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Hosted by {meeting.host}</p>
-                        <h3 className="font-semibold text-sm mt-0.5 leading-tight">{meeting.title}</h3>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm text-foreground leading-tight truncate">
+                            {meeting.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            by {meeting.host}
+                          </p>
+                        </div>
+                        <Button size="sm" className="h-7 px-3 text-xs flex-shrink-0">
+                          Join
+                        </Button>
                       </div>
 
-                      <div className="flex flex-wrap gap-1.5">
-                        {meeting.industries.map((industry, idx) => (
-                          <Badge key={idx} variant={idx === 0 ? "default" : "secondary"} className="text-xs h-5 px-2">
+                      <div className="flex items-center flex-wrap gap-1.5 mb-2">
+                        {meeting.industries.slice(0, 2).map((industry, idx) => (
+                          <span 
+                            key={idx}
+                            className="inline-flex items-center px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-md font-medium"
+                          >
                             {industry}
-                          </Badge>
+                          </span>
                         ))}
                         {meeting.eligible && (
-                          <Badge variant="outline" className="text-xs h-5 px-2 text-green-600 border-green-600">
+                          <span className="inline-flex items-center px-2 py-0.5 bg-green-500/10 text-green-600 text-xs rounded-md font-medium">
                             Eligible
-                          </Badge>
+                          </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>Starts in {meeting.startsIn}</span>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{meeting.startsIn}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" />
+                          <span>{meeting.participants}</span>
+                        </div>
                       </div>
                     </div>
-
-                    <Button size="sm" className="h-8 px-4 text-xs flex-shrink-0">
-                      Join
-                    </Button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Search Meeting Input */}
-            <div className="pt-1">
-              <Label htmlFor="search-meeting" className="text-xs font-medium mb-1.5 block">
-                Search Meeting
-              </Label>
-              <div className="flex gap-2">
-                <Input 
-                  id="search-meeting"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by title or host..."
-                  className="h-9 flex-1 text-sm"
-                />
-                <Button size="icon" className="h-9 w-9 flex-shrink-0">
-                  <Search className="w-4 h-4" />
-                </Button>
+            {filteredMeetings.length === 0 && (
+              <div className="text-center py-12">
+                <Video className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground">No meetings found</p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
