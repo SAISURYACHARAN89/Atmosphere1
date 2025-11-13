@@ -22,7 +22,6 @@ const Settings = () => {
   const [phoneDrawerOpen, setPhoneDrawerOpen] = useState(false);
   
   // Other Dialogs
-  const [savedContentOpen, setSavedContentOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -169,7 +168,7 @@ const Settings = () => {
                 icon={Bookmark}
                 title="Saved Content"
                 subtitle="Access your saved posts and startups"
-                onClick={() => setSavedContentOpen(true)}
+                onClick={() => navigate("/saved-content")}
               />
               <Separator />
               <SettingItem
@@ -446,65 +445,6 @@ const Settings = () => {
           </div>
         </DrawerContent>
       </Drawer>
-
-      {/* Saved Content Dialog */}
-      <Dialog open={savedContentOpen} onOpenChange={setSavedContentOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Saved Content</DialogTitle>
-            <DialogDescription>Your saved items across different categories</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 pt-4">
-            {/* Sell Ads */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Sell Ads</h3>
-              </div>
-              <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
-                <ShoppingBag className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No saved sell ads yet</p>
-              </div>
-            </div>
-
-            {/* Company Cards */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Company Cards</h3>
-              </div>
-              <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
-                <Briefcase className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No saved company cards yet</p>
-              </div>
-            </div>
-
-            {/* Reels */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Play className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Reels</h3>
-              </div>
-              <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
-                <Play className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No saved reels yet</p>
-              </div>
-            </div>
-
-            {/* Posts */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Posts</h3>
-              </div>
-              <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
-                <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No saved posts yet</p>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Recent Activity Dialog */}
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>

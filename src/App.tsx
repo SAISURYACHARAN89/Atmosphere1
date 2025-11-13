@@ -22,6 +22,11 @@ import Opportunities from "./pages/Opportunities";
 import Meetings from "./pages/Meetings";
 import Notifications from "./pages/Notifications";
 import Dashboard from "./pages/Dashboard";
+import SavedContent from "./pages/SavedContent";
+import SavedReels from "./pages/SavedReels";
+import SavedSellAds from "./pages/SavedSellAds";
+import SavedPosts from "./pages/SavedPosts";
+import SavedCompanyCards from "./pages/SavedCompanyCards";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +54,11 @@ const App = () => (
           <Route path="/assets" element={<Assets />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/saved-content" element={<SavedContent />} />
+          <Route path="/saved/reels" element={<SavedReels />} />
+          <Route path="/saved/sell-ads" element={<SavedSellAds />} />
+          <Route path="/saved/posts" element={<SavedPosts />} />
+          <Route path="/saved/company-cards" element={<SavedCompanyCards />} />
           <Route path="/company/:companyId" element={<CompanyProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
