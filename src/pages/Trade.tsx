@@ -333,7 +333,6 @@ const portfolio = [
 
 const Trade = () => {
   const navigate = useNavigate();
-  const isVerified = localStorage.getItem("isVerified") === "true";
   const userMode = localStorage.getItem("userMode");
   const [activeView, setActiveView] = useState<'buy' | 'sell'>('buy');
   const [expandedBuyId, setExpandedBuyId] = useState<number | null>(null);
@@ -438,31 +437,6 @@ const Trade = () => {
     );
   };
 
-  // Verification Block Component
-  const VerificationBlock = () => (
-    <div className="px-4 py-8">
-      <Card className="border-orange-500/50">
-        <CardContent className="py-12 text-center space-y-4">
-          <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center">
-            <AlertCircle className="h-8 w-8 text-orange-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              Verification Required
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {userMode === "startup" 
-                ? "Get your startup verified to access trading features and showcase your equity to investors"
-                : "Verify your investor account to access buy/sell trading features and view all opportunities"}
-            </p>
-          </div>
-          <Button className="mt-4">
-            Start Verification Process
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -498,11 +472,6 @@ const Trade = () => {
         </div>
 
         <div className="pt-[52px]">
-        {/* Show verification block for unverified users on buy/sell */}
-        {!isVerified && (activeView === 'buy' || activeView === 'sell') ? (
-          <VerificationBlock />
-        ) : (
-          <>
           {activeView === 'sell' ? (
           /* Selling Page - Portfolio View */
           <div className="px-4 py-6">
@@ -1193,16 +1162,14 @@ const Trade = () => {
                             className="p-2"
                           >
                             <Bookmark className="w-4 h-4 fill-primary text-primary" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
             </div>
-          </ScrollArea>
-        )}
-        </>
+          )}
+        </div>
+      </ScrollArea>
         )}
         </div>
       </main>

@@ -24,7 +24,6 @@ interface Investment {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const isVerified = localStorage.getItem("isVerified") === "true";
   const userName = localStorage.getItem("userName") || "John";
   const userId = localStorage.getItem("userId") || "john";
   const [activeSection, setActiveSection] = useState<'posts' | 'expand' | 'trades'>('posts');
@@ -186,9 +185,7 @@ const Profile = () => {
                   <h1 className="text-base font-semibold text-foreground truncate">
                     {investorData.name}
                   </h1>
-                  {isVerified && (
-                    <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                  )}
+                  <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -308,24 +305,6 @@ const Profile = () => {
 
             {activeSection === 'expand' && (
               <div className="space-y-4">
-                {!isVerified ? (
-                  <Card>
-                    <CardContent className="py-6 text-center space-y-3">
-                      <div className="w-12 h-12 mx-auto bg-orange-100 rounded-full flex items-center justify-center">
-                        <XCircle className="h-6 w-6 text-orange-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-foreground mb-1">
-                          Portfolio Not Visible
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          Verify your account to showcase your portfolio to others
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <>
                     {/* Investor Overview */}
                     <div className="space-y-3">
                       <h3 className="text-base font-semibold text-foreground">Investor Profile</h3>
@@ -560,8 +539,6 @@ const Profile = () => {
                         ))}
                       </div>
                     </div>
-                  </>
-                )}
               </div>
             )}
 

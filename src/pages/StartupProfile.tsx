@@ -19,7 +19,6 @@ interface Milestone {
 
 const StartupProfile = () => {
   const navigate = useNavigate();
-  const isVerified = localStorage.getItem("isVerified") === "true";
   const userName = localStorage.getItem("userName") || "Airbound";
   const userId = localStorage.getItem("userId") || "airbound";
 
@@ -143,9 +142,7 @@ const StartupProfile = () => {
                   <h1 className="text-base font-semibold text-foreground truncate">
                     {startupData.name}
                   </h1>
-                  {isVerified && (
-                    <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                  )}
+                  <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
                 </div>
 
                 {/* Stats Row - Instagram Style */}
@@ -196,23 +193,6 @@ const StartupProfile = () => {
 
           {/* Tabbed Content Section */}
           <div className="mt-6">
-            {!isVerified ? (
-              <Card className="mx-4">
-                <CardContent className="py-8 text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center">
-                    <Target className="h-8 w-8 text-orange-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Company Portfolio Not Available
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Get verified to display your company's equity distribution and valuation
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
               <Tabs defaultValue="overview" className="w-full">
                 <TabsList className="w-full grid grid-cols-2 mb-6">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -357,12 +337,11 @@ const StartupProfile = () => {
                           {formatDate(milestone.date)}
                         </div>
                       </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-              </Tabs>
-            )}
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+            </Tabs>
           </div>
         </div>
       </main>
