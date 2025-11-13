@@ -1,8 +1,13 @@
-import { User, Plus } from "lucide-react";
+import { User, Plus, ArrowLeft, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import BottomNav from "@/components/BottomNav";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type TabType = "all" | "groups";
 
@@ -22,6 +27,7 @@ interface Group {
 const Messages = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [filter, setFilter] = useState<string>("All");
 
   const messages: Message[] = [
     {
@@ -86,14 +92,22 @@ const Messages = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 bg-background z-50">
-        <div className="max-w-2xl mx-auto flex items-center justify-center px-4 h-14">
-          <div className="flex items-center gap-1.5">
+        <div className="max-w-2xl mx-auto flex items-center px-4 h-14">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-muted/50 rounded-lg transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-6 h-6 text-foreground" />
+          </button>
+          <div className="flex-1 flex items-center justify-center gap-1.5">
             <h1 className="text-lg font-semibold">johnanderson</h1>
             <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
               <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
             </svg>
           </div>
+          <div className="w-10" />
         </div>
       </div>
 
@@ -102,13 +116,36 @@ const Messages = () => {
         <div className="max-w-2xl mx-auto flex items-center px-4">
           <button
             onClick={() => setActiveTab("all")}
-            className="flex-1 py-3 text-center relative"
+            className="flex-1 py-3 relative flex items-center justify-center gap-1"
           >
             <span className={`font-semibold transition-colors ${
               activeTab === "all" ? "text-foreground" : "text-muted-foreground"
             }`}>
               All mail
             </span>
+            {activeTab === "all" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="ml-1 hover:bg-muted/50 rounded p-0.5">
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center">
+                  <DropdownMenuItem onClick={() => setFilter("All")}>
+                    All
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilter("Investors")}>
+                    Investors
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilter("Ad Replies")}>
+                    Ad Replies
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setFilter("Startup's")}>
+                    Startup's
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {activeTab === "all" && (
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-foreground" />
             )}
@@ -141,7 +178,7 @@ const Messages = () => {
       </div>
 
       {/* Content */}
-      <main className="pt-28 pb-20">
+      <main className="pt-28 pb-8">
         <div className="max-w-2xl mx-auto">
           {activeTab === "all" ? (
             // All Mail View
@@ -194,8 +231,6 @@ const Messages = () => {
           )}
         </div>
       </main>
-      
-      <BottomNav />
     </div>
   );
 };
