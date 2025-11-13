@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, AtSign, BarChart3, Bookmark, Activity, Settings as SettingsIcon, MessageSquare, Lock, Briefcase, Crown, HelpCircle, Info, ChevronRight, Mail, Phone as PhoneIcon, KeyRound, Play, ShoppingBag, FileText } from "lucide-react";
+import { ArrowLeft, User, AtSign, BarChart3, Bookmark, Activity, Settings as SettingsIcon, MessageSquare, Lock, Briefcase, Crown, HelpCircle, Info, ChevronRight, Mail, Phone as PhoneIcon, KeyRound, Play, ShoppingBag, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -23,7 +23,7 @@ const Settings = () => {
   
   // Other Dialogs
   const [activityOpen, setActivityOpen] = useState(false);
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [preferencesDrawerOpen, setPreferencesDrawerOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [connectOpen, setConnectOpen] = useState(false);
   const [portfolioOpen, setPortfolioOpen] = useState(false);
@@ -43,6 +43,10 @@ const Settings = () => {
   const [phoneCode, setPhoneCode] = useState("");
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [connectEnabled, setConnectEnabled] = useState(true);
+  
+  // Content Preferences
+  const [keywords, setKeywords] = useState<string[]>(["AI", "Technology", "Startups"]);
+  const [currentKeyword, setCurrentKeyword] = useState("");
 
   const handleSaveName = () => {
     toast.success("Name updated successfully");
@@ -76,6 +80,24 @@ const Settings = () => {
     toast.success("Phone updated successfully");
     setPhoneDrawerOpen(false);
     setPhoneCode("");
+  };
+
+  const handleAddKeyword = () => {
+    if (currentKeyword.trim() && !keywords.includes(currentKeyword.trim())) {
+      setKeywords([...keywords, currentKeyword.trim()]);
+      setCurrentKeyword("");
+    }
+  };
+
+  const handleRemoveKeyword = (keyword: string) => {
+    setKeywords(keywords.filter((k) => k !== keyword));
+  };
+
+  const handleKeywordKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddKeyword();
+    }
   };
 
   const SettingItem = ({ icon: Icon, title, subtitle, onClick, showArrow = true }: any) => (
@@ -182,7 +204,7 @@ const Settings = () => {
                 icon={SettingsIcon}
                 title="Content Preference"
                 subtitle="Customize your feed"
-                onClick={() => setPreferencesOpen(true)}
+                onClick={() => setPreferencesDrawerOpen(true)}
               />
             </div>
           </div>
@@ -463,48 +485,72 @@ const Settings = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Content Preferences Dialog */}
-      <Dialog open={preferencesOpen} onOpenChange={setPreferencesOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Content Preferences</DialogTitle>
-            <DialogDescription>Customize your feed and notifications</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Show startup posts</Label>
-                <p className="text-sm text-muted-foreground">Display startup updates in your feed</p>
+      {/* Content Preferences Drawer */}
+      <Drawer open={preferencesDrawerOpen} onOpenChange={setPreferencesDrawerOpen}>
+        <DrawerContent className="h-[60vh] md:max-w-lg md:mx-auto">
+          <DrawerHeader>
+            <DrawerTitle>Content Preferences</DrawerTitle>
+            <DrawerDescription>Add keywords to filter your feed</DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 py-6 space-y-6 overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="keyword">Add Keyword</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="keyword"
+                  value={currentKeyword}
+                  onChange={(e) => setCurrentKeyword(e.target.value)}
+                  onKeyPress={handleKeywordKeyPress}
+                  placeholder="Enter keyword (e.g., AI, SaaS)"
+                  className="h-12"
+                />
+                <Button 
+                  onClick={handleAddKeyword}
+                  className="h-12 px-6"
+                  disabled={!currentKeyword.trim()}
+                >
+                  Add
+                </Button>
               </div>
-              <Switch defaultChecked />
+              <p className="text-xs text-muted-foreground">
+                Press Enter or click Add to include keyword
+              </p>
             </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Show funding news</Label>
-                <p className="text-sm text-muted-foreground">See latest funding announcements</p>
+
+            {/* Keywords Display */}
+            {keywords.length > 0 && (
+              <div className="space-y-3">
+                <Label>Active Keywords</Label>
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((keyword, index) => (
+                    <div
+                      key={index}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary border border-primary/20"
+                    >
+                      <span className="text-sm font-medium">{keyword}</span>
+                      <button
+                        onClick={() => handleRemoveKeyword(keyword)}
+                        className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Show job postings</Label>
-                <p className="text-sm text-muted-foreground">View job opportunities in your feed</p>
+            )}
+
+            {keywords.length === 0 && (
+              <div className="text-center py-8 bg-muted/30 rounded-lg">
+                <p className="text-sm text-muted-foreground">No keywords added yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add keywords to personalize your content feed
+                </p>
               </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Show events</Label>
-                <p className="text-sm text-muted-foreground">See upcoming startup events</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       {/* Comments Settings Dialog */}
       <Dialog open={commentsOpen} onOpenChange={setCommentsOpen}>
