@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Filter, Building2, MapPin, Calendar, ExternalLink, Users, ChevronDown, ArrowLeft, X } from "lucide-react";
+import { Filter, Building2, MapPin, Calendar, ExternalLink, Users, ChevronDown, X, Briefcase, Mail } from "lucide-react";
+import TopBar from "@/components/TopBar";
+import BottomNav from "@/components/BottomNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -337,22 +338,88 @@ const eventsData: Event[] = [
   }
 ];
 
+interface CoFounder {
+  id: string;
+  name: string;
+  title: string;
+  expertise: string[];
+  location: string;
+  lookingFor: string;
+  bio: string;
+  availability: string;
+}
+
+const coFoundersData: CoFounder[] = [
+  {
+    id: "1",
+    name: "Alex Chen",
+    title: "Full-Stack Developer",
+    expertise: ["React", "Node.js", "AWS", "Product Development"],
+    location: "San Francisco, USA",
+    lookingFor: "Technical Co-founder for SaaS startup",
+    bio: "10+ years building scalable web applications. Looking to join an early-stage startup as a technical co-founder.",
+    availability: "Full-time"
+  },
+  {
+    id: "2",
+    name: "Sarah Johnson",
+    title: "Marketing & Growth Strategist",
+    expertise: ["Digital Marketing", "Growth Hacking", "Brand Strategy", "Content"],
+    location: "London, UK",
+    lookingFor: "Marketing Co-founder for B2B Tech",
+    bio: "Helped 3 startups achieve 10x growth. Seeking mission-driven B2B tech company.",
+    availability: "Part-time"
+  },
+  {
+    id: "3",
+    name: "Raj Patel",
+    title: "AI/ML Engineer",
+    expertise: ["Machine Learning", "Python", "Deep Learning", "Computer Vision"],
+    location: "Berlin, Germany",
+    lookingFor: "Co-founder for AI/ML startup",
+    bio: "PhD in AI, ex-Google. Building intelligent systems for healthcare and climate tech.",
+    availability: "Full-time"
+  },
+  {
+    id: "4",
+    name: "Emma Williams",
+    title: "Product Designer",
+    expertise: ["UX/UI Design", "User Research", "Design Systems", "Prototyping"],
+    location: "New York, USA",
+    lookingFor: "Design Co-founder for Consumer App",
+    bio: "Award-winning designer with passion for creating delightful user experiences.",
+    availability: "Full-time"
+  },
+  {
+    id: "5",
+    name: "Michael Zhang",
+    title: "Finance & Operations",
+    expertise: ["Financial Planning", "Operations", "Fundraising", "Strategy"],
+    location: "Singapore",
+    lookingFor: "Business Co-founder for FinTech",
+    bio: "Ex-investment banker turned operator. Raised $50M+ for startups.",
+    availability: "Full-time"
+  }
+];
+
 const Opportunities = () => {
-  const navigate = useNavigate();
   const [grantSector, setGrantSector] = useState<string>("All Sectors");
   const [grantType, setGrantType] = useState<string>("all");
   const [eventSector, setEventSector] = useState<string>("All Sectors");
   const [eventType, setEventType] = useState<string>("all");
   const [eventLocation, setEventLocation] = useState<string>("All Locations");
+  const [teamExpertise, setTeamExpertise] = useState<string>("All");
   
   const [grantTypeOpen, setGrantTypeOpen] = useState(false);
   const [grantSectorOpen, setGrantSectorOpen] = useState(false);
   const [eventTypeOpen, setEventTypeOpen] = useState(false);
   const [eventSectorOpen, setEventSectorOpen] = useState(false);
   const [eventLocationOpen, setEventLocationOpen] = useState(false);
+  const [teamExpertiseOpen, setTeamExpertiseOpen] = useState(false);
 
   const grantTypes = ["all", "grant", "incubator", "accelerator"];
   const eventTypes = ["all", "physical", "virtual", "hybrid", "e-summit", "conference", "workshop", "networking"];
+  const teamExpertiseOptions = ["All", "Technical", "Business", "Design", "Marketing", "Finance"];
 
   const filteredGrants = grantsData.filter(grant => {
     const sectorMatch = grantSector === "All Sectors" || grant.sector === grantSector;
@@ -365,6 +432,11 @@ const Opportunities = () => {
     const typeMatch = eventType === "all" || event.type === eventType;
     const locationMatch = eventLocation === "All Locations" || event.location.includes(eventLocation) || eventLocation.includes(event.location);
     return sectorMatch && typeMatch && locationMatch;
+  });
+
+  const filteredCoFounders = coFoundersData.filter(cofounder => {
+    if (teamExpertise === "All") return true;
+    return cofounder.expertise.some(exp => exp.toLowerCase().includes(teamExpertise.toLowerCase()));
   });
 
   const getGrantTypeBadge = (type: string) => {
@@ -402,33 +474,22 @@ const Opportunities = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border/50">
-        <div className="max-w-2xl mx-auto flex items-center gap-4 px-4 py-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="hover:bg-muted/80"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-semibold text-foreground">Opportunities</h1>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-background pb-20 pt-14">
+      <TopBar />
+      
       {/* Main Content */}
       <div className="max-w-2xl mx-auto px-4">
-        <Tabs defaultValue="grants" className="mt-4">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="grants" className="gap-2">
-              <Building2 className="w-4 h-4" />
+        {/* Three-Tab Header */}
+        <Tabs defaultValue="grants" className="mt-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6 h-12 bg-muted/50 rounded-2xl p-1">
+            <TabsTrigger value="grants" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">
               Grants
             </TabsTrigger>
-            <TabsTrigger value="events" className="gap-2">
-              <Users className="w-4 h-4" />
+            <TabsTrigger value="events" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">
               Events
+            </TabsTrigger>
+            <TabsTrigger value="team" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">
+              Team
             </TabsTrigger>
           </TabsList>
 
@@ -742,8 +803,124 @@ const Opportunities = () => {
               )}
             </div>
           </TabsContent>
+
+          {/* TEAM TAB */}
+          <TabsContent value="team" className="space-y-4">
+            {/* Team Filters */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Filter className="w-4 h-4" />
+                Filters
+              </div>
+              
+              {/* Expertise Filter */}
+              <Collapsible open={teamExpertiseOpen} onOpenChange={setTeamExpertiseOpen}>
+                <CollapsibleTrigger className="w-full">
+                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                    <span className="text-sm font-medium">Expertise: {teamExpertise}</span>
+                    <ChevronDown className={cn("w-4 h-4 transition-transform", teamExpertiseOpen && "rotate-180")} />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg mt-2">
+                    {teamExpertiseOptions.map(exp => (
+                      <button
+                        key={exp}
+                        onClick={() => {
+                          setTeamExpertise(exp);
+                          setTeamExpertiseOpen(false);
+                        }}
+                        className={cn(
+                          "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                          teamExpertise === exp
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-card hover:bg-muted border border-border"
+                        )}
+                      >
+                        {exp}
+                      </button>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Clear filters if any active */}
+              {teamExpertise !== "All" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setTeamExpertise("All")}
+                  className="w-full gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Clear filters
+                </Button>
+              )}
+            </div>
+
+            {/* Team Results */}
+            <div className="text-sm text-muted-foreground py-2">
+              {filteredCoFounders.length} {filteredCoFounders.length === 1 ? 'co-founder' : 'co-founders'} found
+            </div>
+
+            <div className="space-y-4">
+              {filteredCoFounders.map(cofounder => (
+                <div key={cofounder.id} className="border border-border rounded-xl p-4 space-y-3 hover:bg-muted/30 transition-colors bg-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">{cofounder.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{cofounder.title}</p>
+                    </div>
+                    <Badge variant="outline" className="whitespace-nowrap">
+                      {cofounder.availability}
+                    </Badge>
+                  </div>
+
+                  <p className="text-sm text-foreground/80">{cofounder.bio}</p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {cofounder.expertise.map((skill, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground pt-2 border-t border-border">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {cofounder.location}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Briefcase className="w-3 h-3" />
+                      {cofounder.lookingFor}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <Button variant="default" size="sm" className="flex-1 gap-2">
+                      <Mail className="w-3 h-3" />
+                      Connect
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      View Profile
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              {filteredCoFounders.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No co-founders found with current filters</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
+      
+      <BottomNav />
     </div>
   );
 };
