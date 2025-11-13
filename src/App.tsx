@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Opportunities from "./pages/Opportunities";
+import Meetings from "./pages/Meetings";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/search" element={<Search />} />
           <Route path="/launch" element={<Launch />} />
           <Route path="/opportunities" element={<Opportunities />} />
+          <Route path="/meetings" element={<Meetings />} />
           <Route path="/reels" element={<Reels />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/startup-profile" element={<StartupProfile />} />
