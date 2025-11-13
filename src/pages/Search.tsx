@@ -314,9 +314,9 @@ const Search = () => {
     <div className="min-h-screen bg-background pb-20">
       <TopBar />
       
-      <main className="pt-14 px-4 max-w-2xl mx-auto">
+      <main className="pt-4 px-4 max-w-2xl mx-auto">
         {/* Search Bar */}
-        <div className="mt-6 mb-4 relative">
+        <div className="mt-2 mb-4 relative">
           <div className="relative">
             <SearchIcon 
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground cursor-pointer"
