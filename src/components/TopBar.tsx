@@ -16,8 +16,8 @@ const TopBar = () => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      if (currentScrollY < lastScrollY) {
-        // Scrolling up
+      if (currentScrollY < lastScrollY && lastScrollY - currentScrollY > 5) {
+        // Scrolling up with threshold
         setIsVisible(true);
       } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
         // Scrolling down and past 50px
@@ -32,7 +32,7 @@ const TopBar = () => {
   }, [lastScrollY]);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b border-border/50 z-50 shadow-sm transition-transform duration-300 ${isVisible || isTradePage ? 'translate-y-0' : '-translate-y-full'}`}>
+    <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 transition-transform duration-500 ease-out ${isVisible || isTradePage ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
         {/* Left side - Search & Grants or Back Button */}
         <div className="flex items-center gap-2">
