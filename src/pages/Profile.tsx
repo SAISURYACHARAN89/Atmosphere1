@@ -236,14 +236,25 @@ const Profile = () => {
           <div className="mt-3">
             <div className="grid grid-cols-3 text-center">
               <button
-                onClick={() => setActiveSection('posts')}
-                className={`py-3 text-sm font-medium border-b-2 transition-colors ${
+                onClick={() => {
+                  if (activeSection === 'posts') {
+                    setShowReels(!showReels);
+                  } else {
+                    setActiveSection('posts');
+                  }
+                }}
+                className={`py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
                   activeSection === 'posts'
                     ? 'border-foreground text-foreground'
                     : 'border-transparent text-muted-foreground'
                 }`}
               >
-                Posts
+                {activeSection === 'posts' ? (showReels ? 'Reels' : 'Posts') : 'Posts'}
+                {activeSection === 'posts' && (
+                  <ChevronLeft 
+                    className={`h-3.5 w-3.5 transition-transform ${showReels ? '-rotate-90' : 'rotate-90'}`}
+                  />
+                )}
               </button>
               <button
                 onClick={() => setActiveSection('expand')}
@@ -272,21 +283,6 @@ const Profile = () => {
           <div className="px-4 py-4">
             {activeSection === 'posts' && (
               <div className="space-y-4">
-                {/* Posts/Reels Toggle Header */}
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => setShowReels(!showReels)}
-                    className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
-                  >
-                    <h3 className="text-sm font-semibold text-foreground">
-                      {showReels ? 'Reels' : 'Posts'}
-                    </h3>
-                    <ChevronLeft 
-                      className={`h-4 w-4 text-foreground transition-transform ${showReels ? '-rotate-90' : 'rotate-90'}`}
-                    />
-                  </button>
-                </div>
-
                 {/* Grid of Posts/Reels */}
                 <div className="grid grid-cols-3 gap-1">
                   {[1, 2, 3, 4, 5, 6].map((item) => (
