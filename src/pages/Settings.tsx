@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, AtSign, BarChart3, Bookmark, Activity, Settings as SettingsIcon, MessageSquare, Lock, Briefcase, Crown, HelpCircle, Info, ChevronRight, Mail, Phone as PhoneIcon, KeyRound, Play, ShoppingBag, FileText, X } from "lucide-react";
+import { ArrowLeft, User, AtSign, BarChart3, Bookmark, Activity, Settings as SettingsIcon, MessageSquare, Lock, Briefcase, Crown, HelpCircle, Info, ChevronRight, Mail, Phone as PhoneIcon, KeyRound, Play, ShoppingBag, FileText, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -46,6 +46,8 @@ const Settings = () => {
   
   // Content Preferences
   const [selectedFilters, setSelectedFilters] = useState<string[]>(["AI", "Technology", "Startups"]);
+  const [currentKeyword, setCurrentKeyword] = useState("");
+  const [showFilterOptions, setShowFilterOptions] = useState(false);
 
   const handleSaveName = () => {
     toast.success("Name updated successfully");
@@ -79,6 +81,24 @@ const Settings = () => {
     toast.success("Phone updated successfully");
     setPhoneDrawerOpen(false);
     setPhoneCode("");
+  };
+
+  const handleAddKeyword = () => {
+    if (currentKeyword.trim() && !selectedFilters.includes(currentKeyword.trim())) {
+      setSelectedFilters([...selectedFilters, currentKeyword.trim()]);
+      setCurrentKeyword("");
+    }
+  };
+
+  const handleRemoveFilter = (filter: string) => {
+    setSelectedFilters(selectedFilters.filter(f => f !== filter));
+  };
+
+  const handleKeywordKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddKeyword();
+    }
   };
 
   const handleToggleFilter = (filter: string) => {
@@ -485,46 +505,120 @@ const Settings = () => {
       <Drawer open={preferencesDrawerOpen} onOpenChange={setPreferencesDrawerOpen}>
         <DrawerContent className="h-[70vh] md:max-w-lg md:mx-auto">
           <DrawerHeader>
-            <DrawerTitle>Content Filters</DrawerTitle>
+            <DrawerTitle>Content Preferences</DrawerTitle>
             <DrawerDescription>
               {selectedFilters.length} {selectedFilters.length === 1 ? 'filter' : 'filters'} selected
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 py-6 space-y-6 overflow-y-auto">
-            {availableFilters.map((filterGroup, groupIndex) => (
-              <div key={groupIndex} className="space-y-3">
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                  {filterGroup.category}
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {filterGroup.items.map((filter, index) => {
-                    const isSelected = selectedFilters.includes(filter);
-                    return (
+            {/* Search Box with Filter Icon */}
+            <div className="space-y-2">
+              <Label htmlFor="keyword">Add Keywords</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="keyword"
+                  value={currentKeyword}
+                  onChange={(e) => setCurrentKeyword(e.target.value)}
+                  onKeyPress={handleKeywordKeyPress}
+                  placeholder="Type keyword and press Enter"
+                  className="h-12"
+                />
+                <Button 
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowFilterOptions(!showFilterOptions)}
+                  className="h-12 w-12 flex-shrink-0"
+                >
+                  <Filter className="h-5 w-5" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Type keywords or click the filter icon to select from options
+              </p>
+            </div>
+
+            {/* Selected Filters Display */}
+            {selectedFilters.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Active Filters</Label>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedFilters([])}
+                    className="text-xs h-auto py-1"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedFilters.map((filter, index) => (
+                    <div
+                      key={index}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary border border-primary/20"
+                    >
+                      <span className="text-sm font-medium">{filter}</span>
                       <button
-                        key={index}
-                        onClick={() => handleToggleFilter(filter)}
-                        className={`p-3 rounded-lg border text-left transition-all ${
-                          isSelected
-                            ? 'bg-primary/10 border-primary text-primary font-medium'
-                            : 'bg-card border-border/50 text-foreground hover:bg-muted/50'
-                        }`}
+                        onClick={() => handleRemoveFilter(filter)}
+                        className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
                       >
-                        <span className="text-sm">{filter}</span>
+                        <X className="h-3.5 w-3.5" />
                       </button>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-            
-            {selectedFilters.length > 0 && (
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedFilters([])}
-                className="w-full"
-              >
-                Clear All Filters
-              </Button>
+            )}
+
+            {/* Filter Options (shown when filter icon is clicked) */}
+            {showFilterOptions && (
+              <div className="space-y-6 pt-4 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Filter Options</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFilterOptions(false)}
+                    className="h-auto py-1"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {availableFilters.map((filterGroup, groupIndex) => (
+                  <div key={groupIndex} className="space-y-3">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {filterGroup.category}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {filterGroup.items.map((filter, index) => {
+                        const isSelected = selectedFilters.includes(filter);
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleToggleFilter(filter)}
+                            className={`p-3 rounded-lg border text-left transition-all ${
+                              isSelected
+                                ? 'bg-primary/10 border-primary text-primary font-medium'
+                                : 'bg-card border-border/50 text-foreground hover:bg-muted/50'
+                            }`}
+                          >
+                            <span className="text-sm">{filter}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedFilters.length === 0 && !showFilterOptions && (
+              <div className="text-center py-8 bg-muted/30 rounded-lg">
+                <p className="text-sm text-muted-foreground">No filters selected yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Type keywords or use the filter icon to add filters
+                </p>
+              </div>
             )}
           </div>
         </DrawerContent>
