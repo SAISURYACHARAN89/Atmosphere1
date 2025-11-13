@@ -149,8 +149,9 @@ const Profile = () => {
             <ChevronLeft className="h-5 w-5 text-foreground" />
           </button>
           
-          <h2 className="font-medium text-base text-foreground">
+          <h2 className="font-semibold text-base text-foreground flex items-center gap-1.5">
             {investorData.username.replace('@', '')}
+            <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
           </h2>
           
           <button className="p-2 hover:bg-muted/80 rounded-lg transition-colors">
@@ -180,12 +181,11 @@ const Profile = () => {
 
               {/* Name, Stats, and Menu */}
               <div className="flex-1 min-w-0">
-                {/* Name with verification and menu */}
+                {/* Name with menu */}
                 <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-sm font-semibold text-foreground truncate">
+                  <h1 className="text-sm font-normal text-foreground truncate">
                     {investorData.name}
                   </h1>
-                  <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
                   <Button
                     variant="ghost"
                     size="icon"
