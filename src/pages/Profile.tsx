@@ -275,19 +275,19 @@ const Profile = () => {
           <div className="px-4 py-4">
             {activeSection === 'posts' && (
               <div className="space-y-4">
-                {/* Posts/Reels Toggle */}
+                {/* Posts/Reels Toggle Header */}
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    {showReels ? 'Reels' : 'Posts'}
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => setShowReels(!showReels)}
-                    className="text-xs"
+                    className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
                   >
-                    Switch to {showReels ? 'Posts' : 'Reels'}
-                  </Button>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {showReels ? 'Reels' : 'Posts'}
+                    </h3>
+                    <ChevronLeft 
+                      className={`h-4 w-4 text-foreground transition-transform ${showReels ? '-rotate-90' : 'rotate-90'}`}
+                    />
+                  </button>
                 </div>
 
                 {/* Grid of Posts/Reels */}
