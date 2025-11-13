@@ -22,10 +22,9 @@ const Settings = () => {
   const [phoneDrawerOpen, setPhoneDrawerOpen] = useState(false);
   
   // Other Dialogs
-  const [activityOpen, setActivityOpen] = useState(false);
   const [preferencesDrawerOpen, setPreferencesDrawerOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [connectOpen, setConnectOpen] = useState(false);
+  const [commentsDrawerOpen, setCommentsDrawerOpen] = useState(false);
+  const [connectDrawerOpen, setConnectDrawerOpen] = useState(false);
   const [portfolioOpen, setPortfolioOpen] = useState(false);
   const [premiumOpen, setPremiumOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
@@ -41,8 +40,8 @@ const Settings = () => {
   const [emailCode, setEmailCode] = useState("");
   const [phone, setPhone] = useState("+1234567890");
   const [phoneCode, setPhoneCode] = useState("");
-  const [commentsEnabled, setCommentsEnabled] = useState(true);
-  const [connectEnabled, setConnectEnabled] = useState(true);
+  const [commentsSetting, setCommentsSetting] = useState("verified");
+  const [connectSetting, setConnectSetting] = useState("accepted");
   
   // Content Preferences
   const [selectedFilters, setSelectedFilters] = useState<string[]>(["AI", "Technology", "Startups"]);
@@ -210,13 +209,6 @@ const Settings = () => {
               />
               <Separator />
               <SettingItem
-                icon={Activity}
-                title="Recent Activity"
-                subtitle="See your recent interactions"
-                onClick={() => setActivityOpen(true)}
-              />
-              <Separator />
-              <SettingItem
                 icon={SettingsIcon}
                 title="Content Preference"
                 subtitle="Customize your feed"
@@ -233,14 +225,14 @@ const Settings = () => {
                 icon={MessageSquare}
                 title="Comments"
                 subtitle="Control who can comment on your posts"
-                onClick={() => setCommentsOpen(true)}
+                onClick={() => setCommentsDrawerOpen(true)}
               />
               <Separator />
               <SettingItem
                 icon={Lock}
                 title="Connect"
                 subtitle="Manage direct message permissions"
-                onClick={() => setConnectOpen(true)}
+                onClick={() => setConnectDrawerOpen(true)}
               />
             </div>
           </div>
@@ -484,23 +476,6 @@ const Settings = () => {
         </DrawerContent>
       </Drawer>
 
-      {/* Recent Activity Dialog */}
-      <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Recent Activity</DialogTitle>
-            <DialogDescription>Your recent interactions and engagements</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div className="text-center py-12 text-muted-foreground">
-              <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No recent activity</p>
-              <p className="text-sm mt-1">Your likes, comments, and shares will appear here</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Content Preferences Drawer */}
       <Drawer open={preferencesDrawerOpen} onOpenChange={setPreferencesDrawerOpen}>
         <DrawerContent className="h-[70vh] md:max-w-lg md:mx-auto">
@@ -624,79 +599,116 @@ const Settings = () => {
         </DrawerContent>
       </Drawer>
 
-      {/* Comments Settings Dialog */}
-      <Dialog open={commentsOpen} onOpenChange={setCommentsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Comment Settings</DialogTitle>
-            <DialogDescription>Control who can comment on your posts</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Allow comments</Label>
-                <p className="text-sm text-muted-foreground">Enable comments on your posts</p>
-              </div>
-              <Switch checked={commentsEnabled} onCheckedChange={setCommentsEnabled} />
-            </div>
-            <Separator />
+      {/* Comments Settings Drawer */}
+      <Drawer open={commentsDrawerOpen} onOpenChange={setCommentsDrawerOpen}>
+        <DrawerContent className="h-[60vh] md:max-w-lg md:mx-auto">
+          <DrawerHeader>
+            <DrawerTitle>Comment Settings</DrawerTitle>
+            <DrawerDescription>Control who can comment on your posts</DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 py-6 space-y-4 overflow-y-auto">
             <div className="space-y-3">
               <Label>Who can comment</Label>
               <div className="space-y-2">
-                <button className="w-full p-3 text-left rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                  <p className="font-medium text-sm">Everyone</p>
-                  <p className="text-xs text-muted-foreground">All users can comment</p>
+                <button 
+                  onClick={() => setCommentsSetting("all")}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    commentsSetting === "all"
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <p className="font-medium text-sm">All</p>
+                  <p className="text-xs text-muted-foreground">Everyone can comment</p>
                 </button>
-                <button className="w-full p-3 text-left rounded-lg border-2 border-primary bg-primary/5">
-                  <p className="font-medium text-sm">Connections only</p>
-                  <p className="text-xs text-muted-foreground">Only your connections can comment</p>
+                <button 
+                  onClick={() => setCommentsSetting("verified")}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    commentsSetting === "verified"
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <p className="font-medium text-sm">Only Verified</p>
+                  <p className="text-xs text-muted-foreground">Only verified users can comment</p>
                 </button>
-                <button className="w-full p-3 text-left rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                  <p className="font-medium text-sm">No one</p>
-                  <p className="text-xs text-muted-foreground">Disable comments on all posts</p>
+                <button 
+                  onClick={() => setCommentsSetting("none")}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    commentsSetting === "none"
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <p className="font-medium text-sm">None</p>
+                  <p className="text-xs text-muted-foreground">Disable all comments</p>
                 </button>
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
-      {/* Connect Settings Dialog */}
-      <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Connect Settings</DialogTitle>
-            <DialogDescription>Manage direct message permissions</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Allow messages</Label>
-                <p className="text-sm text-muted-foreground">Enable direct messages</p>
-              </div>
-              <Switch checked={connectEnabled} onCheckedChange={setConnectEnabled} />
-            </div>
-            <Separator />
+      {/* Connect Settings Drawer */}
+      <Drawer open={connectDrawerOpen} onOpenChange={setConnectDrawerOpen}>
+        <DrawerContent className="h-[60vh] md:max-w-lg md:mx-auto">
+          <DrawerHeader>
+            <DrawerTitle>Connect Settings</DrawerTitle>
+            <DrawerDescription>Manage direct message permissions</DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 py-6 space-y-4 overflow-y-auto">
             <div className="space-y-3">
               <Label>Who can message you</Label>
               <div className="space-y-2">
-                <button className="w-full p-3 text-left rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                  <p className="font-medium text-sm">Everyone</p>
-                  <p className="text-xs text-muted-foreground">All verified users can message you</p>
+                <button 
+                  onClick={() => setConnectSetting("all")}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    connectSetting === "all"
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <p className="font-medium text-sm">All</p>
+                  <p className="text-xs text-muted-foreground">Everyone can message you</p>
                 </button>
-                <button className="w-full p-3 text-left rounded-lg border-2 border-primary bg-primary/5">
-                  <p className="font-medium text-sm">Connections only</p>
-                  <p className="text-xs text-muted-foreground">Only your connections can message you</p>
+                <button 
+                  onClick={() => setConnectSetting("accepted")}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    connectSetting === "accepted"
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <p className="font-medium text-sm">After Connection Accepted</p>
+                  <p className="text-xs text-muted-foreground">Only after you accept their connection</p>
                 </button>
-                <button className="w-full p-3 text-left rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                  <p className="font-medium text-sm">No one</p>
-                  <p className="text-xs text-muted-foreground">Block all direct messages</p>
+                <button 
+                  onClick={() => setConnectSetting("verified")}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    connectSetting === "verified"
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <p className="font-medium text-sm">Verified</p>
+                  <p className="text-xs text-muted-foreground">Only verified users can message</p>
+                </button>
+                <button 
+                  onClick={() => setConnectSetting("investors")}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    connectSetting === "investors"
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border/50 hover:bg-muted/50'
+                  }`}
+                >
+                  <p className="font-medium text-sm">Investors</p>
+                  <p className="text-xs text-muted-foreground">Only verified investors can message</p>
                 </button>
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
 
       {/* Portfolio & KYC Dialog */}
       <Dialog open={portfolioOpen} onOpenChange={setPortfolioOpen}>
