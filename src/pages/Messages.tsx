@@ -152,13 +152,13 @@ const Messages = () => {
       </div>
 
       {/* Tabs */}
-      <div className="fixed top-14 left-0 right-0 bg-background z-40">
+      <div className="fixed top-14 left-0 right-0 bg-background z-40 border-b border-border/40">
         <div className="max-w-2xl mx-auto flex items-center px-4">
           <button
             onClick={() => setActiveTab("all")}
-            className="flex-1 py-3 relative flex items-center justify-center gap-1"
+            className="flex-1 py-3.5 relative flex items-center justify-center gap-1"
           >
-            <span className={`font-semibold transition-colors ${
+            <span className={`text-sm font-medium transition-colors ${
               activeTab === "all" ? "text-foreground" : "text-muted-foreground"
             }`}>
               All mail
@@ -166,11 +166,11 @@ const Messages = () => {
             {activeTab === "all" && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="ml-1 hover:bg-muted/50 rounded p-0.5">
+                  <button className="ml-1 hover:bg-muted/50 rounded p-0.5 transition-colors">
                     <ChevronDown className="w-4 h-4" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="center">
+                <DropdownMenuContent align="center" className="min-w-[140px]">
                   <DropdownMenuItem onClick={() => setFilter("All")}>
                     All
                   </DropdownMenuItem>
@@ -187,20 +187,20 @@ const Messages = () => {
               </DropdownMenu>
             )}
             {activeTab === "all" && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-foreground" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-0.5 bg-primary rounded-full" />
             )}
           </button>
           <button
             onClick={() => setActiveTab("groups")}
-            className="flex-1 py-3 text-center relative"
+            className="flex-1 py-3.5 text-center relative"
           >
-            <span className={`font-semibold transition-colors ${
+            <span className={`text-sm font-medium transition-colors ${
               activeTab === "groups" ? "text-foreground" : "text-muted-foreground"
             }`}>
               Groups
             </span>
             {activeTab === "groups" && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-0.5 bg-foreground" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-0.5 bg-primary rounded-full" />
             )}
           </button>
           
@@ -208,49 +208,52 @@ const Messages = () => {
       </div>
 
       {/* Content */}
-      <main className="pt-28 pb-8">
+      <main className="pt-[7.5rem] pb-8">
         <div className="max-w-2xl mx-auto">
           {activeTab === "all" ? (
             // All Mail View
-            <>
+            <div className="px-4 space-y-1">
               {messages.map((message) => (
-                <button key={message.id} className="w-full px-4 py-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left">
+                <button 
+                  key={message.id} 
+                  className="w-full px-4 py-3.5 flex items-center gap-3 hover:bg-muted/30 active:bg-muted/50 transition-all rounded-xl text-left group"
+                >
                   {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-success/30 flex items-center justify-center flex-shrink-0">
-                    <User className="w-6 h-6 text-success" strokeWidth={2} />
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0 group-hover:from-primary/30 group-hover:to-primary/20 transition-all">
+                    <User className="w-7 h-7 text-primary" strokeWidth={2.5} />
                   </div>
 
                   {/* Message Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground mb-1">
+                    <h3 className="font-semibold text-foreground mb-1.5 text-[15px]">
                       {message.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-sm text-muted-foreground truncate leading-relaxed">
                       {message.preview}
                     </p>
                   </div>
                 </button>
               ))}
-            </>
+            </div>
           ) : (
             // Groups View
-            <div className="px-4">
+            <div className="px-4 py-2">
               {/* Search Bar and Create Button */}
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-6 flex items-center gap-3">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-muted-foreground" />
                   <Input
                     placeholder="Search groups..."
                     value={groupSearch}
                     onChange={(e) => setGroupSearch(e.target.value)}
                     onFocus={() => setIsSearchFocused(true)}
                     onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                    className="pl-9 pr-9"
+                    className="h-11 pl-10 pr-10 rounded-xl border-border/60 focus:border-primary/40 transition-colors text-[15px]"
                   />
                   {groupSearch && (
                     <button
                       onClick={() => setGroupSearch("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted/50"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -259,7 +262,7 @@ const Messages = () => {
                 <Button
                   size="icon"
                   onClick={() => setShowCreateForm(!showCreateForm)}
-                  className="flex-shrink-0"
+                  className="h-11 w-11 flex-shrink-0 rounded-xl shadow-sm hover:shadow-md transition-all"
                 >
                   <Plus className="w-5 h-5" />
                 </Button>
@@ -267,66 +270,67 @@ const Messages = () => {
 
               {/* Create Group Form */}
               {showCreateForm && (
-                <div className="mb-4 p-4 bg-muted/30 rounded-lg space-y-3">
-                  <h3 className="font-semibold text-sm">Create New Group</h3>
+                <div className="mb-6 p-5 bg-gradient-to-br from-muted/30 to-muted/20 rounded-2xl space-y-4 border border-border/50 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-base">Create New Group</h3>
+                    <button 
+                      onClick={() => setShowCreateForm(false)}
+                      className="p-1.5 rounded-lg hover:bg-background/50 transition-colors"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
                   <Input
                     placeholder="Group name"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
+                    className="h-11 rounded-xl border-border/60 text-[15px]"
                   />
                   <Textarea
-                    placeholder="Description"
+                    placeholder="Description (optional)"
                     value={newGroupDescription}
                     onChange={(e) => setNewGroupDescription(e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[90px] rounded-xl border-border/60 text-[15px] resize-none"
                   />
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={newGroupType}
-                      onChange={(e) => setNewGroupType(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option>Public</option>
-                      <option>Private</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleCreateGroup} className="flex-1">
-                      Create Group
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowCreateForm(false)}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
+                  <select
+                    value={newGroupType}
+                    onChange={(e) => setNewGroupType(e.target.value)}
+                    className="flex h-11 w-full rounded-xl border border-border/60 bg-background px-4 py-2 text-[15px] focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
+                  >
+                    <option>Public</option>
+                    <option>Private</option>
+                  </select>
+                  <Button 
+                    onClick={handleCreateGroup} 
+                    className="w-full h-11 rounded-xl shadow-sm hover:shadow-md transition-all"
+                  >
+                    Create Group
+                  </Button>
                 </div>
               )}
 
               {/* Search Results or Groups List */}
               {isSearchFocused || groupSearch ? (
                 // Search Results
-                <div>
-                  <p className="text-sm text-muted-foreground mb-3 px-1">
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground mb-4 px-1 uppercase tracking-wide">
                     {groupSearch ? "Search Results" : "Suggested Groups"}
                   </p>
                   {filteredSearchGroups.map((group) => (
                     <button
                       key={group.id}
                       onClick={() => setSelectedGroup(group)}
-                      className="w-full py-3 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left rounded-lg"
+                      className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-muted/30 active:bg-muted/50 transition-all rounded-xl text-left group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <User className="w-6 h-6 text-primary" strokeWidth={2} />
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0 group-hover:from-primary/30 group-hover:to-primary/20 transition-all">
+                        <User className="w-7 h-7 text-primary" strokeWidth={2.5} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground mb-1">
+                        <h3 className="font-semibold text-foreground mb-1 text-[15px]">
                           {group.name}
                         </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {group.members} members
+                        <p className="text-xs text-muted-foreground font-medium">
+                          {group.members.toLocaleString()} members
                         </p>
                       </div>
                     </button>
@@ -334,29 +338,29 @@ const Messages = () => {
                 </div>
               ) : (
                 // Groups List
-                <>
+                <div className="space-y-2">
                   {groups.map((group) => (
                     <button
                       key={group.id}
-                      className="w-full py-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left rounded-lg"
+                      className="w-full px-4 py-4 flex items-center gap-4 hover:bg-muted/30 active:bg-muted/50 transition-all rounded-xl text-left group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                        <User className="w-6 h-6 text-primary" strokeWidth={2} />
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0 group-hover:from-primary/30 group-hover:to-primary/20 transition-all">
+                        <User className="w-7 h-7 text-primary" strokeWidth={2.5} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground mb-1">
+                        <h3 className="font-semibold text-foreground mb-1.5 text-[15px]">
                           {group.name}
                         </h3>
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {group.members} members
+                        <p className="text-xs text-muted-foreground mb-1.5 font-medium">
+                          {group.members.toLocaleString()} members
                         </p>
-                        <p className="text-sm text-muted-foreground truncate">
+                        <p className="text-sm text-muted-foreground truncate leading-relaxed">
                           {group.lastMessage}
                         </p>
                       </div>
                     </button>
                   ))}
-                </>
+                </div>
               )}
             </div>
           )}
@@ -365,27 +369,30 @@ const Messages = () => {
 
       {/* Group Preview Dialog */}
       <Dialog open={!!selectedGroup} onOpenChange={() => setSelectedGroup(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <User className="w-6 h-6 text-primary" strokeWidth={2} />
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0">
+                <User className="w-8 h-8 text-primary" strokeWidth={2.5} />
               </div>
-              <div>
-                <h3 className="font-semibold">{selectedGroup?.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedGroup?.members} members
+              <div className="flex-1 pt-1">
+                <h3 className="font-semibold text-lg mb-1.5">{selectedGroup?.name}</h3>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {selectedGroup?.members.toLocaleString()} members
                 </p>
               </div>
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
+          <div className="py-3">
+            <p className="text-[15px] text-muted-foreground leading-relaxed">
               Join this group to connect with like-minded professionals and stay updated with the latest discussions.
             </p>
           </div>
-          <DialogFooter>
-            <Button onClick={() => selectedGroup && handleJoinGroup(selectedGroup)} className="w-full">
+          <DialogFooter className="pt-2">
+            <Button 
+              onClick={() => selectedGroup && handleJoinGroup(selectedGroup)} 
+              className="w-full h-11 rounded-xl shadow-sm hover:shadow-md transition-all"
+            >
               Join Group
             </Button>
           </DialogFooter>
