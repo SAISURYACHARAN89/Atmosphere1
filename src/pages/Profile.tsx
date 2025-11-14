@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CheckCircle2, XCircle, Plus, ChevronLeft, Home, Search, MessageCircle, User, Settings, Bookmark, TrendingUpIcon, Briefcase, FileText } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, MapPin, TrendingUp, TrendingDown, DollarSign, Target, Activity, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CheckCircle2, XCircle, Plus, ChevronLeft } from "lucide-react";
 
 interface Investment {
   id: string;
@@ -29,24 +28,6 @@ const Profile = () => {
   const userId = localStorage.getItem("userId") || "john";
   const [activeSection, setActiveSection] = useState<'posts' | 'expand' | 'trades'>('posts');
   const [showReels, setShowReels] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
-
-  const navigationItems = [
-    { name: "Home", icon: Home, path: "/" },
-    { name: "Search", icon: Search, path: "/search" },
-    { name: "Messages", icon: MessageCircle, path: "/messages" },
-    { name: "Notifications", icon: Activity, path: "/notifications" },
-    { name: "Profile", icon: User, path: "/profile" },
-    { name: "Saved Posts", icon: Bookmark, path: "/saved-posts" },
-    { name: "Saved Reels", icon: Bookmark, path: "/saved-reels" },
-    { name: "Saved Company Cards", icon: Bookmark, path: "/saved-company-cards" },
-    { name: "Saved Sell Ads", icon: Bookmark, path: "/saved-sell-ads" },
-    { name: "Opportunities", icon: Briefcase, path: "/opportunities" },
-    { name: "Trade", icon: TrendingUpIcon, path: "/trade" },
-    { name: "Meetings", icon: Calendar, path: "/meetings" },
-    { name: "Reels", icon: FileText, path: "/reels" },
-    { name: "Settings", icon: Settings, path: "/settings" },
-  ];
 
   // Mock investor data
   const investorData = {
@@ -161,33 +142,9 @@ const Profile = () => {
       {/* Instagram-style Header */}
       <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-md z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <button className="p-2 hover:bg-muted/80 rounded-lg transition-colors">
-                <Menu className="h-5 w-5 text-foreground" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] sm:w-[320px]">
-              <SheetHeader>
-                <SheetTitle>Navigation</SheetTitle>
-              </SheetHeader>
-              <nav className="mt-6 flex flex-col gap-1">
-                {navigationItems.map((item) => (
-                  <button
-                    key={item.path}
-                    onClick={() => {
-                      navigate(item.path);
-                      setSheetOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted/80 transition-colors text-left"
-                  >
-                    <item.icon className="h-5 w-5 text-foreground" />
-                    <span className="text-sm font-medium text-foreground">{item.name}</span>
-                  </button>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
+          <button className="p-2 hover:bg-muted/80 rounded-lg transition-colors">
+            <Menu className="h-5 w-5 text-foreground" />
+          </button>
           
           <h2 className="font-semibold text-base text-foreground flex items-center gap-1.5">
             {investorData.username.replace('@', '')}
@@ -219,13 +176,21 @@ const Profile = () => {
                 </button>
               </div>
 
-              {/* Name and Stats */}
+              {/* Name, Stats, and Menu */}
               <div className="flex-1 min-w-0">
-                {/* Name */}
+                {/* Name with menu */}
                 <div className="flex items-center gap-2 mb-2">
                   <h1 className="text-sm font-normal text-foreground truncate">
                     {investorData.name}
                   </h1>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate("/settings")}
+                    className="h-8 w-8 ml-auto flex-shrink-0"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
                 </div>
 
                 {/* Stats Row - Instagram Style */}
