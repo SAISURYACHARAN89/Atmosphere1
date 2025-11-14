@@ -122,16 +122,21 @@ const Signup = () => {
   };
 
   const handleCodeNext = () => {
-    if (!code || code.length !== 6) {
+    if (!code) {
       toast({
-        title: "Invalid Code",
-        description: "Please enter the 6-digit verification code",
+        title: "Missing Code",
+        description: "Please enter any verification code",
         variant: "destructive",
       });
       return;
     }
 
+    // Accept any code as dummy verification
     localStorage.setItem("signupCode", code);
+    toast({
+      title: "Code Verified",
+      description: "Verification successful",
+    });
     setStep("password");
   };
 
