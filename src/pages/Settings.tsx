@@ -906,7 +906,7 @@ const Settings = () => {
 
       {/* KYC Verification Dialog */}
       <Dialog open={kycVerificationOpen} onOpenChange={setKycVerificationOpen}>
-        <DialogContent className="p-0 max-w-2xl border-0 bg-transparent">
+        <DialogContent className="p-4 sm:p-6 max-w-md bg-background border">
           <VerificationFlow 
             type="kyc" 
             onComplete={() => setKycVerificationOpen(false)} 
@@ -916,7 +916,7 @@ const Settings = () => {
 
       {/* Portfolio Verification Dialog */}
       <Dialog open={portfolioVerificationOpen} onOpenChange={setPortfolioVerificationOpen}>
-        <DialogContent className="p-0 max-w-2xl border-0 bg-transparent">
+        <DialogContent className="p-4 sm:p-6 max-w-md bg-background border">
           <VerificationFlow 
             type="portfolio" 
             onComplete={() => setPortfolioVerificationOpen(false)} 
@@ -926,7 +926,7 @@ const Settings = () => {
 
       {/* Company Verification Dialog */}
       <Dialog open={companyVerificationOpen} onOpenChange={setCompanyVerificationOpen}>
-        <DialogContent className="p-0 max-w-2xl border-0 bg-transparent">
+        <DialogContent className="p-4 sm:p-6 max-w-md bg-background border">
           <VerificationFlow 
             type="company" 
             onComplete={() => setCompanyVerificationOpen(false)} 
