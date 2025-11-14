@@ -19,9 +19,11 @@ const BottomNav = () => {
   const leftModePages = ["/", "/search", "/reels", "/profile"];
   const rightModePages = ["/launch", "/trade", "/opportunities", "/meetings"];
   
-  // Mode state - only changes via toggle button
+  // Mode state - only changes via toggle button, persisted in localStorage
   const [appMode, setAppMode] = useState<AppMode>(() => {
-    // Initialize based on current page
+    const stored = localStorage.getItem('navMode');
+    if (stored === 'left' || stored === 'right') return stored;
+    // Initialize based on current page only if no stored preference
     return rightModePages.includes(location.pathname) ? "right" : "left";
   });
   
@@ -86,9 +88,11 @@ const BottomNav = () => {
     // Toggle mode and navigate to the last visited page of the other mode
     if (appMode === "left") {
       setAppMode("right");
+      localStorage.setItem('navMode', 'right');
       navigate(lastRightPage);
     } else {
       setAppMode("left");
+      localStorage.setItem('navMode', 'left');
       navigate(lastLeftPage);
     }
   };
