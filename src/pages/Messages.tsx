@@ -45,6 +45,15 @@ const Messages = () => {
   const [newGroupName, setNewGroupName] = useState<string>("");
   const [newGroupDescription, setNewGroupDescription] = useState<string>("");
   const [newGroupType, setNewGroupType] = useState<string>("Public");
+  
+  const handleBackClick = () => {
+    const appMode = localStorage.getItem('appMode') || 'left';
+    if (appMode === 'right') {
+      navigate('/launch');
+    } else {
+      navigate('/');
+    }
+  };
 
   const messages: Message[] = [
     {
@@ -135,7 +144,7 @@ const Messages = () => {
       <div className="fixed top-0 left-0 right-0 bg-background z-50">
         <div className="max-w-2xl mx-auto flex items-center px-4 h-14">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBackClick}
             className="p-2 hover:bg-muted/50 rounded-lg transition-colors"
             aria-label="Go back"
           >

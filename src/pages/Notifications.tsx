@@ -129,6 +129,15 @@ const getNotificationIcon = (type: Notification['type']) => {
 
 const Notifications = () => {
   const navigate = useNavigate();
+  
+  const handleBackClick = () => {
+    const appMode = localStorage.getItem('appMode') || 'left';
+    if (appMode === 'right') {
+      navigate('/launch');
+    } else {
+      navigate('/');
+    }
+  };
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -137,7 +146,7 @@ const Notifications = () => {
       <header className="sticky top-0 bg-background/95 backdrop-blur-lg z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBackClick}
             className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-foreground" />
