@@ -11,6 +11,12 @@ const BottomNav = () => {
   // Check if we're on a company profile that was navigated from home or reels
   const fromPath = location.state?.from;
   const isCompanyProfile = location.pathname.startsWith('/company/');
+  const isStartupProfile = location.pathname.startsWith('/startup-profile/');
+  
+  // Hide bottom nav when viewing other profiles
+  if (isCompanyProfile || isStartupProfile) {
+    return null;
+  }
   
   // Determine mode based on current page
   const leftModePages = ["/", "/search", "/reels", "/profile"];
