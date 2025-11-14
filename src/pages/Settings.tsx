@@ -141,7 +141,7 @@ const Settings = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/profile')}
             className="hover:bg-muted/80"
           >
             <ArrowLeft className="h-5 w-5" />
