@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Trash2, Edit, Bookmark, Zap, Heart, AlertCircle, TrendingUp, DollarSign, Calendar, Target } from "lucide-react";
-import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -440,11 +439,9 @@ const Trade = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16">
-      <TopBar />
       
-      <main className="pt-14 max-w-2xl mx-auto">
-        {/* Compact Buy/Sell Buttons at Top */}
-        <div className={`fixed top-14 left-0 right-0 z-40 flex items-center justify-between gap-3 px-4 py-3 bg-background/95 backdrop-blur-sm max-w-2xl mx-auto transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <main className="max-w-2xl mx-auto">{/* Compact Buy/Sell Buttons at Top */}
+        <div className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-between gap-3 px-4 py-3 bg-background/95 backdrop-blur-sm max-w-2xl mx-auto transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
           <Button 
             size="sm" 
             variant="outline"

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronDown, Clock, Users, Search, Plus, Video } from "lucide-react";
-import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,11 +83,9 @@ const Meetings = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16">
-      <TopBar />
 
-      <main className="pt-14 max-w-2xl mx-auto">
-        <div className="p-4 space-y-4">
-          {/* Launch Meeting Section */}
+      <main className="max-w-2xl mx-auto">
+        <div className="p-4 space-y-4">{/* Launch Meeting Section */}
           <div>
             <button
               onClick={() => setLaunchExpanded(!launchExpanded)}

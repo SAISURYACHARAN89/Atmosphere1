@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Filter, Building2, MapPin, Calendar, ExternalLink, Users, ChevronDown, X, Briefcase, Mail } from "lucide-react";
-import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -474,12 +473,10 @@ const Opportunities = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20 pt-14">
-      <TopBar />
+    <div className="min-h-screen bg-background pb-20">
       
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-4">
-        {/* Three-Tab Header */}
+      <div className="max-w-2xl mx-auto px-4">{/* Three-Tab Header */}
         <Tabs defaultValue="grants" className="mt-6">
           <TabsList className="grid w-full grid-cols-3 mb-6 h-12 bg-muted/50 rounded-2xl p-1">
             <TabsTrigger value="grants" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">
