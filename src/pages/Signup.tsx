@@ -152,32 +152,23 @@ const Signup = () => {
 
     setLoading(true);
 
-    // Verify OTP and create account
-    const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
+    // Create account with email and password
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: email,
-      token: code,
-      type: "email",
-    });
-
-    if (verifyError) {
-      toast({
-        title: "Verification Failed",
-        description: "Invalid verification code. Please try again.",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
-    // Update user password
-    const { error: passwordError } = await supabase.auth.updateUser({
       password: password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          username: username,
+          full_name: fullName,
+        },
+      },
     });
 
-    if (passwordError) {
+    if (signUpError) {
       toast({
-        title: "Error",
-        description: "Failed to set password. Please try again.",
+        title: "Signup Failed",
+        description: signUpError.message,
         variant: "destructive",
       });
       setLoading(false);
