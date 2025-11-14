@@ -11,6 +11,8 @@ interface ChatMessage {
   sender: "me" | "them";
   timestamp: string;
   image?: string;
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 interface Contact {
@@ -43,10 +45,42 @@ const ChatDetail = () => {
   };
 
   const contact = contacts[chatId || "1"];
+  const isGroupChat = contact?.type === "group";
 
   // Initialize with dummy messages
   useState(() => {
-    const dummyMessages: ChatMessage[] = [
+    const dummyMessages: ChatMessage[] = isGroupChat ? [
+      {
+        id: 1,
+        text: "Hey everyone! Excited about the upcoming pitch day!",
+        sender: "them",
+        timestamp: "10:30 AM",
+        senderName: "Priya Sharma",
+        senderAvatar: "PS",
+      },
+      {
+        id: 2,
+        text: "Same here! I've been working on my deck all week.",
+        sender: "them",
+        timestamp: "10:32 AM",
+        senderName: "Vikram Singh",
+        senderAvatar: "VS",
+      },
+      {
+        id: 3,
+        text: "Count me in! What time does it start?",
+        sender: "me",
+        timestamp: "10:35 AM",
+      },
+      {
+        id: 4,
+        text: "It starts at 2 PM sharp. Make sure to arrive 15 mins early!",
+        sender: "them",
+        timestamp: "10:38 AM",
+        senderName: "Ananya Desai",
+        senderAvatar: "AD",
+      },
+    ] : [
       {
         id: 1,
         text: "Hey! How are you doing?",
@@ -102,6 +136,9 @@ const ChatDetail = () => {
       ];
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       
+      const groupNames = ["Priya Sharma", "Vikram Singh", "Ananya Desai", "Karthik Reddy"];
+      const randomName = groupNames[Math.floor(Math.random() * groupNames.length)];
+      
       const responseMessage: ChatMessage = {
         id: chatMessages.length + 2,
         text: randomResponse,
@@ -109,6 +146,10 @@ const ChatDetail = () => {
         timestamp: new Date().toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
+        }),
+        ...(isGroupChat && {
+          senderName: randomName,
+          senderAvatar: randomName.split(' ').map(n => n[0]).join(''),
         }),
       };
       setChatMessages((prev) => [...prev, responseMessage]);
@@ -178,39 +219,70 @@ const ChatDetail = () => {
 
       {/* Messages */}
       <main className="flex-1 pt-14 pb-20 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-          {chatMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
-            >
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-3">
+          {chatMessages.map((message, index) => {
+            const showSenderInfo = 
+              isGroupChat && 
+              message.sender === "them" && 
+              (index === 0 || chatMessages[index - 1].senderName !== message.senderName);
+
+            return (
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                  message.sender === "me"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                key={message.id}
+                className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"} ${
+                  showSenderInfo ? "mt-4" : ""
                 }`}
               >
-                {message.image && (
-                  <img
-                    src={message.image}
-                    alt="Uploaded"
-                    className="rounded-lg mb-2 max-w-full"
-                  />
-                )}
-                {message.text && <p className="text-sm">{message.text}</p>}
-                <p
-                  className={`text-xs mt-1 ${
-                    message.sender === "me"
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {message.timestamp}
-                </p>
+                <div className={`flex items-end gap-2 max-w-[75%] ${message.sender === "me" ? "flex-row-reverse" : ""}`}>
+                  {/* Avatar for group chats */}
+                  {isGroupChat && message.sender === "them" && showSenderInfo && (
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mb-1">
+                      <span className="text-[9px] font-medium text-muted-foreground">
+                        {message.senderAvatar}
+                      </span>
+                    </div>
+                  )}
+                  {isGroupChat && message.sender === "them" && !showSenderInfo && (
+                    <div className="w-6" />
+                  )}
+
+                  <div className="flex flex-col">
+                    {/* Sender name for group chats */}
+                    {showSenderInfo && (
+                      <span className="text-[10px] text-muted-foreground font-medium mb-1 px-3">
+                        {message.senderName}
+                      </span>
+                    )}
+
+                    {/* Message bubble */}
+                    <div
+                      className={`rounded-[18px] px-4 py-2.5 ${
+                        message.sender === "me"
+                          ? "bg-[#007AFF] text-white"
+                          : "bg-[#E5E5EA] text-black"
+                      }`}
+                    >
+                      {message.image && (
+                        <img
+                          src={message.image}
+                          alt="Uploaded"
+                          className="rounded-xl mb-2 max-w-full"
+                        />
+                      )}
+                      {message.text && (
+                        <p className="text-[15px] leading-[1.4]">{message.text}</p>
+                      )}
+                    </div>
+
+                    {/* Timestamp */}
+                    <span className="text-[11px] text-muted-foreground mt-1 px-3">
+                      {message.timestamp}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
 
