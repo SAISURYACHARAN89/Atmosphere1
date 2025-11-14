@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Card } from "@/components/ui/card";
 import { CheckCircle2, FileText, Camera, User, Upload, Clock, Plus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -59,41 +58,39 @@ export const VerificationFlow = ({ type, onComplete }: VerificationFlowProps) =>
     // Portfolio List View
     if (portfolioView === "list") {
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-8 space-y-6 bg-card border-border">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">My Portfolio</h2>
-              <p className="text-sm text-muted-foreground">Verified investments</p>
-            </div>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-medium text-foreground">My Portfolio</h3>
+            <p className="text-xs text-muted-foreground">Verified investments</p>
+          </div>
 
-            {/* Verified Investments List */}
-            <div className="space-y-3">
-              {dummyInvestments.map((investment, index) => (
-                <div key={index} className="p-4 border border-border rounded-lg bg-muted/30">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-foreground">{investment.company}</h3>
-                      <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                        <span>{investment.percentage}</span>
-                        <span>•</span>
-                        <span>{investment.date}</span>
-                      </div>
-                    </div>
-                    <CheckCircle2 className="h-5 w-5 text-foreground flex-shrink-0" />
+          {/* Verified Investments List */}
+          <div className="space-y-2">
+            {dummyInvestments.map((investment, index) => (
+              <div key={index} className="flex items-center justify-between py-2.5 px-3 border border-border/50 rounded hover:bg-muted/20 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{investment.company}</p>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                    <span>{investment.percentage}</span>
+                    <span>•</span>
+                    <span>{investment.date}</span>
                   </div>
                 </div>
-              ))}
-            </div>
+                <CheckCircle2 className="h-4 w-4 text-foreground flex-shrink-0 ml-3" />
+              </div>
+            ))}
+          </div>
 
-            {/* Add to Portfolio Button */}
-            <Button 
-              onClick={() => setPortfolioView("form")}
-              className="w-full h-12 text-base font-medium bg-foreground text-background hover:bg-foreground/90"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add to My Portfolio
-            </Button>
-          </Card>
+          {/* Add to Portfolio Button */}
+          <Button 
+            onClick={() => setPortfolioView("form")}
+            variant="outline"
+            size="sm"
+            className="w-full h-9 text-xs font-medium"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Add to My Portfolio
+          </Button>
         </div>
       );
     }
@@ -101,154 +98,144 @@ export const VerificationFlow = ({ type, onComplete }: VerificationFlowProps) =>
     // Investment Details Form View
     if (portfolioView === "form") {
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-8 space-y-6 bg-card border-border">
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setPortfolioView("list")}
-                className="h-8 w-8"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-2xl font-bold text-foreground">Investment Details</h2>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="companyName" className="text-sm font-medium text-foreground">
-                  Company Name
-                </Label>
-                <Input
-                  id="companyName"
-                  value={investmentData.companyName}
-                  onChange={(e) => setInvestmentData({...investmentData, companyName: e.target.value})}
-                  placeholder="Enter company name"
-                  className="bg-background border-border"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="investmentPercentage" className="text-sm font-medium text-foreground">
-                  Investment Percentage
-                </Label>
-                <Input
-                  id="investmentPercentage"
-                  value={investmentData.investmentPercentage}
-                  onChange={(e) => setInvestmentData({...investmentData, investmentPercentage: e.target.value})}
-                  placeholder="e.g., 15%"
-                  className="bg-background border-border"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="investmentAmount" className="text-sm font-medium text-foreground">
-                  Investment Amount
-                </Label>
-                <Input
-                  id="investmentAmount"
-                  value={investmentData.investmentAmount}
-                  onChange={(e) => setInvestmentData({...investmentData, investmentAmount: e.target.value})}
-                  placeholder="e.g., $50,000"
-                  className="bg-background border-border"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="investmentDate" className="text-sm font-medium text-foreground">
-                  Investment Date
-                </Label>
-                <Input
-                  id="investmentDate"
-                  type="date"
-                  value={investmentData.investmentDate}
-                  onChange={(e) => setInvestmentData({...investmentData, investmentDate: e.target.value})}
-                  className="bg-background border-border"
-                />
-              </div>
-            </div>
-
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
             <Button 
-              onClick={handleFormSubmit}
-              className="w-full h-12 text-base font-medium bg-foreground text-background hover:bg-foreground/90"
+              variant="ghost" 
+              size="sm"
+              onClick={() => setPortfolioView("list")}
+              className="h-7 w-7 p-0"
             >
-              Continue to Upload Documents
+              <ArrowLeft className="h-3.5 w-3.5" />
             </Button>
-          </Card>
+            <h3 className="text-sm font-medium text-foreground">Investment Details</h3>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="companyName" className="text-xs font-medium text-foreground">
+                Company Name
+              </Label>
+              <Input
+                id="companyName"
+                value={investmentData.companyName}
+                onChange={(e) => setInvestmentData({...investmentData, companyName: e.target.value})}
+                placeholder="Enter company name"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="investmentPercentage" className="text-xs font-medium text-foreground">
+                Investment Percentage
+              </Label>
+              <Input
+                id="investmentPercentage"
+                value={investmentData.investmentPercentage}
+                onChange={(e) => setInvestmentData({...investmentData, investmentPercentage: e.target.value})}
+                placeholder="e.g., 15%"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="investmentAmount" className="text-xs font-medium text-foreground">
+                Investment Amount
+              </Label>
+              <Input
+                id="investmentAmount"
+                value={investmentData.investmentAmount}
+                onChange={(e) => setInvestmentData({...investmentData, investmentAmount: e.target.value})}
+                placeholder="e.g., $50,000"
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="investmentDate" className="text-xs font-medium text-foreground">
+                Investment Date
+              </Label>
+              <Input
+                id="investmentDate"
+                type="date"
+                value={investmentData.investmentDate}
+                onChange={(e) => setInvestmentData({...investmentData, investmentDate: e.target.value})}
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+
+          <Button 
+            onClick={handleFormSubmit}
+            size="sm"
+            className="w-full h-9 text-xs font-medium"
+          >
+            Continue to Upload Documents
+          </Button>
         </div>
       );
     }
 
     // Document Upload View
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8 space-y-8 bg-card border-border">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setPortfolioView("form")}
-              className="h-8 w-8"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-2xl font-bold text-foreground">Upload Documents</h2>
-          </div>
-
-          <div className="flex justify-center">
-            <div className="w-32 h-32 rounded-2xl border-2 border-border bg-muted/30 flex items-center justify-center">
-              <Upload className="h-16 w-16 text-foreground" strokeWidth={1.5} />
-            </div>
-          </div>
-
-          <div className="text-center space-y-2">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Upload investment documents for {investmentData.companyName || "this investment"}
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-foreground/50 transition-colors cursor-pointer">
-              <Input
-                type="file"
-                multiple
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileChange}
-                className="hidden"
-                id="portfolio-upload"
-              />
-              <label htmlFor="portfolio-upload" className="cursor-pointer">
-                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm font-medium text-foreground">
-                  {selectedFiles.length > 0 
-                    ? `${selectedFiles.length} document(s) selected` 
-                    : "Choose investment documents"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  PDF, JPG, or PNG
-                </p>
-              </label>
-            </div>
-
-            <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg border border-border">
-              <Clock className="h-5 w-5 text-foreground flex-shrink-0 mt-0.5" />
-              <div className="text-left">
-                <p className="text-sm font-medium text-foreground">Manual Verification</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Documents will be verified within 6 hours
-                </p>
-              </div>
-            </div>
-          </div>
-
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
           <Button 
-            onClick={handleFinalSubmit}
-            className="w-full h-12 text-base font-medium bg-foreground text-background hover:bg-foreground/90"
+            variant="ghost" 
+            size="sm"
+            onClick={() => setPortfolioView("form")}
+            className="h-7 w-7 p-0"
           >
-            Submit for Verification
+            <ArrowLeft className="h-3.5 w-3.5" />
           </Button>
-        </Card>
+          <h3 className="text-sm font-medium text-foreground">Upload Documents</h3>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Upload documents for {investmentData.companyName || "this investment"}
+        </p>
+
+        <div className="space-y-3">
+          <div className="border border-dashed border-border rounded p-4 text-center hover:border-foreground/50 transition-colors cursor-pointer">
+            <Input
+              type="file"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileChange}
+              className="hidden"
+              id="portfolio-upload"
+            />
+            <label htmlFor="portfolio-upload" className="cursor-pointer block">
+              <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" strokeWidth={1.5} />
+              <p className="text-xs font-medium text-foreground">
+                {selectedFiles.length > 0 
+                  ? `${selectedFiles.length} file(s) selected` 
+                  : "Choose files"}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                PDF, JPG, PNG
+              </p>
+            </label>
+          </div>
+
+          <div className="flex items-start gap-2 p-2.5 bg-muted/30 rounded border border-border/50">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <div className="text-left">
+              <p className="text-xs font-medium text-foreground">Manual Verification</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Documents verified within 6 hours
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Button 
+          onClick={handleFinalSubmit}
+          size="sm"
+          className="w-full h-9 text-xs font-medium"
+        >
+          Submit for Verification
+        </Button>
       </div>
     );
   }
@@ -326,56 +313,41 @@ export const VerificationFlow = ({ type, onComplete }: VerificationFlowProps) =>
   if (!stepContent) return null;
 
   const Icon = stepContent.icon;
-  const progress = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-8 bg-card border-border">
-        {/* Progress Indicator */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs text-muted-foreground">
-            <span>Identity doc</span>
-            <span className={currentStep >= 2 ? "text-foreground" : ""}>
-              {type === "kyc" ? "ID back" : "Documents"}
-            </span>
-            <span className={currentStep >= 3 ? "text-foreground" : ""}>
-              {type === "kyc" ? "Selfie" : "Submit"}
-            </span>
-          </div>
-          <Progress value={progress} className="h-1" />
+    <div className="space-y-4">
+      {/* Progress */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-[10px] text-muted-foreground">
+          <span>Step {currentStep} of {totalSteps}</span>
+          <span>{Math.round((currentStep / totalSteps) * 100)}%</span>
         </div>
+        <Progress value={(currentStep / totalSteps) * 100} className="h-1" />
+      </div>
 
-        {/* Icon */}
-        <div className="flex justify-center">
-          <div className="w-32 h-32 rounded-2xl border-2 border-primary/20 bg-muted/30 flex items-center justify-center">
-            <Icon className="h-16 w-16 text-primary" strokeWidth={1.5} />
-          </div>
+      {/* Icon */}
+      <div className="flex justify-center py-4">
+        <div className="w-16 h-16 rounded-lg border border-border bg-muted/20 flex items-center justify-center">
+          <Icon className="h-10 w-10 text-foreground" strokeWidth={1.5} />
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-foreground">{stepContent.title}</h2>
-          <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-            {stepContent.description}
-          </p>
-          {stepContent.note && (
-            <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-              <span className="w-4 h-4 rounded-full border border-muted-foreground flex items-center justify-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></span>
-              </span>
-              {stepContent.note}
-            </p>
-          )}
-        </div>
+      {/* Content */}
+      <div className="text-center space-y-1.5">
+        <h3 className="text-sm font-medium text-foreground">{stepContent.title}</h3>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {stepContent.description}
+        </p>
+      </div>
 
-        {/* Action Button */}
-        <Button 
-          onClick={handleNext}
-          className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90"
-        >
-          {stepContent.buttonText}
-        </Button>
-      </Card>
+      {/* Action Button */}
+      <Button 
+        onClick={handleNext}
+        size="sm"
+        className="w-full h-9 text-xs font-medium"
+      >
+        {stepContent.buttonText}
+      </Button>
     </div>
   );
 };
