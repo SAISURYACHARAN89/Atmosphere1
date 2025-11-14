@@ -1,4 +1,4 @@
-import { MessageCircle, ChevronLeft, Heart } from "lucide-react";
+import { MessageCircle, ChevronLeft, Menu } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -40,7 +40,7 @@ const TopBar = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg z-50 transition-transform duration-500 ease-out ${isVisible || isTradePage ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
-        {/* Left side - Likes or Back Button (mobile and iPad) */}
+        {/* Left side - Menu or Back Button (mobile and iPad) */}
         <div className="flex items-center gap-2 lg:hidden">
           {isCompanyProfile && fromPath ? (
             <button 
@@ -51,11 +51,10 @@ const TopBar = () => {
             </button>
           ) : (
             <button 
-              onClick={() => navigate('/notifications')}
-              className="p-2 rounded-lg hover:bg-muted/80 transition-all duration-300 active:scale-95 relative"
+              onClick={() => navigate('/settings')}
+              className="p-2 rounded-lg hover:bg-muted/80 transition-all duration-300 active:scale-95"
             >
-              <Heart className="w-5 h-5 text-foreground" strokeWidth={2} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></span>
+              <Menu className="w-5 h-5 text-foreground" strokeWidth={2} />
             </button>
           )}
         </div>

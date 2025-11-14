@@ -142,7 +142,10 @@ const Profile = () => {
       {/* Instagram-style Header */}
       <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-md z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
-          <button className="p-2 hover:bg-muted/80 rounded-lg transition-colors">
+          <button 
+            onClick={() => navigate('/settings')}
+            className="p-2 hover:bg-muted/80 rounded-lg transition-colors"
+          >
             <Menu className="h-5 w-5 text-foreground" />
           </button>
           
@@ -178,19 +181,11 @@ const Profile = () => {
 
               {/* Name, Stats, and Menu */}
               <div className="flex-1 min-w-0">
-                {/* Name with menu */}
+                {/* Name */}
                 <div className="flex items-center gap-2 mb-2">
                   <h1 className="text-sm font-normal text-foreground truncate">
                     {investorData.name}
                   </h1>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate("/settings")}
-                    className="h-8 w-8 ml-auto flex-shrink-0"
-                  >
-                    <Menu className="h-5 w-5" />
-                  </Button>
                 </div>
 
                 {/* Stats Row - Instagram Style */}
