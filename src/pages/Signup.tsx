@@ -93,29 +93,11 @@ const Signup = () => {
     }
 
     localStorage.setItem("signupUsername", username);
-    
-    // Send OTP to email
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email,
-      options: {
-        shouldCreateUser: false,
-      },
-    });
-
     setLoading(false);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send verification code. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     toast({
-      title: "Code Sent",
-      description: "Check your email for the verification code",
+      title: "Username Available",
+      description: "Please enter any verification code to continue",
     });
 
     setStep("code");
