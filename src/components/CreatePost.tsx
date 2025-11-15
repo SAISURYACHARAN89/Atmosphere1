@@ -16,7 +16,7 @@ interface CreatePostProps {
 const CreatePost = ({ onClose }: CreatePostProps) => {
   const [step, setStep] = useState<UploadStep>("select");
   const [postType, setPostType] = useState<PostType>("post");
-  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
   const [caption, setCaption] = useState("");
   const [location, setLocation] = useState("");
   const [taggedPeople, setTaggedPeople] = useState("");
@@ -35,7 +35,16 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
   ];
 
   const handleMediaSelect = (media: string) => {
-    setSelectedMedia(media);
+    if (postType === "reel") {
+      setSelectedMedia([media]);
+    } else {
+      // For posts, toggle selection
+      setSelectedMedia(prev => 
+        prev.includes(media) 
+          ? prev.filter(m => m !== media)
+          : [...prev, media]
+      );
+    }
   };
 
   const handleNext = () => {
@@ -80,7 +89,7 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
             onClick={handleNext}
             variant="ghost"
             className="text-primary font-semibold"
-            disabled={!selectedMedia && postType !== "thought"}
+            disabled={selectedMedia.length === 0 && postType !== "thought"}
           >
             Next
           </Button>
@@ -125,30 +134,38 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
           {postType !== "thought" ? (
             <>
               {/* Selected media preview */}
-              <div className="h-64 md:h-80 bg-muted flex items-center justify-center border-b border-border shrink-0">
-                {selectedMedia ? (
-                  <img 
-                    src={selectedMedia} 
-                    alt="Selected" 
-                    className="max-h-full max-w-full object-contain"
-                  />
+              <div className="flex items-center justify-center border-b border-border shrink-0 bg-black">
+                {selectedMedia.length > 0 ? (
+                  <div className={`w-full ${postType === "reel" ? "aspect-[9/16]" : "aspect-[4/3]"} max-h-[60vh]`}>
+                    <img 
+                      src={selectedMedia[0]} 
+                      alt="Selected" 
+                      className="w-full h-full object-cover"
+                    />
+                    {selectedMedia.length > 1 && postType === "post" && (
+                      <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-sm">
+                        +{selectedMedia.length - 1}
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <div className="text-center text-muted-foreground">
+                  <div className="text-center text-muted-foreground py-20">
                     <Image className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>Select a photo or video</p>
+                    <p>Select {postType === "post" ? "photos or videos" : "a video"}</p>
                   </div>
                 )}
               </div>
 
-              {/* Media gallery */}
-              <div className="flex-1 overflow-y-auto bg-background p-2 min-h-0">
+              {/* Media gallery with fade effect */}
+              <div className="flex-1 overflow-y-auto bg-background p-2 min-h-0 relative">
+                <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
                 <div className="grid grid-cols-3 gap-1 pb-2">
                   {mockMedia.map((media, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleMediaSelect(media)}
-                      className={`aspect-square rounded overflow-hidden ${
-                        selectedMedia === media ? "ring-2 ring-primary" : ""
+                      className={`aspect-square rounded overflow-hidden relative ${
+                        selectedMedia.includes(media) ? "ring-2 ring-primary" : ""
                       }`}
                     >
                       <img 
@@ -156,9 +173,15 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
                         alt={`Media ${idx + 1}`}
                         className="w-full h-full object-cover"
                       />
+                      {selectedMedia.includes(media) && postType === "post" && (
+                        <div className="absolute top-1 right-1 bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">
+                          {selectedMedia.indexOf(media) + 1}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none" />
               </div>
             </>
           ) : (
@@ -177,13 +200,15 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
       {step === "edit" && (
         <div className="flex-1 flex flex-col">
           {/* Media preview */}
-          <div className="flex-1 bg-muted flex items-center justify-center">
-            {selectedMedia && (
-              <img 
-                src={selectedMedia} 
-                alt="Preview" 
-                className="max-h-full max-w-full object-contain"
-              />
+          <div className="flex-1 bg-black flex items-center justify-center">
+            {selectedMedia.length > 0 && (
+              <div className={`${postType === "reel" ? "aspect-[9/16]" : "aspect-[4/3]"} max-h-full`}>
+                <img 
+                  src={selectedMedia[0]} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
             )}
           </div>
 
@@ -213,13 +238,18 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {/* Media preview */}
-            {selectedMedia && postType !== "thought" && (
-              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+            {selectedMedia.length > 0 && postType !== "thought" && (
+              <div className={`rounded-lg overflow-hidden bg-black ${postType === "reel" ? "aspect-[9/16]" : "aspect-[4/3]"} max-w-md mx-auto`}>
                 <img 
-                  src={selectedMedia} 
+                  src={selectedMedia[0]} 
                   alt="Final preview" 
                   className="w-full h-full object-cover"
                 />
+                {selectedMedia.length > 1 && (
+                  <div className="text-center text-sm text-muted-foreground mt-2">
+                    +{selectedMedia.length - 1} more photo{selectedMedia.length > 2 ? 's' : ''}
+                  </div>
+                )}
               </div>
             )}
 
