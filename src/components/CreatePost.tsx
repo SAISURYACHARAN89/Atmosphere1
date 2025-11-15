@@ -90,9 +90,9 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
 
       {/* Content based on step */}
       {step === "select" && (
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Type selector */}
-          <div className="flex border-b border-border">
+          <div className="flex border-b border-border shrink-0">
             <button
               onClick={() => setPostType("post")}
               className={`flex-1 py-3 flex items-center justify-center gap-2 transition-colors ${
@@ -125,7 +125,7 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
           {postType !== "thought" ? (
             <>
               {/* Selected media preview */}
-              <div className="h-1/2 bg-muted flex items-center justify-center border-b border-border">
+              <div className="h-64 md:h-80 bg-muted flex items-center justify-center border-b border-border shrink-0">
                 {selectedMedia ? (
                   <img 
                     src={selectedMedia} 
@@ -141,8 +141,8 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
               </div>
 
               {/* Media gallery */}
-              <div className="flex-1 overflow-y-auto bg-background p-2">
-                <div className="grid grid-cols-3 gap-1">
+              <div className="flex-1 overflow-y-auto bg-background p-2 min-h-0">
+                <div className="grid grid-cols-3 gap-1 pb-2">
                   {mockMedia.map((media, idx) => (
                     <button
                       key={idx}
@@ -162,7 +162,7 @@ const CreatePost = ({ onClose }: CreatePostProps) => {
               </div>
             </>
           ) : (
-            <div className="flex-1 p-4">
+            <div className="flex-1 p-4 overflow-y-auto">
               <Textarea
                 placeholder="Share your thoughts..."
                 className="min-h-[300px] text-lg border-none focus-visible:ring-0 resize-none"
