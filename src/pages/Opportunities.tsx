@@ -597,7 +597,7 @@ const Opportunities = () => {
     <div className="min-h-screen bg-background pb-20">
       
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-4">{/* Three-Tab Header */}
+      <div className="max-w-2xl md:max-w-7xl mx-auto px-4">{/* Three-Tab Header */}
         <Tabs defaultValue="grants" className="mt-6">
           <TabsList className="grid w-full grid-cols-3 mb-6 h-12 bg-muted/50 rounded-2xl p-1">
             <TabsTrigger value="grants" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">
@@ -704,7 +704,7 @@ const Opportunities = () => {
               {filteredGrants.length} {filteredGrants.length === 1 ? 'opportunity' : 'opportunities'} found
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
               {filteredGrants.map(grant => (
                 <div key={grant.id} className="border border-border rounded-xl p-4 space-y-3 hover:bg-muted/30 transition-colors bg-card">
                   <div className="flex items-start justify-between gap-2">
@@ -874,7 +874,7 @@ const Opportunities = () => {
               {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'} found
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
               {filteredEvents.map(event => (
                 <div key={event.id} className="border border-border rounded-xl p-4 space-y-3 hover:bg-muted/30 transition-colors bg-card">
                   <div className="flex items-start justify-between gap-2">
@@ -1190,7 +1190,7 @@ const Opportunities = () => {
               {filteredRolePostings.length} {filteredRolePostings.length === 1 ? 'position' : 'positions'} available
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
               {filteredRolePostings.map(posting => {
                 const isMyAd = posting.id.startsWith('user-');
                 return (
