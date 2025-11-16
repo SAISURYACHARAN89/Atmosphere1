@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { Filter, Building2, MapPin, Calendar, ExternalLink, Users, ChevronDown, X, Briefcase, Mail } from "lucide-react";
+import { Filter, Building2, MapPin, Calendar, ExternalLink, Users, ChevronDown, X, Briefcase, Mail, Plus } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Grant {
   id: string;
@@ -480,6 +485,21 @@ const Opportunities = () => {
   const [teamRemoteOpen, setTeamRemoteOpen] = useState(false);
   const [teamEmploymentOpen, setTeamEmploymentOpen] = useState(false);
 
+  // User created job postings
+  const [userPostings, setUserPostings] = useState<StartupRolePosting[]>([]);
+  const [createAdOpen, setCreateAdOpen] = useState(false);
+  const [newPosting, setNewPosting] = useState({
+    startupName: "",
+    roleTitle: "",
+    sector: "Artificial Intelligence",
+    location: "",
+    isRemote: false,
+    employmentType: "Full-time" as "Full-time" | "Part-time",
+    compensation: "",
+    description: "",
+    requirements: "",
+  });
+
   const grantTypes = ["all", "grant", "incubator", "accelerator"];
   const eventTypes = ["all", "physical", "virtual", "hybrid", "e-summit", "conference", "workshop", "networking"];
   const remoteOptions = ["all", "remote", "on-site"];
@@ -498,7 +518,38 @@ const Opportunities = () => {
     return sectorMatch && typeMatch && locationMatch;
   });
 
-  const filteredRolePostings = startupRolePostings.filter(posting => {
+  const handleCreatePosting = () => {
+    const posting: StartupRolePosting = {
+      id: `user-${Date.now()}`,
+      startupName: newPosting.startupName,
+      roleTitle: newPosting.roleTitle,
+      sector: newPosting.sector,
+      location: newPosting.location,
+      isRemote: newPosting.isRemote,
+      employmentType: newPosting.employmentType,
+      compensation: newPosting.compensation,
+      description: newPosting.description,
+      requirements: newPosting.requirements,
+      applicantsCount: 0,
+    };
+    setUserPostings([posting, ...userPostings]);
+    setCreateAdOpen(false);
+    setNewPosting({
+      startupName: "",
+      roleTitle: "",
+      sector: "Artificial Intelligence",
+      location: "",
+      isRemote: false,
+      employmentType: "Full-time",
+      compensation: "",
+      description: "",
+      requirements: "",
+    });
+  };
+
+  const allRolePostings = [...userPostings, ...startupRolePostings];
+
+  const filteredRolePostings = allRolePostings.filter(posting => {
     const sectorMatch = teamSector === "All Sectors" || posting.sector === teamSector;
     const locationMatch = teamLocation === "All Locations" || posting.location.includes(teamLocation) || teamLocation === "Global";
     const remoteMatch = teamRemote === "all" || 
@@ -873,6 +924,117 @@ const Opportunities = () => {
 
           {/* TEAM TAB */}
           <TabsContent value="team" className="space-y-4">
+            {/* Create Ad Button */}
+            <Dialog open={createAdOpen} onOpenChange={setCreateAdOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create Job Ad
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create Job Posting</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="startupName">Startup Name</Label>
+                    <Input
+                      id="startupName"
+                      value={newPosting.startupName}
+                      onChange={(e) => setNewPosting({...newPosting, startupName: e.target.value})}
+                      placeholder="Enter your startup name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="roleTitle">Role Title</Label>
+                    <Input
+                      id="roleTitle"
+                      value={newPosting.roleTitle}
+                      onChange={(e) => setNewPosting({...newPosting, roleTitle: e.target.value})}
+                      placeholder="e.g., Co-Founder & CTO"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sector">Sector</Label>
+                    <Select value={newPosting.sector} onValueChange={(value) => setNewPosting({...newPosting, sector: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sectors.filter(s => s !== "All Sectors").map(sector => (
+                          <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={newPosting.location}
+                      onChange={(e) => setNewPosting({...newPosting, location: e.target.value})}
+                      placeholder="e.g., San Francisco, USA"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="employmentType">Employment Type</Label>
+                    <Select value={newPosting.employmentType} onValueChange={(value: "Full-time" | "Part-time") => setNewPosting({...newPosting, employmentType: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Full-time">Full-time</SelectItem>
+                        <SelectItem value="Part-time">Part-time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isRemote"
+                      checked={newPosting.isRemote}
+                      onChange={(e) => setNewPosting({...newPosting, isRemote: e.target.checked})}
+                      className="rounded"
+                    />
+                    <Label htmlFor="isRemote">Remote Position</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="compensation">Compensation</Label>
+                    <Input
+                      id="compensation"
+                      value={newPosting.compensation}
+                      onChange={(e) => setNewPosting({...newPosting, compensation: e.target.value})}
+                      placeholder="e.g., Equity (15-20%) + Competitive Salary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={newPosting.description}
+                      onChange={(e) => setNewPosting({...newPosting, description: e.target.value})}
+                      placeholder="Describe the role and your startup"
+                      rows={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="requirements">Requirements</Label>
+                    <Textarea
+                      id="requirements"
+                      value={newPosting.requirements}
+                      onChange={(e) => setNewPosting({...newPosting, requirements: e.target.value})}
+                      placeholder="What are you looking for?"
+                      rows={3}
+                    />
+                  </div>
+                  <Button onClick={handleCreatePosting} className="w-full">
+                    Create Posting
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             {/* Team Filters */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -1029,23 +1191,30 @@ const Opportunities = () => {
             </div>
 
             <div className="space-y-4">
-              {filteredRolePostings.map(posting => (
-                <div key={posting.id} className="border border-border rounded-xl p-5 space-y-4 hover:shadow-lg transition-all bg-card">
-                  {/* Header */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-6 h-6 text-primary" />
+              {filteredRolePostings.map(posting => {
+                const isMyAd = posting.id.startsWith('user-');
+                return (
+                  <div key={posting.id} className="border border-border rounded-xl p-5 space-y-4 hover:shadow-lg transition-all bg-card">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-foreground text-lg">{posting.startupName}</h3>
+                            {isMyAd && (
+                              <Badge variant="secondary" className="text-xs">my ad</Badge>
+                            )}
+                          </div>
+                          <p className="text-base text-foreground/90 font-semibold mt-1">{posting.roleTitle}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-foreground text-lg">{posting.startupName}</h3>
-                        <p className="text-base text-foreground/90 font-semibold mt-1">{posting.roleTitle}</p>
-                      </div>
+                      <Badge variant="default" className="whitespace-nowrap font-medium">
+                        {posting.employmentType}
+                      </Badge>
                     </div>
-                    <Badge variant="default" className="whitespace-nowrap font-medium">
-                      {posting.employmentType}
-                    </Badge>
-                  </div>
 
                   {/* Description */}
                   <p className="text-sm text-foreground/80 leading-relaxed">{posting.description}</p>
@@ -1098,7 +1267,8 @@ const Opportunities = () => {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
 
               {filteredRolePostings.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
