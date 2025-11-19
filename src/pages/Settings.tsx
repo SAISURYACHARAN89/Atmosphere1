@@ -46,7 +46,10 @@ const Settings = () => {
   const [phoneCode, setPhoneCode] = useState("");
   const [commentsSetting, setCommentsSetting] = useState("verified");
   const [connectSetting, setConnectSetting] = useState("accepted");
-  
+  const [accountType, setAccountType] = useState(
+  localStorage.getItem("accountType") || "startup"
+);
+
   // Content Preferences
   const [selectedFilters, setSelectedFilters] = useState<string[]>(["AI", "Technology", "Startups"]);
   const [currentKeyword, setCurrentKeyword] = useState("");
@@ -247,24 +250,31 @@ const Settings = () => {
             <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
               <SettingItem
                 icon={Shield}
-                title="KYC Verification"
+                title="Verification"
                 subtitle="Verify your identity"
-                onClick={() => navigate("/kyc-verification")}
+                onClick={() => navigate("/getverified")}
               />
               <Separator />
               <SettingItem
                 icon={Briefcase}
                 title="Portfolio Verification"
                 subtitle="Verify your investment portfolio"
-                onClick={() => navigate("/portfolio-verification")}
+                onClick={() => {
+                    if (accountType === "investor") {
+                      navigate("/startupinvestor");
+                    } else {
+                      navigate("/startupportfolio");
+                    }
+                  }}
+
               />
               <Separator />
-              <SettingItem
+              {/* <SettingItem
                 icon={Building}
                 title="Company Verification"
                 subtitle="Verify your company details"
                 onClick={() => setCompanyVerificationOpen(true)}
-              />
+              /> */}
               <Separator />
               <SettingItem
                 icon={Crown}

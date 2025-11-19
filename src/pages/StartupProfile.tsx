@@ -272,7 +272,9 @@ const StartupProfile = () => {
                         <p className="text-sm font-semibold text-foreground">{startupData.stage}</p>
                       </div>
                     </div>
+
                   </CardContent>
+                  
                 </Card>
 
                 {/* Team Info */}

@@ -1,16 +1,45 @@
-import { useState } from "react";
-import { Filter, Building2, MapPin, Calendar, ExternalLink, Users, ChevronDown, X, Briefcase, Mail, Plus } from "lucide-react";
+// Opportunities.tsx
+import React, { useState } from "react";
+import {
+  Filter,
+  Building2,
+  MapPin,
+  Calendar,
+  ExternalLink,
+  Users,
+  ChevronDown,
+  X,
+  Briefcase,
+  Mail,
+  Plus,
+} from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Grant {
   id: string;
@@ -32,10 +61,33 @@ interface Event {
   sector: string;
   location: string;
   date: string;
-  type: "physical" | "virtual" | "hybrid" | "e-summit" | "conference" | "workshop" | "networking";
+  type:
+    | "physical"
+    | "virtual"
+    | "hybrid"
+    | "e-summit"
+    | "conference"
+    | "workshop"
+    | "networking";
   description: string;
   attendees: string;
   url: string;
+}
+
+interface StartupRolePosting {
+  id: string;
+  startupName: string;
+  startupLogo?: string;
+  roleTitle: string;
+  sector: string;
+  location: string;
+  isRemote: boolean;
+  employmentType: "Full-time" | "Part-time";
+  compensation: string;
+  description: string;
+  requirements: string;
+  applicantsCount: number;
+  customQuestions: string[];
 }
 
 const sectors = [
@@ -107,7 +159,7 @@ const grantsData: Grant[] = [
     deadline: "Dec 31, 2024",
     type: "grant",
     description: "Supporting innovative tech startups in AI, blockchain, and IoT sectors.",
-    url: "#"
+    url: "#",
   },
   {
     id: "2",
@@ -119,7 +171,7 @@ const grantsData: Grant[] = [
     deadline: "Jan 15, 2025",
     type: "accelerator",
     description: "3-month program for renewable energy startups with funding and mentorship.",
-    url: "#"
+    url: "#",
   },
   {
     id: "3",
@@ -131,7 +183,7 @@ const grantsData: Grant[] = [
     deadline: "Nov 30, 2024",
     type: "incubator",
     description: "Supporting healthcare innovation with focus on telemedicine and digital health.",
-    url: "#"
+    url: "#",
   },
   {
     id: "4",
@@ -143,7 +195,7 @@ const grantsData: Grant[] = [
     deadline: "Dec 15, 2024",
     type: "grant",
     description: "Funding for fintech startups revolutionizing payment systems and banking.",
-    url: "#"
+    url: "#",
   },
   {
     id: "5",
@@ -155,7 +207,7 @@ const grantsData: Grant[] = [
     deadline: "Jan 31, 2025",
     type: "accelerator",
     description: "12-week intensive program for education technology startups.",
-    url: "#"
+    url: "#",
   },
   {
     id: "6",
@@ -167,7 +219,7 @@ const grantsData: Grant[] = [
     deadline: "Feb 28, 2025",
     type: "grant",
     description: "Supporting sustainable agriculture and food tech innovations.",
-    url: "#"
+    url: "#",
   },
   {
     id: "7",
@@ -179,7 +231,7 @@ const grantsData: Grant[] = [
     deadline: "Dec 20, 2024",
     type: "incubator",
     description: "Focus on artificial intelligence and machine learning applications.",
-    url: "#"
+    url: "#",
   },
   {
     id: "8",
@@ -191,7 +243,7 @@ const grantsData: Grant[] = [
     deadline: "Jan 10, 2025",
     type: "accelerator",
     description: "Supporting e-commerce and retail technology innovations.",
-    url: "#"
+    url: "#",
   },
   {
     id: "9",
@@ -203,7 +255,7 @@ const grantsData: Grant[] = [
     deadline: "Jan 20, 2025",
     type: "grant",
     description: "Supporting advanced manufacturing and Industry 4.0 innovations.",
-    url: "#"
+    url: "#",
   },
   {
     id: "10",
@@ -215,8 +267,8 @@ const grantsData: Grant[] = [
     deadline: "Feb 10, 2025",
     type: "incubator",
     description: "6-month program for blockchain and Web3 startups.",
-    url: "#"
-  }
+    url: "#",
+  },
 ];
 
 const eventsData: Event[] = [
@@ -228,9 +280,10 @@ const eventsData: Event[] = [
     location: "San Francisco, USA",
     date: "Dec 15-17, 2024",
     type: "physical",
-    description: "Three-day summit featuring leading AI researchers, industry experts, and networking opportunities.",
+    description:
+      "Three-day summit featuring leading AI researchers, industry experts, and networking opportunities.",
     attendees: "2000+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e2",
@@ -240,9 +293,10 @@ const eventsData: Event[] = [
     location: "Online",
     date: "Jan 8-10, 2025",
     type: "virtual",
-    description: "Virtual conference connecting climate tech startups with investors and industry leaders.",
+    description:
+      "Virtual conference connecting climate tech startups with investors and industry leaders.",
     attendees: "5000+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e3",
@@ -252,9 +306,10 @@ const eventsData: Event[] = [
     location: "London",
     date: "Jan 22-23, 2025",
     type: "e-summit",
-    description: "E-summit showcasing breakthrough healthcare technologies and digital health solutions.",
+    description:
+      "E-summit showcasing breakthrough healthcare technologies and digital health solutions.",
     attendees: "3500+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e4",
@@ -264,9 +319,10 @@ const eventsData: Event[] = [
     location: "Singapore",
     date: "Feb 5-6, 2025",
     type: "conference",
-    description: "Premier conference for fintech innovators, regulators, and financial institutions.",
+    description:
+      "Premier conference for fintech innovators, regulators, and financial institutions.",
     attendees: "1500+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e5",
@@ -278,7 +334,7 @@ const eventsData: Event[] = [
     type: "workshop",
     description: "Interactive workshops on implementing educational technology in institutions.",
     attendees: "500+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e6",
@@ -288,9 +344,10 @@ const eventsData: Event[] = [
     location: "Amsterdam, Netherlands",
     date: "Mar 1-3, 2025",
     type: "physical",
-    description: "Exhibition and conference featuring sustainable agriculture and food technology innovations.",
+    description:
+      "Exhibition and conference featuring sustainable agriculture and food technology innovations.",
     attendees: "2500+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e7",
@@ -302,7 +359,7 @@ const eventsData: Event[] = [
     type: "networking",
     description: "Exclusive networking event for blockchain entrepreneurs and investors.",
     attendees: "800+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e8",
@@ -314,7 +371,7 @@ const eventsData: Event[] = [
     type: "conference",
     description: "Conference on advanced manufacturing, robotics, and Industry 4.0 technologies.",
     attendees: "1800+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e9",
@@ -326,7 +383,7 @@ const eventsData: Event[] = [
     type: "virtual",
     description: "Virtual summit covering e-commerce strategies, trends, and growth tactics.",
     attendees: "4000+ attendees",
-    url: "#"
+    url: "#",
   },
   {
     id: "e10",
@@ -336,26 +393,12 @@ const eventsData: Event[] = [
     location: "New York",
     date: "Apr 15-16, 2025",
     type: "hybrid",
-    description: "Forum addressing latest cybersecurity challenges and solutions for businesses.",
+    description:
+      "Forum addressing latest cybersecurity challenges and solutions for businesses.",
     attendees: "2200+ attendees",
-    url: "#"
-  }
+    url: "#",
+  },
 ];
-
-interface StartupRolePosting {
-  id: string;
-  startupName: string;
-  startupLogo?: string;
-  roleTitle: string;
-  sector: string;
-  location: string;
-  isRemote: boolean;
-  employmentType: "Full-time" | "Part-time";
-  compensation: string;
-  description: string;
-  requirements: string;
-  applicantsCount: number;
-}
 
 const startupRolePostings: StartupRolePosting[] = [
   {
@@ -367,9 +410,12 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: true,
     employmentType: "Full-time",
     compensation: "Equity (15-20%) + Competitive Salary",
-    description: "Building next-generation AI solutions for enterprise automation. Seeking technical leader to drive product development and scale engineering team.",
-    requirements: "10+ years in software engineering, proven track record in AI/ML, startup experience preferred, strong leadership skills",
-    applicantsCount: 24
+    description:
+      "Building next-generation AI solutions for enterprise automation. Seeking technical leader to drive product development and scale engineering team.",
+    requirements:
+      "10+ years in software engineering, proven track record in AI/ML, startup experience preferred, strong leadership skills",
+    applicantsCount: 24,
+    customQuestions: [],
   },
   {
     id: "2",
@@ -380,9 +426,12 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: false,
     employmentType: "Full-time",
     compensation: "Equity (3-5%) + €80k-100k",
-    description: "Revolutionary renewable energy platform seeking marketing leader to drive B2B growth and brand positioning in European markets.",
-    requirements: "5+ years B2B marketing experience, climate tech interest, growth hacking expertise, fluent English and German",
-    applicantsCount: 12
+    description:
+      "Revolutionary renewable energy platform seeking marketing leader to drive B2B growth and brand positioning in European markets.",
+    requirements:
+      "5+ years B2B marketing experience, climate tech interest, growth hacking expertise, fluent English and German",
+    applicantsCount: 12,
+    customQuestions: [],
   },
   {
     id: "3",
@@ -393,9 +442,12 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: true,
     employmentType: "Part-time",
     compensation: "Equity (8-12%) + Part-time Salary",
-    description: "Digital health platform connecting patients with specialists. Looking for designer to shape product vision and create exceptional user experiences.",
-    requirements: "Healthcare or medtech design experience, user research skills, design systems expertise, passion for improving patient care",
-    applicantsCount: 8
+    description:
+      "Digital health platform connecting patients with specialists. Looking for designer to shape product vision and create exceptional user experiences.",
+    requirements:
+      "Healthcare or medtech design experience, user research skills, design systems expertise, passion for improving patient care",
+    applicantsCount: 8,
+    customQuestions: [],
   },
   {
     id: "4",
@@ -406,9 +458,12 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: false,
     employmentType: "Full-time",
     compensation: "Equity (5-8%) + SGD 90k-120k",
-    description: "Commercial drone delivery startup scaling operations across Asia. Need experienced operations leader to build efficient logistics systems.",
-    requirements: "Logistics or supply chain experience, startup mindset, data-driven approach, willing to travel across Asia",
-    applicantsCount: 15
+    description:
+      "Commercial drone delivery startup scaling operations across Asia. Need experienced operations leader to build efficient logistics systems.",
+    requirements:
+      "Logistics or supply chain experience, startup mindset, data-driven approach, willing to travel across Asia",
+    applicantsCount: 15,
+    customQuestions: [],
   },
   {
     id: "5",
@@ -419,9 +474,12 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: true,
     employmentType: "Full-time",
     compensation: "Equity (18-25%) + Base Salary",
-    description: "Next-gen payment infrastructure for emerging markets. Seeking financial leader to manage fundraising, financial strategy, and investor relations.",
-    requirements: "Investment banking or VC background, fintech experience, proven fundraising track record, financial modeling expertise",
-    applicantsCount: 32
+    description:
+      "Next-gen payment infrastructure for emerging markets. Seeking financial leader to manage fundraising, financial strategy, and investor relations.",
+    requirements:
+      "Investment banking or VC background, fintech experience, proven fundraising track record, financial modeling expertise",
+    applicantsCount: 32,
+    customQuestions: [],
   },
   {
     id: "6",
@@ -432,9 +490,12 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: true,
     employmentType: "Full-time",
     compensation: "Equity (10-15%) + $140k-180k",
-    description: "AI-powered personalized learning platform for K-12 education. Looking for technical co-founder to lead engineering and product development.",
-    requirements: "Full-stack expertise, EdTech passion, experience with AI/ML, team building skills, scalability focus",
-    applicantsCount: 18
+    description:
+      "AI-powered personalized learning platform for K-12 education. Looking for technical co-founder to lead engineering and product development.",
+    requirements:
+      "Full-stack expertise, EdTech passion, experience with AI/ML, team building skills, scalability focus",
+    applicantsCount: 18,
+    customQuestions: [],
   },
   {
     id: "7",
@@ -445,9 +506,12 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: false,
     employmentType: "Part-time",
     compensation: "Equity (4-6%) + Part-time Salary",
-    description: "Sustainable farming technology startup seeking BD leader to establish partnerships with farms and distributors across Europe.",
-    requirements: "Agriculture industry knowledge, strong network in agritech, partnership development experience, sustainability focus",
-    applicantsCount: 7
+    description:
+      "Sustainable farming technology startup seeking BD leader to establish partnerships with farms and distributors across Europe.",
+    requirements:
+      "Agriculture industry knowledge, strong network in agritech, partnership development experience, sustainability focus",
+    applicantsCount: 7,
+    customQuestions: [],
   },
   {
     id: "8",
@@ -458,13 +522,252 @@ const startupRolePostings: StartupRolePosting[] = [
     isRemote: true,
     employmentType: "Full-time",
     compensation: "Equity (20-25%) + Competitive Package",
-    description: "Enterprise cybersecurity platform protecting critical infrastructure. Seeking security expert to lead product vision and threat research.",
-    requirements: "Deep cybersecurity expertise, ethical hacking background, enterprise security experience, thought leadership",
-    applicantsCount: 21
-  }
+    description:
+      "Enterprise cybersecurity platform protecting critical infrastructure. Seeking security expert to lead product vision and threat research.",
+    requirements:
+      "Deep cybersecurity expertise, ethical hacking background, enterprise security experience, thought leadership",
+    applicantsCount: 21,
+    customQuestions: [],
+  },
 ];
 
-const Opportunities = () => {
+const grantTypes = ["all", "grant", "incubator", "accelerator"];
+const eventTypes = [
+  "all",
+  "physical",
+  "virtual",
+  "hybrid",
+  "e-summit",
+  "conference",
+  "workshop",
+  "networking",
+];
+const remoteOptions = ["all", "remote", "on-site"];
+const employmentOptions = ["all", "Full-time", "Part-time"];
+
+/* ---------------------------
+   Helper functions
+   --------------------------- */
+const getGrantTypeBadge = (type: string) => {
+  switch (type) {
+    case "grant":
+      return "default";
+    case "incubator":
+      return "secondary";
+    case "accelerator":
+      return "outline";
+    default:
+      return "default";
+  }
+};
+
+const getEventTypeBadge = (type: string) => {
+  switch (type) {
+    case "physical":
+      return "default";
+    case "virtual":
+      return "secondary";
+    case "hybrid":
+      return "outline";
+    default:
+      return "default";
+  }
+};
+
+/* ---------------------------
+   RoleCard Component
+   --------------------------- */
+type RoleCardProps = {
+  posting: StartupRolePosting;
+  isMyAd?: boolean;
+};
+
+const RoleCard: React.FC<RoleCardProps> = ({ posting, isMyAd = false }) => {
+  const [showApplyBox, setShowApplyBox] = useState(false);
+  const [applicationText, setApplicationText] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [applied, setApplied] = useState(false);
+  const [count, setCount] = useState(posting.applicantsCount);
+  const [questionAnswers, setQuestionAnswers] = useState<string[]>(
+    posting.customQuestions.map(() => "")
+  );
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (!file) return;
+    setUploadedFile(file);
+  };
+
+  const handleAnswerChange = (index: number, value: string) => {
+    const newAnswers = [...questionAnswers];
+    newAnswers[index] = value;
+    setQuestionAnswers(newAnswers);
+  };
+
+  const handleSubmit = () => {
+    // Check if all custom questions are answered (if they exist)
+    const hasQuestions = posting.customQuestions.some(q => q.trim() !== "");
+    const allQuestionsAnswered = questionAnswers.every((answer, index) => {
+      return posting.customQuestions[index] ? answer.trim() !== "" : true;
+    });
+
+    if (hasQuestions && !allQuestionsAnswered) {
+      alert("Please answer all questions before submitting.");
+      return;
+    }
+
+    if (!applicationText.trim() && !uploadedFile) return;
+
+    // Simulate an API call
+    setApplied(true);
+    setShowApplyBox(false);
+    setCount((prev) => prev + 1);
+
+    // Clear inputs
+    setApplicationText("");
+    setUploadedFile(null);
+    setQuestionAnswers(posting.customQuestions.map(() => ""));
+  };
+
+  return (
+    <div className="border border-border rounded-xl p-5 space-y-4 hover:shadow-lg transition-all bg-card">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 flex-1">
+          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-6 h-6 text-primary" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-foreground text-lg">{posting.startupName}</h3>
+              {isMyAd && (
+                <Badge variant="secondary" className="text-xs">
+                  my ad
+                </Badge>
+              )}
+            </div>
+
+            <p className="text-base text-foreground/90 font-semibold mt-1">{posting.roleTitle}</p>
+          </div>
+        </div>
+
+        <Badge variant="default" className="whitespace-nowrap font-medium">
+          {posting.employmentType}
+        </Badge>
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-foreground/80 leading-relaxed">{posting.description}</p>
+
+      {/* Requirements */}
+      <div className="bg-muted/50 rounded-lg p-3">
+        <p className="text-xs font-medium text-muted-foreground mb-1">Looking for:</p>
+        <p className="text-sm text-foreground/90">{posting.requirements}</p>
+      </div>
+
+      {/* Compensation */}
+      <div className="flex items-center gap-2 text-sm">
+        <span className="font-semibold text-primary">Compensation:</span>
+        <span className="text-foreground/90">{posting.compensation}</span>
+      </div>
+
+      {/* Details Grid */}
+      <div className="grid grid-cols-2 gap-3 text-xs">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <MapPin className="w-3.5 h-3.5" />
+          <span>{posting.location}</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Briefcase className="w-3.5 h-3.5" />
+          <span>{posting.isRemote ? "Remote" : "On-site"}</span>
+        </div>
+      </div>
+
+      {/* Sector */}
+      <Badge variant="secondary" className="text-xs">
+        {posting.sector}
+      </Badge>
+
+      {/* Applicants Count */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border">
+        <Users className="w-4 h-4" />
+        <span className="font-medium">{count} applicants</span>
+      </div>
+
+      {/* Apply Box */}
+      {showApplyBox && !applied && (
+        <div className="bg-muted/40 border border-border rounded-lg p-3 space-y-3">
+          <Textarea
+            value={applicationText}
+            onChange={(e) => setApplicationText(e.target.value)}
+            placeholder="Write a short introduction..."
+            className="w-full bg-background rounded-md border border-border p-2 text-sm resize-none"
+            rows={3}
+          />
+
+          {/* Custom Questions */}
+          {posting.customQuestions.filter(q => q.trim() !== "").map((question, index) => (
+            <div key={index} className="space-y-2">
+              <Label className="text-sm font-medium">{question}</Label>
+              <Textarea
+                value={questionAnswers[index]}
+                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                placeholder="Your answer..."
+                className="w-full bg-background rounded-md border border-border p-2 text-sm resize-none"
+                rows={2}
+                required
+              />
+            </div>
+          ))}
+
+          {/* File upload */}
+          <div>
+            <label className="text-xs text-muted-foreground">Upload resume (PDF/DOC)</label>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={handleFileUpload}
+              className="mt-1 text-xs"
+            />
+
+            {uploadedFile && <p className="text-xs mt-1 text-primary font-medium">{uploadedFile.name}</p>}
+          </div>
+
+          {/* Send Button */}
+          <Button size="sm" className="w-full font-medium" onClick={handleSubmit}>
+            Send Application
+          </Button>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-3 pt-2">
+        <Button
+          size="sm"
+          className="flex-1 gap-2 font-medium"
+          variant={applied ? "secondary" : "default"}
+          onClick={() => {
+            if (!applied) setShowApplyBox((prev) => !prev);
+          }}
+        >
+          {applied ? "Applied" : "Apply for Role"}
+        </Button>
+
+        <Button size="sm" variant="outline" className="gap-2">
+          <ExternalLink className="w-3.5 h-3.5" />
+          View Profile
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+/* ---------------------------
+   Main Opportunities component
+   --------------------------- */
+const Opportunities: React.FC = () => {
   const [grantSector, setGrantSector] = useState<string>("All Sectors");
   const [grantType, setGrantType] = useState<string>("all");
   const [eventSector, setEventSector] = useState<string>("All Sectors");
@@ -474,7 +777,7 @@ const Opportunities = () => {
   const [teamLocation, setTeamLocation] = useState<string>("All Locations");
   const [teamRemote, setTeamRemote] = useState<string>("all");
   const [teamEmploymentType, setTeamEmploymentType] = useState<string>("all");
-  
+
   const [grantTypeOpen, setGrantTypeOpen] = useState(false);
   const [grantSectorOpen, setGrantSectorOpen] = useState(false);
   const [eventTypeOpen, setEventTypeOpen] = useState(false);
@@ -484,6 +787,7 @@ const Opportunities = () => {
   const [teamLocationOpen, setTeamLocationOpen] = useState(false);
   const [teamRemoteOpen, setTeamRemoteOpen] = useState(false);
   const [teamEmploymentOpen, setTeamEmploymentOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("team");
 
   // User created job postings
   const [userPostings, setUserPostings] = useState<StartupRolePosting[]>([]);
@@ -498,23 +802,22 @@ const Opportunities = () => {
     compensation: "",
     description: "",
     requirements: "",
+    customQuestions: ["", "", ""],
   });
 
-  const grantTypes = ["all", "grant", "incubator", "accelerator"];
-  const eventTypes = ["all", "physical", "virtual", "hybrid", "e-summit", "conference", "workshop", "networking"];
-  const remoteOptions = ["all", "remote", "on-site"];
-  const employmentOptions = ["all", "Full-time", "Part-time"];
-
-  const filteredGrants = grantsData.filter(grant => {
+  const filteredGrants = grantsData.filter((grant) => {
     const sectorMatch = grantSector === "All Sectors" || grant.sector === grantSector;
     const typeMatch = grantType === "all" || grant.type === grantType;
     return sectorMatch && typeMatch;
   });
 
-  const filteredEvents = eventsData.filter(event => {
+  const filteredEvents = eventsData.filter((event) => {
     const sectorMatch = eventSector === "All Sectors" || event.sector === eventSector;
     const typeMatch = eventType === "all" || event.type === eventType;
-    const locationMatch = eventLocation === "All Locations" || event.location.includes(eventLocation) || eventLocation.includes(event.location);
+    const locationMatch =
+      eventLocation === "All Locations" ||
+      event.location.includes(eventLocation) ||
+      eventLocation.includes(event.location);
     return sectorMatch && typeMatch && locationMatch;
   });
 
@@ -531,6 +834,7 @@ const Opportunities = () => {
       description: newPosting.description,
       requirements: newPosting.requirements,
       applicantsCount: 0,
+      customQuestions: newPosting.customQuestions.filter(q => q.trim() !== ""),
     };
     setUserPostings([posting, ...userPostings]);
     setCreateAdOpen(false);
@@ -544,61 +848,32 @@ const Opportunities = () => {
       compensation: "",
       description: "",
       requirements: "",
+      customQuestions: ["", "", ""],
     });
   };
 
   const allRolePostings = [...userPostings, ...startupRolePostings];
 
-  const filteredRolePostings = allRolePostings.filter(posting => {
+  const filteredRolePostings = allRolePostings.filter((posting) => {
     const sectorMatch = teamSector === "All Sectors" || posting.sector === teamSector;
-    const locationMatch = teamLocation === "All Locations" || posting.location.includes(teamLocation) || teamLocation === "Global";
-    const remoteMatch = teamRemote === "all" || 
-      (teamRemote === "remote" && posting.isRemote) || 
+    const locationMatch =
+      teamLocation === "All Locations" ||
+      posting.location.includes(teamLocation) ||
+      teamLocation === "Global";
+    const remoteMatch =
+      teamRemote === "all" ||
+      (teamRemote === "remote" && posting.isRemote) ||
       (teamRemote === "on-site" && !posting.isRemote);
     const employmentMatch = teamEmploymentType === "all" || posting.employmentType === teamEmploymentType;
     return sectorMatch && locationMatch && remoteMatch && employmentMatch;
   });
 
-  const getGrantTypeBadge = (type: string) => {
-    switch (type) {
-      case "grant": return "default";
-      case "incubator": return "secondary";
-      case "accelerator": return "outline";
-      default: return "default";
-    }
-  };
-
-  const getEventTypeBadge = (type: string) => {
-    switch (type) {
-      case "physical": return "default";
-      case "virtual": return "secondary";
-      case "hybrid": return "outline";
-      default: return "default";
-    }
-  };
-
-  const FilterButton = ({ label, value, isActive }: { label: string; value: string; isActive: boolean }) => (
-    <button
-      className={cn(
-        "px-3 py-1.5 rounded-full text-sm font-medium transition-colors border",
-        isActive
-          ? "bg-primary text-primary-foreground border-primary"
-          : "bg-background text-foreground border-border hover:bg-muted"
-      )}
-    >
-      {label}
-      {isActive && value !== "all" && value !== "All Sectors" && value !== "All Locations" && (
-        <span className="ml-1.5">✓</span>
-      )}
-    </button>
-  );
-
   return (
     <div className="min-h-screen bg-background pb-20">
-      
-      {/* Main Content */}
-      <div className="max-w-2xl md:max-w-7xl mx-auto px-4">{/* Three-Tab Header */}
-        <Tabs defaultValue="grants" className="mt-6">
+      <div className="max-w-2xl md:max-w-5xl mx-auto px-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+
+
           <TabsList className="grid w-full grid-cols-3 mb-6 h-12 bg-muted/50 rounded-2xl p-1">
             <TabsTrigger value="grants" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">
               Grants
@@ -609,18 +884,36 @@ const Opportunities = () => {
             <TabsTrigger value="team" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">
               Team
             </TabsTrigger>
+            {/* <TabsTrigger value="myteams" className="text-sm font-medium rounded-xl data-[state=active]:bg-background">My Teams</TabsTrigger> */}
+
           </TabsList>
+          <TabsContent value="myteams" className="space-y-4">
+              <div className="text-sm text-muted-foreground py-2">
+                {userPostings.length} {userPostings.length === 1 ? "position" : "positions"} posted by you
+              </div>
+
+              <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+                {userPostings.map((posting) => (
+                  <RoleCard key={posting.id} posting={posting} isMyAd={true} />
+                ))}
+              </div>
+
+              {userPostings.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>You haven't posted any team roles yet</p>
+                </div>
+              )}
+            </TabsContent>
 
           {/* GRANTS TAB */}
           <TabsContent value="grants" className="space-y-4">
-            {/* Grant Filters */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Filter className="w-4 h-4" />
                 Filters
               </div>
-              
-              {/* Grant Type Filter */}
+
               <Collapsible open={grantTypeOpen} onOpenChange={setGrantTypeOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -630,7 +923,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {grantTypes.map(type => (
+                    {grantTypes.map((type) => (
                       <button
                         key={type}
                         onClick={() => {
@@ -639,9 +932,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                          grantType === type
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          grantType === type ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
@@ -651,7 +942,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Grant Sector Filter */}
               <Collapsible open={grantSectorOpen} onOpenChange={setGrantSectorOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -661,7 +951,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {sectors.map(sector => (
+                    {sectors.map((sector) => (
                       <button
                         key={sector}
                         onClick={() => {
@@ -670,9 +960,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          grantSector === sector
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          grantSector === sector ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {sector}
@@ -682,7 +970,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Clear filters if any active */}
               {(grantType !== "all" || grantSector !== "All Sectors") && (
                 <Button
                   variant="ghost"
@@ -699,22 +986,19 @@ const Opportunities = () => {
               )}
             </div>
 
-            {/* Grant Results */}
             <div className="text-sm text-muted-foreground py-2">
-              {filteredGrants.length} {filteredGrants.length === 1 ? 'opportunity' : 'opportunities'} found
+              {filteredGrants.length} {filteredGrants.length === 1 ? "opportunity" : "opportunities"} found
             </div>
 
-            <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
-              {filteredGrants.map(grant => (
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+              {filteredGrants.map((grant) => (
                 <div key={grant.id} className="border border-border rounded-xl p-4 space-y-3 hover:bg-muted/30 transition-colors bg-card">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <h3 className="font-semibold text-foreground">{grant.name}</h3>
                       <p className="text-sm text-muted-foreground mt-1">{grant.organization}</p>
                     </div>
-                    <Badge variant={getGrantTypeBadge(grant.type)}>
-                      {grant.type}
-                    </Badge>
+                    <Badge variant={getGrantTypeBadge(grant.type)}>{grant.type}</Badge>
                   </div>
 
                   <p className="text-sm text-foreground/80">{grant.description}</p>
@@ -751,14 +1035,12 @@ const Opportunities = () => {
 
           {/* EVENTS TAB */}
           <TabsContent value="events" className="space-y-4">
-            {/* Event Filters */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Filter className="w-4 h-4" />
                 Filters
               </div>
-              
-              {/* Event Type Filter */}
+
               <Collapsible open={eventTypeOpen} onOpenChange={setEventTypeOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -768,7 +1050,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {eventTypes.map(type => (
+                    {eventTypes.map((type) => (
                       <button
                         key={type}
                         onClick={() => {
@@ -777,9 +1059,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                          eventType === type
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          eventType === type ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
@@ -789,7 +1069,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Event Sector Filter */}
               <Collapsible open={eventSectorOpen} onOpenChange={setEventSectorOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -799,7 +1078,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {sectors.map(sector => (
+                    {sectors.map((sector) => (
                       <button
                         key={sector}
                         onClick={() => {
@@ -808,9 +1087,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          eventSector === sector
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          eventSector === sector ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {sector}
@@ -820,7 +1097,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Event Location Filter */}
               <Collapsible open={eventLocationOpen} onOpenChange={setEventLocationOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -830,7 +1106,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {locations.map(location => (
+                    {locations.map((location) => (
                       <button
                         key={location}
                         onClick={() => {
@@ -839,9 +1115,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          eventLocation === location
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          eventLocation === location ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {location}
@@ -851,7 +1125,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Clear filters if any active */}
               {(eventType !== "all" || eventSector !== "All Sectors" || eventLocation !== "All Locations") && (
                 <Button
                   variant="ghost"
@@ -869,22 +1142,19 @@ const Opportunities = () => {
               )}
             </div>
 
-            {/* Event Results */}
             <div className="text-sm text-muted-foreground py-2">
-              {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'} found
+              {filteredEvents.length} {filteredEvents.length === 1 ? "event" : "events"} found
             </div>
 
-            <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
-              {filteredEvents.map(event => (
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+              {filteredEvents.map((event) => (
                 <div key={event.id} className="border border-border rounded-xl p-4 space-y-3 hover:bg-muted/30 transition-colors bg-card">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <h3 className="font-semibold text-foreground">{event.name}</h3>
                       <p className="text-sm text-muted-foreground mt-1">{event.organizer}</p>
                     </div>
-                    <Badge variant={getEventTypeBadge(event.type)}>
-                      {event.type}
-                    </Badge>
+                    <Badge variant={getEventTypeBadge(event.type)}>{event.type}</Badge>
                   </div>
 
                   <p className="text-sm text-foreground/80">{event.description}</p>
@@ -924,14 +1194,24 @@ const Opportunities = () => {
 
           {/* TEAM TAB */}
           <TabsContent value="team" className="space-y-4">
-            {/* Create Ad Button */}
             <Dialog open={createAdOpen} onOpenChange={setCreateAdOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full gap-2">
-                  <Plus className="w-4 h-4" />
-                  Create Job Ad
+              <div className="flex items-center gap-3">
+                <DialogTrigger asChild>
+                  <Button className="flex-1 gap-2">
+                    <Plus className="w-4 h-4" />
+                    Create Job Ad
+                  </Button>
+                </DialogTrigger>
+
+                {/* NEW BUTTON — switches to My Teams tab */}
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setActiveTab("myteams")}
+                >
+                  My Teams
                 </Button>
-              </DialogTrigger>
+              </div>
               <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create Job Posting</DialogTitle>
@@ -942,7 +1222,7 @@ const Opportunities = () => {
                     <Input
                       id="startupName"
                       value={newPosting.startupName}
-                      onChange={(e) => setNewPosting({...newPosting, startupName: e.target.value})}
+                      onChange={(e) => setNewPosting({ ...newPosting, startupName: e.target.value })}
                       placeholder="Enter your startup name"
                     />
                   </div>
@@ -951,19 +1231,21 @@ const Opportunities = () => {
                     <Input
                       id="roleTitle"
                       value={newPosting.roleTitle}
-                      onChange={(e) => setNewPosting({...newPosting, roleTitle: e.target.value})}
+                      onChange={(e) => setNewPosting({ ...newPosting, roleTitle: e.target.value })}
                       placeholder="e.g., Co-Founder & CTO"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="sector">Sector</Label>
-                    <Select value={newPosting.sector} onValueChange={(value) => setNewPosting({...newPosting, sector: value})}>
+                    <Select value={newPosting.sector} onValueChange={(value) => setNewPosting({ ...newPosting, sector: value })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {sectors.filter(s => s !== "All Sectors").map(sector => (
-                          <SelectItem key={sector} value={sector}>{sector}</SelectItem>
+                        {sectors.filter((s) => s !== "All Sectors").map((sector) => (
+                          <SelectItem key={sector} value={sector}>
+                            {sector}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -973,13 +1255,16 @@ const Opportunities = () => {
                     <Input
                       id="location"
                       value={newPosting.location}
-                      onChange={(e) => setNewPosting({...newPosting, location: e.target.value})}
+                      onChange={(e) => setNewPosting({ ...newPosting, location: e.target.value })}
                       placeholder="e.g., San Francisco, USA"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="employmentType">Employment Type</Label>
-                    <Select value={newPosting.employmentType} onValueChange={(value: "Full-time" | "Part-time") => setNewPosting({...newPosting, employmentType: value})}>
+                    <Select
+                      value={newPosting.employmentType}
+                      onValueChange={(value: "Full-time" | "Part-time") => setNewPosting({ ...newPosting, employmentType: value })}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -994,7 +1279,7 @@ const Opportunities = () => {
                       type="checkbox"
                       id="isRemote"
                       checked={newPosting.isRemote}
-                      onChange={(e) => setNewPosting({...newPosting, isRemote: e.target.checked})}
+                      onChange={(e) => setNewPosting({ ...newPosting, isRemote: e.target.checked })}
                       className="rounded"
                     />
                     <Label htmlFor="isRemote">Remote Position</Label>
@@ -1004,7 +1289,7 @@ const Opportunities = () => {
                     <Input
                       id="compensation"
                       value={newPosting.compensation}
-                      onChange={(e) => setNewPosting({...newPosting, compensation: e.target.value})}
+                      onChange={(e) => setNewPosting({ ...newPosting, compensation: e.target.value })}
                       placeholder="e.g., Equity (15-20%) + Competitive Salary"
                     />
                   </div>
@@ -1013,7 +1298,7 @@ const Opportunities = () => {
                     <Textarea
                       id="description"
                       value={newPosting.description}
-                      onChange={(e) => setNewPosting({...newPosting, description: e.target.value})}
+                      onChange={(e) => setNewPosting({ ...newPosting, description: e.target.value })}
                       placeholder="Describe the role and your startup"
                       rows={4}
                     />
@@ -1023,11 +1308,38 @@ const Opportunities = () => {
                     <Textarea
                       id="requirements"
                       value={newPosting.requirements}
-                      onChange={(e) => setNewPosting({...newPosting, requirements: e.target.value})}
+                      onChange={(e) => setNewPosting({ ...newPosting, requirements: e.target.value })}
                       placeholder="What are you looking for?"
                       rows={3}
                     />
                   </div>
+
+                  {/* Custom Questions Section */}
+                  <div className="space-y-3 pt-4 border-t border-border">
+                    <Label className="text-sm font-medium">Custom Questions (Optional, max 3)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Add up to 3 questions for applicants to answer
+                    </p>
+                    
+                    {[0, 1, 2].map((index) => (
+                      <div key={index} className="space-y-2">
+                        <Label htmlFor={`question-${index}`} className="text-xs">
+                          Question {index + 1}
+                        </Label>
+                        <Input
+                          id={`question-${index}`}
+                          value={newPosting.customQuestions[index]}
+                          onChange={(e) => {
+                            const newQuestions = [...newPosting.customQuestions];
+                            newQuestions[index] = e.target.value;
+                            setNewPosting({ ...newPosting, customQuestions: newQuestions });
+                          }}
+                          placeholder={`Enter question ${index + 1} (optional)`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
                   <Button onClick={handleCreatePosting} className="w-full">
                     Create Posting
                   </Button>
@@ -1035,14 +1347,12 @@ const Opportunities = () => {
               </DialogContent>
             </Dialog>
 
-            {/* Team Filters */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Filter className="w-4 h-4" />
                 Filters
               </div>
-              
-              {/* Sector Filter */}
+
               <Collapsible open={teamSectorOpen} onOpenChange={setTeamSectorOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -1052,7 +1362,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {sectors.map(sector => (
+                    {sectors.map((sector) => (
                       <button
                         key={sector}
                         onClick={() => {
@@ -1061,9 +1371,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          teamSector === sector
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          teamSector === sector ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {sector}
@@ -1073,7 +1381,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Location Filter */}
               <Collapsible open={teamLocationOpen} onOpenChange={setTeamLocationOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -1083,7 +1390,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {locations.map(location => (
+                    {locations.map((location) => (
                       <button
                         key={location}
                         onClick={() => {
@@ -1092,9 +1399,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          teamLocation === location
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          teamLocation === location ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {location}
@@ -1104,7 +1409,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Remote/On-site Filter */}
               <Collapsible open={teamRemoteOpen} onOpenChange={setTeamRemoteOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -1114,7 +1418,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="flex gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {remoteOptions.map(option => (
+                    {remoteOptions.map((option) => (
                       <button
                         key={option}
                         onClick={() => {
@@ -1123,9 +1427,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize",
-                          teamRemote === option
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          teamRemote === option ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {option === "all" ? "All" : option === "remote" ? "Remote" : "On-site"}
@@ -1135,7 +1437,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Employment Type Filter */}
               <Collapsible open={teamEmploymentOpen} onOpenChange={setTeamEmploymentOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
@@ -1145,7 +1446,7 @@ const Opportunities = () => {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="flex gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {employmentOptions.map(option => (
+                    {employmentOptions.map((option) => (
                       <button
                         key={option}
                         onClick={() => {
@@ -1154,9 +1455,7 @@ const Opportunities = () => {
                         }}
                         className={cn(
                           "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                          teamEmploymentType === option
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card hover:bg-muted border border-border"
+                          teamEmploymentType === option ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
                         )}
                       >
                         {option === "all" ? "All" : option}
@@ -1166,7 +1465,6 @@ const Opportunities = () => {
                 </CollapsibleContent>
               </Collapsible>
 
-              {/* Clear filters if any active */}
               {(teamSector !== "All Sectors" || teamLocation !== "All Locations" || teamRemote !== "all" || teamEmploymentType !== "all") && (
                 <Button
                   variant="ghost"
@@ -1185,102 +1483,27 @@ const Opportunities = () => {
               )}
             </div>
 
-            {/* Team Results */}
             <div className="text-sm text-muted-foreground py-2">
-              {filteredRolePostings.length} {filteredRolePostings.length === 1 ? 'position' : 'positions'} available
+              {filteredRolePostings.length} {filteredRolePostings.length === 1 ? "position" : "positions"} available
             </div>
 
-            <div className="space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
-              {filteredRolePostings.map(posting => {
-                const isMyAd = posting.id.startsWith('user-');
-                return (
-                  <div key={posting.id} className="border border-border rounded-xl p-5 space-y-4 hover:shadow-lg transition-all bg-card">
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1">
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-6 h-6 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-foreground text-lg">{posting.startupName}</h3>
-                            {isMyAd && (
-                              <Badge variant="secondary" className="text-xs">my ad</Badge>
-                            )}
-                          </div>
-                          <p className="text-base text-foreground/90 font-semibold mt-1">{posting.roleTitle}</p>
-                        </div>
-                      </div>
-                      <Badge variant="default" className="whitespace-nowrap font-medium">
-                        {posting.employmentType}
-                      </Badge>
-                    </div>
-
-                  {/* Description */}
-                  <p className="text-sm text-foreground/80 leading-relaxed">{posting.description}</p>
-
-                  {/* Requirements */}
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Looking for:</p>
-                    <p className="text-sm text-foreground/90">{posting.requirements}</p>
-                  </div>
-
-                  {/* Compensation */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-semibold text-primary">Compensation:</span>
-                    <span className="text-foreground/90">{posting.compensation}</span>
-                  </div>
-
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{posting.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Briefcase className="w-3.5 h-3.5" />
-                      <span>{posting.isRemote ? "Remote" : "On-site"}</span>
-                    </div>
-                  </div>
-
-                  {/* Sector Badge */}
-                  <div>
-                    <Badge variant="secondary" className="text-xs">
-                      {posting.sector}
-                    </Badge>
-                  </div>
-
-                  {/* Applicants Count */}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border">
-                    <Users className="w-4 h-4" />
-                    <span className="font-medium">{posting.applicantsCount} applicants</span>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-2">
-                    <Button size="sm" className="flex-1 gap-2 font-medium">
-                      Apply for Role
-                    </Button>
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      View Profile
-                    </Button>
-                  </div>
-                </div>
-                );
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+              {filteredRolePostings.map((posting) => {
+                const isMyAd = posting.id.startsWith("user-");
+                return <RoleCard key={posting.id} posting={posting} isMyAd={isMyAd} />;
               })}
-
-              {filteredRolePostings.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No positions found with current filters</p>
-                </div>
-              )}
             </div>
+
+            {filteredRolePostings.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No positions found with current filters</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
-      
+
       <BottomNav />
     </div>
   );

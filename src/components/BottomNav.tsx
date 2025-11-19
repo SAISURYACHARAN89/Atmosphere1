@@ -1,5 +1,16 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Rocket, TrendingUp, Film, User, Search, Briefcase, Calendar, Heart, MessageCircle } from "lucide-react";
+import {
+  Home,
+  Rocket,
+  TrendingUp,
+  Film,
+  User,
+  Search,
+  Briefcase,
+  Calendar,
+  Heart,
+  MessageCircle,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 
 type AppMode = "left" | "right";
@@ -8,42 +19,46 @@ const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if we're on a company profile that was navigated from home or reels
+  /* ----------------------------------------------------
+      NEW LOGIC → Detect when user is previewing reels
+  ---------------------------------------------------- */
+  const previewFrom = location.state?.preview ?? null;
+  const isPreviewReels = location.pathname === "/reels" && !!previewFrom;
+
+  /* Existing logic */
   const fromPath = location.state?.from;
-  const isCompanyProfile = location.pathname.startsWith('/company/');
-  const isStartupProfile = location.pathname.startsWith('/startup-profile/');
-  const isNotificationsPage = location.pathname === '/notifications';
-  const isMessagesPage = location.pathname === '/messages';
-  
-  // Define page groups
+  const isCompanyProfile = location.pathname.startsWith("/company/");
+  const isStartupProfile = location.pathname.startsWith("/startup-profile/");
+  const isNotificationsPage = location.pathname === "/notifications";
+  const isMessagesPage = location.pathname === "/messages";
+
   const leftModePages = ["/", "/search", "/reels", "/profile"];
   const rightModePages = ["/launch", "/trade", "/opportunities", "/meetings"];
-  
-  // Mode state - only changes via toggle button, persisted in localStorage
+
   const [appMode, setAppMode] = useState<AppMode>(() => {
-    const stored = localStorage.getItem('navMode');
-    if (stored === 'left' || stored === 'right') return stored;
-    // Initialize based on current page only if no stored preference
+    const stored = localStorage.getItem("navMode");
+    if (stored === "left" || stored === "right") return stored;
     return rightModePages.includes(location.pathname) ? "right" : "left";
   });
-  
-  // Track last visited page for each mode
+
   const [lastLeftPage, setLastLeftPage] = useState(() => {
     return leftModePages.includes(location.pathname) ? location.pathname : "/";
   });
+
   const [lastRightPage, setLastRightPage] = useState(() => {
-    return rightModePages.includes(location.pathname) ? location.pathname : "/launch";
+    return rightModePages.includes(location.pathname)
+      ? location.pathname
+      : "/launch";
   });
 
-  // Track the last visited page for each mode
   useEffect(() => {
     if (leftModePages.includes(location.pathname)) {
       setLastLeftPage(location.pathname);
     } else if (rightModePages.includes(location.pathname)) {
       setLastRightPage(location.pathname);
     }
-  }, [location.pathname, leftModePages, rightModePages]);
-  
+  }, [location.pathname]);
+
   const leftModeTabs = [
     { id: "home", icon: Home, label: "Home", path: "/" },
     { id: "search", icon: Search, label: "Search", path: "/search" },
@@ -58,7 +73,6 @@ const BottomNav = () => {
     { id: "meetings", icon: Calendar, label: "Meetings", path: "/meetings" },
   ];
 
-  // Sidebar tabs with likes and messages
   const leftModeSidebarTabs = [
     { id: "home", icon: Home, label: "Home", path: "/" },
     { id: "search", icon: Search, label: "Search", path: "/search" },
@@ -81,242 +95,158 @@ const BottomNav = () => {
   const sidebarTabs = appMode === "left" ? leftModeSidebarTabs : rightModeSidebarTabs;
 
   const handleTabClick = (tab: typeof tabs[0]) => {
-    // Save current mode before navigating to notifications or messages
-    if (tab.path === '/notifications') {
-      localStorage.setItem('notificationsPreviousMode', appMode);
-    } else if (tab.path === '/messages') {
-      localStorage.setItem('messagesPreviousMode', appMode);
-    }
-    navigate(tab.path);
+    navigate(tab.path, { state: {} });
   };
 
   const toggleMode = () => {
-    // Toggle mode and navigate to the last visited page of the other mode
     if (appMode === "left") {
       setAppMode("right");
-      localStorage.setItem('navMode', 'right');
+      localStorage.setItem("navMode", "right");
       navigate(lastRightPage);
     } else {
       setAppMode("left");
-      localStorage.setItem('navMode', 'left');
+      localStorage.setItem("navMode", "left");
       navigate(lastLeftPage);
     }
   };
 
-  // Hide mobile bottom nav on profile pages, notifications, and messages
-  const shouldHideMobileNav = isCompanyProfile || isStartupProfile || isNotificationsPage || isMessagesPage;
+  const shouldHideMobileNav =
+    isCompanyProfile ||
+    isStartupProfile ||
+    isNotificationsPage ||
+    isMessagesPage;
+
+  const isTabActive = (tabPath: string) => {
+    if (isPreviewReels) return tabPath === "/search";
+    if (isCompanyProfile && fromPath) return tabPath === fromPath;
+    return location.pathname === tabPath;
+  };
 
   return (
     <>
-      {/* Mobile and iPad bottom nav */}
+      {/* MOBILE NAV */}
       {!shouldHideMobileNav && (
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border/50 z-50 shadow-lg">
-        <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-2">
-          {/* First two tabs */}
-          {tabs.slice(0, 2).map((tab) => {
-            const Icon = tab.icon;
-            const isActive = isCompanyProfile && fromPath
-              ? tab.path === fromPath
-              : location.pathname === tab.path;
+          <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-2">
+            {tabs.slice(0, 2).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = isTabActive(tab.path);
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab)}
-                className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300"
-                aria-label={tab.label}
-              >
-                <Icon
-                  className={`transition-colors duration-300 ${
-                    isActive 
-                      ? 'text-white fill-white' 
-                      : 'text-muted-foreground'
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab)}
+                  className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300"
+                >
+                  <Icon
+                    className={`${isActive ? "text-white fill-white" : "text-muted-foreground"}`}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    size={24}
+                    fill={isActive ? "currentColor" : "none"}
+                  />
+                </button>
+              );
+            })}
+
+            {/* Toggle Mode */}
+            <button
+              onClick={toggleMode}
+              className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300"
+            >
+              <div className="relative w-14 h-7 bg-muted rounded-full p-1">
+                <div
+                  className={`absolute top-1 w-5 h-5 bg-primary rounded-full transition-transform duration-300 ${
+                    appMode === "left" ? "left-1" : "left-8"
                   }`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  size={24}
-                  fill={isActive ? "currentColor" : "none"}
                 />
-              </button>
-            );
-          })}
+              </div>
+            </button>
 
-          {/* Central mode toggle switch */}
-          <button
-            onClick={toggleMode}
-            className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300"
-            aria-label="Toggle mode"
-          >
-            <div className="relative w-14 h-7 bg-muted rounded-full p-1">
-              <div 
-                className={`absolute top-1 w-5 h-5 bg-primary rounded-full transition-transform duration-300 ease-out ${
-                  appMode === "left" ? "left-1" : "left-8"
-                }`}
-              />
-            </div>
-          </button>
+            {tabs.slice(2, 4).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = isTabActive(tab.path);
 
-          {/* Last two tabs */}
-          {tabs.slice(2, 4).map((tab) => {
-            const Icon = tab.icon;
-            const isActive = isCompanyProfile && fromPath
-              ? tab.path === fromPath
-              : location.pathname === tab.path;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab)}
-                className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300"
-                aria-label={tab.label}
-              >
-                <Icon
-                  className={`transition-colors duration-300 ${
-                    isActive 
-                      ? 'text-white fill-white' 
-                      : 'text-muted-foreground'
-                  }`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  size={24}
-                  fill={isActive ? "currentColor" : "none"}
-                />
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab)}
+                  className="flex flex-col items-center justify-center gap-1 flex-1 transition-all duration-300"
+                >
+                  <Icon
+                    className={`${isActive ? "text-white fill-white" : "text-muted-foreground"}`}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    size={24}
+                    fill={isActive ? "currentColor" : "none"}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       )}
 
-      {/* Desktop left sidebar */}
+      {/* DESKTOP SIDEBAR */}
       <nav className="hidden lg:flex fixed left-0 top-0 bottom-0 w-20 bg-background/80 backdrop-blur-lg z-50">
-        <div className="flex flex-col items-center justify-center gap-6 w-full py-4">
-          {/* First 2 tabs */}
-          {sidebarTabs.slice(0, 2).map((tab) => {
-            const Icon = tab.icon;
-            const isActive = isCompanyProfile && fromPath
-              ? tab.path === fromPath
-              : location.pathname === tab.path;
+        <div className="flex flex-col items-center justify-center w-full h-full gap-6">
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab)}
-                className="flex items-center justify-center transition-all duration-300 w-12 h-12"
-                aria-label={tab.label}
-              >
-                <Icon
-                  className={`transition-colors duration-300 ${
-                    isActive 
-                      ? 'text-white fill-white' 
-                      : 'text-muted-foreground'
-                  }`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  size={28}
-                  fill={isActive ? "currentColor" : "none"}
-                />
-              </button>
-            );
-          })}
 
-          {/* Likes (3rd tab) */}
-          {sidebarTabs[2] && (() => {
-            const tab = sidebarTabs[2];
-            const Icon = tab.icon;
-            const isActive = isCompanyProfile && fromPath
-              ? tab.path === fromPath
-              : location.pathname === tab.path;
+          {/* Top Half Icons */}
+          <div className="flex flex-col items-center gap-6">
+            {sidebarTabs.slice(0, Math.ceil(sidebarTabs.length / 2)).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = isTabActive(tab.path);
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab)}
-                className="flex items-center justify-center transition-all duration-300 w-12 h-12"
-                aria-label={tab.label}
-              >
-                <Icon
-                  className={`transition-colors duration-300 ${
-                    isActive 
-                      ? 'text-white fill-white' 
-                      : 'text-muted-foreground'
-                  }`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  size={28}
-                  fill={isActive ? "currentColor" : "none"}
-                />
-              </button>
-            );
-          })()}
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab)}
+                  className="flex items-center justify-center transition-all duration-300 w-12 h-12"
+                >
+                  <Icon
+                    className={`${isActive ? "text-white fill-white" : "text-muted-foreground"}`}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    size={28}
+                    fill={isActive ? "currentColor" : "none"}
+                  />
+                </button>
+              );
+            })}
+          </div>
 
-          {/* Mode toggle switch */}
-          <button
-            onClick={toggleMode}
-            className="flex items-center justify-center transition-all duration-300"
-            aria-label="Toggle mode"
-          >
+          {/* Center Toggle */}
+          <button onClick={toggleMode} className="my-4">
             <div className="relative w-14 h-7 bg-muted rounded-full p-1">
-              <div 
-                className={`absolute top-1 w-5 h-5 bg-primary rounded-full transition-transform duration-300 ease-out ${
+              <div
+                className={`absolute top-1 w-5 h-5 bg-primary rounded-full transition-transform duration-300 ${
                   appMode === "left" ? "left-1" : "left-8"
                 }`}
               />
             </div>
           </button>
 
-          {/* Messages (4th tab) */}
-          {sidebarTabs[3] && (() => {
-            const tab = sidebarTabs[3];
-            const Icon = tab.icon;
-            const isActive = isCompanyProfile && fromPath
-              ? tab.path === fromPath
-              : location.pathname === tab.path;
+          {/* Bottom Half Icons */}
+          <div className="flex flex-col items-center gap-6">
+            {sidebarTabs.slice(Math.ceil(sidebarTabs.length / 2)).map((tab) => {
+              const Icon = tab.icon;
+              const isActive = isTabActive(tab.path);
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab)}
-                className="flex items-center justify-center transition-all duration-300 w-12 h-12"
-                aria-label={tab.label}
-              >
-                <Icon
-                  className={`transition-colors duration-300 ${
-                    isActive 
-                      ? 'text-white fill-white' 
-                      : 'text-muted-foreground'
-                  }`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  size={28}
-                  fill={isActive ? "currentColor" : "none"}
-                />
-              </button>
-            );
-          })()}
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab)}
+                  className="flex items-center justify-center transition-all duration-300 w-12 h-12"
+                >
+                  <Icon
+                    className={`${isActive ? "text-white fill-white" : "text-muted-foreground"}`}
+                    strokeWidth={isActive ? 2.5 : 2}
+                    size={28}
+                    fill={isActive ? "currentColor" : "none"}
+                  />
+                </button>
+              );
+            })}
+          </div>
 
-          {/* Last 2 tabs (Reels/Profile or Opportunities/Meetings) */}
-          {sidebarTabs.slice(4, 6).map((tab) => {
-            const Icon = tab.icon;
-            const isActive = isCompanyProfile && fromPath
-              ? tab.path === fromPath
-              : location.pathname === tab.path;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab)}
-                className="flex items-center justify-center transition-all duration-300 w-12 h-12"
-                aria-label={tab.label}
-              >
-                <Icon
-                  className={`transition-colors duration-300 ${
-                    isActive 
-                      ? 'text-white fill-white' 
-                      : 'text-muted-foreground'
-                  }`}
-                  strokeWidth={isActive ? 2.5 : 2}
-                  size={28}
-                  fill={isActive ? "currentColor" : "none"}
-                />
-              </button>
-            );
-          })}
         </div>
       </nav>
     </>

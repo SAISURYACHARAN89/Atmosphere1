@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type FilterDay = "today" | "yesterday";
+type FilterDay = "today" | "Last 7 days" ;
 
 const industryTags = [
   "AI", "ML", "Fintech", "HealthTech", "EV", "SaaS", 
@@ -160,10 +160,10 @@ const Launch = () => {
               <h2 className="text-xl font-semibold">Startup Launches</h2>
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => setFilterDay(filterDay === "today" ? "yesterday" : "today")}
+                  onClick={() => setFilterDay(filterDay === "today" ? "last 7 days" : "today")}
                   className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
-                  {filterDay === "today" ? "Today" : "Yesterday"}
+                  {filterDay === "today" ? "Today" : "Last 7 days"}
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 <Button 
@@ -250,7 +250,7 @@ const Launch = () => {
                 <div className="text-center space-y-6 py-8">
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Next Launch Starting In</h3>
-                    <p className="text-sm text-muted-foreground">Airbound Pvt. Ltd. - Drone Delivery Platform</p>
+                    {/* <p className="text-sm text-muted-foreground">Airbound Pvt. Ltd. - Drone Delivery Platform</p> */}
                   </div>
                   
                   <div className="flex justify-center gap-4">
@@ -275,7 +275,7 @@ const Launch = () => {
                   </div>
 
                   <div className="pt-4 border-t">
-                    <p className="text-sm text-muted-foreground mb-3">3 more launches scheduled today</p>
+                    {/* <p className="text-sm text-muted-foreground mb-3">3 more launches scheduled today</p> */}
                     <Button className="w-full">Set Reminder</Button>
                   </div>
                 </div>
@@ -286,7 +286,7 @@ const Launch = () => {
                   filteredStartups.map(startup => (
                     <div key={startup.id} className="bg-card border rounded-lg p-4 shadow-sm space-y-3">
                       <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-lg ${startup.color} flex items-center justify-center text-white font-bold flex-shrink-0`}>
+                        <div className={`w-12 h-12 rounded-full ${startup.color} flex items-center justify-center text-white font-bold flex-shrink-0`}>
                           {startup.initials}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -295,38 +295,42 @@ const Launch = () => {
                         </div>
                       </div>
                       
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                          {startup.type}
-                        </span>
-                        {startup.industries.map(ind => (
-                          <span key={ind} className="px-2 py-1 bg-muted rounded-full text-xs">
-                            {ind}
-                          </span>
-                        ))}
-                      </div>
+                      <div className="flex items-center flex-wrap gap-2">
+
+                          {/* Industry Pills */}
+                          {startup.industries.map(ind => (
+                            <span 
+                              key={ind} 
+                              className="px-2 py-1 bg-muted rounded-full text-xs"
+                            >
+                              {ind}
+                            </span>
+                          ))}
+
+                          {/* Divider Dot (optional, looks cleaner) */}
+                          {/* <span className="text-muted-foreground">•</span> */}
+
+                          {/* Pre-Revenue Row */}
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="text-muted-foreground">Pre Revenue</span>
+                            {/* <span className="font-medium">{startup.revenue}</span> */}
+                          </div>
+
+                        </div>
+
+                    
                       
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">Valuation:</span>
-                          <span className="font-medium">{startup.valuation}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Revenue:</span>
-                          <span className="font-medium">{startup.revenue}</span>
-                        </div>
-                      </div>
+                      
 
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Funding Rounds: </span>
-                          <span className="font-medium">{startup.fundingRounds}</span>
+                          <span className="text-muted-foreground">Capital raised: </span>
+                          <span className="font-medium">{startup.valuation}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Looking for Funds:</span>
-                          <span className={`font-medium ${startup.lookingForFunds ? 'text-green-600' : 'text-muted-foreground'}`}>
-                            {startup.lookingForFunds ? "Yes" : "No"}
+                          <span className="text-muted-foreground">Current Round: </span>
+                          <span className={`font-medium `}>
+                            Pre seed  : 200K 
                           </span>
                         </div>
                       </div>

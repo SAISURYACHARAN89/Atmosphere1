@@ -1,54 +1,62 @@
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Eye, Heart, Crown, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  Users,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const metrics = [
+  // insights list
+  const insights = [
     {
-      title: "Account Reached",
-      subtitle: "Total views",
-      value: "24,583",
-      change: "+12.5%",
+      title: "Views",
+      value: 0,
       icon: Eye,
-      iconBg: "bg-blue-500/10",
-      iconColor: "text-blue-500",
+      color: "text-blue-500",
+      route: "views",
     },
     {
-      title: "Likes",
-      subtitle: "Post engagements",
-      value: "3,247",
-      change: "+8.3%",
-      icon: Heart,
-      iconBg: "bg-pink-500/10",
-      iconColor: "text-pink-500",
-    },
-    {
-      title: "Crowns",
-      subtitle: "Premium rewards",
-      value: "156",
-      change: "+15.2%",
-      icon: Crown,
-      iconBg: "bg-yellow-500/10",
-      iconColor: "text-yellow-500",
-    },
-    {
-      title: "Followers",
-      subtitle: "Your community",
-      value: "1,842",
-      change: "+5.7%",
+      title: "Profile visits",
+      value: 20,
       icon: Users,
-      iconBg: "bg-purple-500/10",
-      iconColor: "text-purple-500",
+      color: "text-green-500",
+      route: "profile-visits",
     },
   ];
 
+  // ---------------------
+  // DATE RANGE OVERLAY
+  // ---------------------
+  const [showRange, setShowRange] = useState(false);
+  const [selectedRange, setSelectedRange] = useState("Last 30 days");
+
+  const ranges = ["Last 7 days", "Last 30 days", "Last 90 days"];
+
+  const pickerRef = useRef(null);
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (pickerRef.current && !(pickerRef.current as any).contains(e.target)) {
+        setShowRange(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border/50">
-        <div className="flex items-center gap-4 px-4 py-3 max-w-2xl mx-auto">
+      {/* HEADER */}
+      <header className="fixed top-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border z-50">
+        <div className="max-w-2xl mx-auto flex items-center gap-4 h-14 px-4">
           <Button
             variant="ghost"
             size="icon"
@@ -57,96 +65,131 @@ const Dashboard = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">Professional Dashboard</h1>
+
+          <h1 className="text-lg font-semibold flex-1">
+            Professional dashboard
+          </h1>
+
+          <Button variant="ghost" size="icon">
+            <ChevronRight className="opacity-0" />
+          </Button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="px-4 py-6">
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Overview Section */}
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <h2 className="text-2xl font-bold text-foreground">Performance Overview</h2>
-              <p className="text-sm text-muted-foreground">Track your account metrics and growth</p>
+      {/* MAIN */}
+      <main className="pt-16 pb-10 px-4">
+        <div className="max-w-2xl mx-auto relative">
+
+          {/* --------------------------- */}
+          {/* DATE SELECTOR FLOATING UI   */}
+          {/* --------------------------- */}
+          <div className="relative mb-3" ref={pickerRef}>
+            <div
+              onClick={() => setShowRange(!showRange)}
+              className="inline-flex items-center gap-2 bg-muted px-4 py-2 rounded-2xl text-sm cursor-pointer border border-border/50"
+            >
+              {selectedRange}
+
+              {showRange ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
             </div>
+
+            {/* FLOATING DROPDOWN */}
+            {showRange && (
+              <div
+                className="absolute left-0 mt-2 w-44 bg-card border border-border/50 rounded-xl shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+              >
+                {ranges.map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => {
+                      setSelectedRange(range);
+                      setShowRange(false);
+                    }}
+                    className="block w-full px-4 py-2 text-left text-sm hover:bg-muted/40 transition-colors"
+                  >
+                    {range}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {metrics.map((metric, index) => {
-              const Icon = metric.icon;
+          {/* SMALL DATE DISPLAY RIGHT */}
+          
+
+          {/* INSIGHTS TITLE */}
+          <h2 className="text-base font-semibold mb-3">Insights</h2>
+
+          {/* --------------------------- */}
+          {/* INSIGHTS LIST */}
+          {/* --------------------------- */}
+          <div className="bg-card rounded-xl border border-border/40">
+            {insights.map((item, i) => {
+              const Icon = item.icon;
               return (
                 <div
-                  key={index}
-                  className="bg-card rounded-xl border border-border/50 p-6 space-y-4 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+                  key={i}
+                  className="flex items-center justify-between px-4 py-4 border-b last:border-b-0 cursor-pointer"
+                  onClick={() => navigate("/dashboard/" + item.route)}
                 >
-                  {/* Icon and Title */}
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        {metric.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground/70">
-                        {metric.subtitle}
-                      </p>
-                    </div>
-                    <div className={`p-3 rounded-lg ${metric.iconBg}`}>
-                      <Icon className={`h-5 w-5 ${metric.iconColor}`} />
-                    </div>
+                  <div className="flex items-center gap-3">
+                    <Icon className={`h-5 w-5 ${item.color}`} />
+                    <span className="text-sm text-foreground">{item.title}</span>
                   </div>
 
-                  {/* Value and Change */}
-                  <div className="space-y-1">
-                    <p className="text-3xl font-bold text-foreground">
-                      {metric.value}
-                    </p>
-                    <p className="text-xs font-medium text-green-500">
-                      {metric.change} from last month
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{item.value}</span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Summary Stats */}
-          <div className="bg-card rounded-xl border border-border/50 p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Summary</h3>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Engagement Rate
-                </p>
-                <p className="text-2xl font-bold text-foreground">13.2%</p>
+          {/* SPACING */}
+          <div className="h-6" />
+
+          {/* --------------------------- */}
+          {/* FOLLOWERS BREAKDOWN */}
+          {/* --------------------------- */}
+          <div
+            className="bg-card rounded-xl border border-border/40 p-4 cursor-pointer"
+            // onClick={() => navigate("/dashboard/followers")}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-3xl font-bold">834</p>
+                <p className="text-sm text-muted-foreground">Followers</p>
+                <p className="text-xs text-red-500 mt-1">-1.1% vs Oct 17</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Growth Rate
-                </p>
-                <p className="text-2xl font-bold text-foreground">10.4%</p>
+
+              {/* <ChevronRight className="h-5 w-5 text-muted-foreground" /> */}
+            </div>
+
+            <div className="mt-5 border-t pt-4">
+              <p className="font-semibold text-sm mb-3">Growth</p>
+
+              <div className="flex items-center justify-between text-sm py-1">
+                <span className="text-muted-foreground">Overall</span>
+                <span>-10</span>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Avg. Daily Views
-                </p>
-                <p className="text-2xl font-bold text-foreground">819</p>
+
+              <div className="flex items-center justify-between text-sm py-1">
+                <span className="text-muted-foreground">Follows</span>
+                <span className="text-green-500">20</span>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Peak Views Day
-                </p>
-                <p className="text-2xl font-bold text-foreground">Friday</p>
+
+              <div className="flex items-center justify-between text-sm py-1">
+                <span className="text-muted-foreground">Unfollows</span>
+                <span className="text-red-500">30</span>
               </div>
             </div>
           </div>
 
-          {/* Time Period Info */}
-          <div className="bg-muted/30 rounded-lg p-4">
-            <p className="text-xs text-muted-foreground text-center">
-              Data shown is from the last 30 days • Updated daily
-            </p>
-          </div>
         </div>
       </main>
     </div>

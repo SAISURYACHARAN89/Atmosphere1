@@ -1,9 +1,28 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Crown, MessageCircle, Bookmark, Share2, ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Heart,
+  Crown,
+  MessageCircle,
+  Bookmark,
+  Share2,
+  ShieldCheck,
+  Plus,
+  Send,
+} from "lucide-react";
+
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 
 interface StartupPostProps {
   company: {
@@ -23,6 +42,8 @@ interface StartupPostProps {
 
 const StartupPost = ({ company }: StartupPostProps) => {
   const navigate = useNavigate();
+  const [showBigHeart, setShowBigHeart] = useState(false);
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [liked, setLiked] = useState(false);
   const [crowned, setCrowned] = useState(false);
@@ -30,6 +51,50 @@ const StartupPost = ({ company }: StartupPostProps) => {
   const [likes, setLikes] = useState(349);
   const [crowns, setCrowns] = useState(19);
   const [comments] = useState(32);
+
+  // COMMENT HOOKS
+  const commentFileRef = useRef<HTMLInputElement>(null);
+  const [commentImage, setCommentImage] = useState<string | null>(null);
+
+  const handleCommentImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    setCommentImage(url);
+  };
+
+  // COMMENT LIST
+  const [commentList, setCommentList] = useState([
+    {
+      id: 1,
+      name: "Priya Sharma",
+      verified: true,
+      time: "2h",
+      avatar: "/avatars/p1.jpg",
+      text: "Amazing progress! Keep building 🔥",
+    },
+    {
+      id: 2,
+      name: "Ravi Kumar",
+      verified: false,
+      time: "1h",
+      avatar: "/avatars/p2.jpg",
+      text: "Super excited for this startup!",
+      image: company.images[0],
+    },
+    {
+      id: 3,
+      name: "Ananya Desai",
+      verified: true,
+      time: "30m",
+      avatar: "/avatars/p3.jpg",
+      text: "Love the product vision 🚀",
+    },
+  ]);
+
+  const [newComment, setNewComment] = useState("");
+  const commentsTopRef = useRef<HTMLDivElement>(null);
 
   const handleLike = () => {
     setLiked(!liked);
@@ -41,38 +106,108 @@ const StartupPost = ({ company }: StartupPostProps) => {
     setCrowns(crowned ? crowns - 1 : crowns + 1);
   };
 
+  const addComment = () => {
+  if (!newComment.trim() && !commentImage) return;
+
+  setCommentList(prev => [
+    {
+      id: Date.now(),
+      name: "You",
+      verified: false,
+      time: "now",
+      avatar: "",
+      text: newComment,
+      image: commentImage || null,
+    },
+    ...prev,
+  ]);
+
+  setNewComment("");
+  setCommentImage(null);
+
+  // 🔥 Auto scroll to top
+  setTimeout(() => {
+    commentsTopRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, 50);
+};
+let tapTimeout: NodeJS.Timeout | null = null;
+
+const handleDoubleTap = () => {
+  // Like the post
+  if (!liked) {
+    handleLike();
+  }
+
+  // Show animated big heart
+  setShowBigHeart(true);
+
+  setTimeout(() => {
+    setShowBigHeart(false);
+  }, 700);
+};
+
+const handleImageTap = () => {
+  if (tapTimeout) {
+    clearTimeout(tapTimeout);
+    tapTimeout = null;
+    handleDoubleTap();
+  } else {
+    tapTimeout = setTimeout(() => {
+      tapTimeout = null;
+    }, 250); // Instagram uses ~250ms double-tap window
+  }
+};
+
+
   return (
     <Card className="overflow-hidden border-0 bg-background shadow-none">
-      {/* Header - Clickable */}
-      <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-card-hover transition-colors"
-        onClick={() => navigate(`/company/${company.id}`, { state: { from: '/' } })}
+      {/* HEADER */}
+      <div
+        className="flex items-center justify-between p-4 cursor-pointer"
+        onClick={() =>
+          navigate(`/company/${company.id}`, { state: { from: "/" } })
+        }
       >
         <div className="flex items-center gap-3">
           <Avatar className="h-11 w-11 border-2 border-border">
             <AvatarImage src={company.logo} alt={company.name} />
-            <AvatarFallback className="bg-muted text-foreground">{company.name[0]}</AvatarFallback>
+            <AvatarFallback className="bg-muted text-foreground">
+              {company.name[0]}
+            </AvatarFallback>
           </Avatar>
+
           <div>
             <div className="flex items-center gap-1.5">
               <h3 className="font-semibold text-base">{company.name}</h3>
               <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">{company.tagline}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {company.tagline}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Image Carousel with Rounded Edges */}
+      {/* IMAGES */}
       <div className="px-3 pb-3">
-        <div className="relative bg-muted rounded-xl overflow-hidden">
+        <div
+          className="relative bg-muted rounded-xl overflow-hidden select-none"
+          onClick={handleImageTap}
+        >
+          {showBigHeart && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <Heart
+                className="h-24 w-24 text-white animate-[pop_0.7s_ease-out_forwards]"
+                fill="white"
+              />
+            </div>
+          )}
+
           <img
             src={company.images[currentImageIndex]}
-            alt={`${company.name} ${currentImageIndex + 1}`}
             className="w-full aspect-[4/3] object-cover"
           />
-          
-          {/* Image Indicators */}
+
           {company.images.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
               {company.images.map((_, index) => (
@@ -94,13 +229,15 @@ const StartupPost = ({ company }: StartupPostProps) => {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* ACTIONS */}
       <div className="px-4 pb-3">
         <div className="flex items-center gap-5">
+
+          {/* LIKE */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-auto p-0 hover:bg-transparent group flex items-center gap-1.5"
+            className="h-auto p-0 flex items-center gap-1.5"
             onClick={(e) => {
               e.stopPropagation();
               handleLike();
@@ -108,16 +245,20 @@ const StartupPost = ({ company }: StartupPostProps) => {
           >
             <Heart
               className={`h-6 w-6 transition-all ${
-                liked ? "fill-accent text-accent" : "text-foreground group-hover:text-accent"
+                liked
+                  ? "fill-current text-red-500"
+                  : "text-foreground hover:text-red-500"
               }`}
             />
+
             <span className="text-sm font-medium">{likes}</span>
           </Button>
-          
+
+          {/* CROWN */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-auto p-0 hover:bg-transparent group flex items-center gap-1.5"
+            className="h-auto p-0 flex items-center gap-1.5"
             onClick={(e) => {
               e.stopPropagation();
               handleCrown();
@@ -125,28 +266,153 @@ const StartupPost = ({ company }: StartupPostProps) => {
           >
             <Crown
               className={`h-6 w-6 transition-all ${
-                crowned ? "fill-primary text-primary" : "text-foreground group-hover:text-primary"
+                crowned
+                  ? "fill-current text-yellow-500"
+                  : "text-foreground hover:text-yellow-500"
               }`}
             />
+
             <span className="text-sm font-medium">{crowns}</span>
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-auto p-0 hover:bg-transparent group flex items-center gap-1.5"
-            onClick={(e) => e.stopPropagation()}
+          {/* COMMENT DRAWER */}
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 flex items-center gap-1.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MessageCircle className="h-6 w-6 text-foreground hover:text-accent transition-colors" />
+                <span className="text-sm font-medium">{comments}</span>
+              </Button>
+            </DrawerTrigger>
+
+            <DrawerContent
+            className="
+              p-0 
+              w-full 
+              max-w-full 
+              mx-auto 
+              rounded-t-xl
+              lg:max-w-[560px]
+            "
           >
-            <MessageCircle className="h-6 w-6 text-foreground group-hover:text-accent transition-colors" />
-            <span className="text-sm font-medium">{comments}</span>
-          </Button>
+
+              <DrawerHeader className="px-4 py-3">
+                <DrawerTitle>Comments</DrawerTitle>
+              </DrawerHeader>
+
+              {/* Comment List */}
+              <div ref={commentsTopRef} className="max-h-[70vh] overflow-y-auto px-4 pb-6 space-y-6">
+                {commentList.map((c) => (
+                  <div key={c.id} className="flex items-start gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={c.avatar} />
+                      <AvatarFallback>{c.name[0]}</AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold text-sm">{c.name}</p>
+                        {c.verified && (
+                          <ShieldCheck className="w-4 h-4 text-primary" />
+                        )}
+                        <span className="text-[12px] text-muted-foreground">
+                          {c.time}
+                        </span>
+                      </div>
+
+                      {c.text && (
+                        <p className="text-sm text-foreground/90 mt-0.5 leading-relaxed">
+                          {c.text}
+                        </p>
+                      )}
+
+                      {c.image && (
+                        <img
+                          src={c.image}
+                          className="rounded-lg mt-2 max-w-[80%]"
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {commentImage && (
+                <div className="px-4 pb-2">
+                  <div className="relative inline-block">
+                    <img
+                      src={commentImage}
+                      className="w-24 h-24 object-cover rounded-lg border"
+                    />
+
+                    {/* Remove image button */}
+                    <button
+                      onClick={() => setCommentImage(null)}
+                      className="absolute -top-2 -right-2 bg-black/60 text-white rounded-full p-1"
+                    >
+                      <span className="text-xs">✕</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* COMMENT INPUT */}
+              <DrawerFooter className="bg-background border-t p-3">
+
+                    <div className="w-full flex items-center gap-2">
+
+                      {/* + icon */}
+                      <button
+                        onClick={() => commentFileRef.current?.click()}
+                        className="p-2 rounded-full hover:bg-muted transition"
+                      >
+                        <Plus className="w-5 h-5 text-muted-foreground" />
+                      </button>
+
+                      {/* hidden input */}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={commentFileRef}
+                        className="hidden"
+                        onChange={handleCommentImageUpload}
+                      />
+
+                      {/* input field */}
+                      <Input
+                        placeholder="Add a comment..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        className="flex-1 rounded-full"
+                      />
+
+                      {/* send icon */}
+                      <button
+                        onClick={addComment}
+                        disabled={!newComment.trim() && !commentImage}
+                        className="p-2 rounded-full hover:bg-primary/10 disabled:opacity-30 transition"
+                      >
+                        <Send className="w-5 h-5 text-primary" />
+                      </button>
+
+                    </div>
+
+                  </DrawerFooter>
+
+
+            </DrawerContent>
+          </Drawer>
 
           <div className="flex-1" />
 
+          {/* SAVE */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-auto p-0 hover:bg-transparent group"
+            className="h-auto p-0"
             onClick={(e) => {
               e.stopPropagation();
               setSaved(!saved);
@@ -154,23 +420,20 @@ const StartupPost = ({ company }: StartupPostProps) => {
           >
             <Bookmark
               className={`h-6 w-6 transition-all ${
-                saved ? "fill-foreground" : "text-foreground group-hover:fill-muted-foreground"
+                saved ? "fill-foreground" : "text-foreground"
               }`}
             />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-auto p-0 hover:bg-transparent group"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Share2 className="h-6 w-6 text-foreground group-hover:text-accent transition-colors" />
+          {/* SHARE */}
+          <Button variant="ghost" size="sm" className="h-auto p-0">
+            <Share2 className="h-6 w-6 text-foreground hover:text-accent transition-colors" />
           </Button>
+
         </div>
       </div>
 
-      {/* What's [Company Name] Section */}
+      {/* COMPANY INFO */}
       <div className="px-4 pb-3">
         <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">
           WHAT'S {company.name.toUpperCase()}
@@ -180,73 +443,87 @@ const StartupPost = ({ company }: StartupPostProps) => {
         </p>
       </div>
 
-      {/* Traction Section */}
+      {/* TRACTION */}
       <div className="px-4 pb-3">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">TRACTION</h4>
+        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">
+          TRACTION
+        </h4>
         <p className="text-sm text-foreground/90">
           Mvp functional, EOI signed, 1200+ test flights
         </p>
       </div>
 
-      {/* Three Info Boxes */}
+      {/* SMALL INFO BOXES */}
       <div className="px-4 pb-3">
         <div className="grid grid-cols-3 gap-2">
           <div className="px-3 py-2 rounded-lg border border-border bg-card text-center">
             <p className="text-xs font-medium text-foreground">
-              {company.revenueGenerating ? 'REVENUE' : 'PRE REVENUE'}
+              {company.revenueGenerating ? "REVENUE" : "PRE REVENUE"}
             </p>
           </div>
+
           <div className="px-3 py-2 rounded-lg border border-border bg-card text-center">
             <p className="text-xs font-medium text-foreground">Age : 1yr</p>
           </div>
+
           <div className="px-3 py-2 rounded-lg border border-border bg-card text-center">
-            <p className="text-xs font-medium text-foreground">Funding Rounds : 2</p>
+            <p className="text-xs font-medium text-foreground">Funding : 2</p>
           </div>
         </div>
       </div>
 
-      {/* Funds Raised and Current Investors */}
-      <div className="px-4 pb-3">
-        <div className="grid grid-cols-2 gap-4">
+      {/* FUNDING INFO */}
+      <div className="px-4 pb-4">
+        <div className="grid grid-cols-2">
           <div>
             <span className="text-xs text-muted-foreground">Funds raised</span>
-            <p className="font-bold text-base mt-0.5">{company.fundsRaised}</p>
+            <p className="font-bold text-base mt-0.5">
+              {company.fundsRaised}
+            </p>
           </div>
+
           <div>
             <span className="text-xs text-muted-foreground">Current investors</span>
-            <p className="text-sm mt-0.5 text-foreground/90">{company.currentInvestors.join(", ")}</p>
+            <p className="text-sm mt-0.5 text-foreground/90">
+              {company.currentInvestors.join(", ")}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Current Round - Only show if raising */}
-      {company.lookingToDilute && company.dilutionAmount && (
+      {/* ROUND STATUS */}
+      {company.lookingToDilute && company.dilutionAmount ? (
         <div className="px-4 pb-4">
           <div className="flex items-baseline gap-2 mb-2">
             <span className="text-xs text-muted-foreground">Current round :</span>
-            <span className="text-sm font-semibold text-foreground">Series A</span>
+            <span className="text-sm font-semibold text-foreground">
+              Series A
+            </span>
           </div>
+
           <div className="relative">
             <div className="h-8 rounded-full bg-card border border-border overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-muted to-muted-foreground/20 transition-all"
-                style={{ width: '15%' }}
+                style={{ width: "15%" }}
               />
             </div>
+
             <div className="flex justify-between items-center mt-1">
               <span className="text-xs text-muted-foreground">180,000$ Filled.</span>
-              <span className="text-sm font-bold text-foreground">{company.dilutionAmount}</span>
+              <span className="text-sm font-bold text-foreground">
+                {company.dilutionAmount}
+              </span>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Not Raising - Simple text */}
-      {!company.lookingToDilute && (
+      ) : (
         <div className="px-4 pb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-xs text-muted-foreground">Current round :</span>
-            <span className="text-sm font-medium text-foreground">Not raising</span>
+            <span className="text-sm font-medium text-foreground">
+              Not raising
+            </span>
           </div>
         </div>
       )}

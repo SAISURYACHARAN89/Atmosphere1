@@ -20,11 +20,16 @@ const companyData: Record<string, any> = {
     following: 124,
     description: "Airbound.co is pioneering the future of urban logistics with our autonomous drone delivery network. We're building infrastructure to enable same-day delivery across major metropolitan areas.",
     founded: "2022",
+    startupType: "Pre-revenue",
+    rounds: 2,
+    totalRaised: "$2M",
+    investorNames: ["Y Combinator", "Sequoia", "a16z"],
+    currentRound: "Series A",
+    oneliner : "Autonomous drone delivery network for urban logistics.",
     location: "San Francisco, CA",
-    website: "airbound.co",
-    teamSize: "15-20",
+    website: "https://airbound.co",
     industry: "Logistics & Transportation",
-    preValuation: "$5M",
+    preRevenue: "$5M",
     postValuation: "$12M",
     fundsRaised: "$2M",
     currentInvestors: ["Y Combinator", "Sequoia", "a16z"],
@@ -37,158 +42,7 @@ const companyData: Record<string, any> = {
     ],
     videos: [],
     reels: []
-  },
-  "skyt-air": {
-    name: "Skyt Air",
-    logo: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=100&h=100&fit=crop",
-    tagline: "AI-powered air traffic management system",
-    isPublic: false,
-    description: "Skyt Air develops next-generation air traffic management solutions using artificial intelligence and machine learning to optimize flight paths and reduce delays.",
-    founded: "2021",
-    location: "Austin, TX",
-    website: "skytair.com",
-    teamSize: "10-15",
-    industry: "Aviation & AI",
-    preValuation: "$8M",
-    postValuation: "$18M",
-    fundsRaised: "$4M",
-    currentInvestors: ["Techstars", "500 Startups"],
-    fundingGoal: "$5M Series A",
-    pitchDeckPublic: false,
-    photos: [
-      "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=800&h=600&fit=crop"
-    ],
-    videos: [],
-    reels: []
-  },
-  "neuralhealth": {
-    name: "NeuralHealth",
-    logo: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=100&h=100&fit=crop",
-    tagline: "AI diagnostics for early disease detection",
-    isPublic: true,
-    followers: 5431,
-    following: 89,
-    description: "NeuralHealth leverages advanced AI algorithms to detect diseases earlier than traditional methods, improving patient outcomes and reducing healthcare costs.",
-    founded: "2020",
-    location: "Boston, MA",
-    website: "neuralhealth.ai",
-    teamSize: "25-30",
-    industry: "Healthcare & AI",
-    preValuation: "$15M",
-    postValuation: "$35M",
-    fundsRaised: "$8M",
-    currentInvestors: ["Founders Fund", "Khosla Ventures"],
-    fundingGoal: "$6M Series B",
-    pitchDeckPublic: true,
-    photos: [
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=800&h=600&fit=crop"
-    ],
-    videos: [],
-    reels: []
-  },
-  "greencharge": {
-    name: "GreenCharge",
-    logo: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=100&h=100&fit=crop",
-    tagline: "Solar-powered EV charging network for highways",
-    isPublic: false,
-    description: "GreenCharge is building a nationwide network of solar-powered EV charging stations along major highways, making long-distance electric travel more accessible and sustainable.",
-    founded: "2021",
-    location: "Denver, CO",
-    website: "greencharge.io",
-    teamSize: "20-25",
-    industry: "Clean Energy & Infrastructure",
-    preValuation: "$10M",
-    postValuation: "$25M",
-    fundsRaised: "$5M",
-    currentInvestors: ["Tesla Ventures", "Climate Fund"],
-    pitchDeckPublic: false,
-    photos: [
-      "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1617704548623-340376564e68?w=800&h=600&fit=crop"
-    ],
-    videos: [],
-    reels: []
-  },
-  "foodflow": {
-    name: "FoodFlow",
-    logo: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=100&h=100&fit=crop",
-    tagline: "B2B food supply chain automation platform",
-    isPublic: true,
-    followers: 1923,
-    following: 156,
-    description: "FoodFlow revolutionizes the B2B food supply chain with our automation platform, connecting restaurants, suppliers, and distributors in one seamless ecosystem.",
-    founded: "2022",
-    location: "New York, NY",
-    website: "foodflow.com",
-    teamSize: "12-18",
-    industry: "Food Tech & Supply Chain",
-    preValuation: "$7M",
-    postValuation: "$16M",
-    fundsRaised: "$3.5M",
-    currentInvestors: ["Greylock Partners", "First Round"],
-    fundingGoal: "$4M Series A",
-    pitchDeckPublic: false,
-    photos: [
-      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&h=600&fit=crop"
-    ],
-    videos: [],
-    reels: []
-  },
-  "codementor-ai": {
-    name: "CodeMentor AI",
-    logo: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=100&h=100&fit=crop",
-    tagline: "AI-powered coding education and mentorship",
-    isPublic: false,
-    description: "CodeMentor AI provides personalized coding education through AI-powered mentorship, helping developers learn faster and build better software.",
-    founded: "2023",
-    location: "Seattle, WA",
-    website: "codementor.ai",
-    teamSize: "8-12",
-    industry: "EdTech & AI",
-    preValuation: "$12M",
-    postValuation: "$28M",
-    fundsRaised: "$6M",
-    currentInvestors: ["Accel", "Index Ventures"],
-    fundingGoal: "$5M Series A",
-    pitchDeckPublic: true,
-    photos: [
-      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&h=600&fit=crop"
-    ],
-    videos: [],
-    reels: []
-  },
-  "urbanfarm": {
-    name: "UrbanFarm",
-    logo: "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=100&h=100&fit=crop",
-    tagline: "Vertical farming solutions for city buildings",
-    isPublic: true,
-    followers: 3254,
-    following: 201,
-    description: "UrbanFarm transforms unused urban spaces into productive vertical farms, bringing fresh produce closer to consumers while reducing environmental impact.",
-    founded: "2021",
-    location: "Chicago, IL",
-    website: "urbanfarm.tech",
-    teamSize: "15-20",
-    industry: "AgTech & Sustainability",
-    preValuation: "$9M",
-    postValuation: "$22M",
-    fundsRaised: "$4.5M",
-    currentInvestors: ["Y Combinator", "Climate Capital"],
-    fundingGoal: "$4M Seed Round",
-    pitchDeckPublic: false,
-    photos: [
-      "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop"
-    ],
-    videos: [],
-    reels: []
+    
   }
 };
 
@@ -197,9 +51,11 @@ const CompanyProfile = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [invitationSent, setInvitationSent] = useState(false);
-  
+  const [pitchRequested, setPitchRequested] = useState(false);
+
   const company = companyId ? companyData[companyId] : null;
   const fromPath = location.state?.from || null;
+  const [showUserList, setShowUserList] = useState<null | "followers" | "following">(null);
 
   if (!company) {
     return (
@@ -218,6 +74,16 @@ const CompanyProfile = () => {
 
   const [activeSection, setActiveSection] = useState<'posts' | 'expand' | 'trades'>('posts');
   const [showReels, setShowReels] = useState(false);
+  const followersList = [
+  { id: 1, name: "Ava Johnson", username: "@avaj", avatar: "https://randomuser.me/api/portraits/women/1.jpg", isFollowing: false },
+  { id: 2, name: "Michael Chen", username: "@mchen", avatar: "https://randomuser.me/api/portraits/men/2.jpg", isFollowing: true },
+  { id: 3, name: "Sophia Patel", username: "@spatel", avatar: "https://randomuser.me/api/portraits/women/3.jpg", isFollowing: false }
+];
+
+const followingList = [
+  { id: 5, name: "Liam Parker", username: "@liamp", avatar: "https://randomuser.me/api/portraits/men/4.jpg", isFollowing: true },
+  { id: 6, name: "Emma Davis", username: "@emd", avatar: "https://randomuser.me/api/portraits/women/5.jpg", isFollowing: true }
+];
 
   return (
     <div className="min-h-screen bg-background">
@@ -253,14 +119,22 @@ const CompanyProfile = () => {
                     <div className="font-semibold">342</div>
                     <div className="text-muted-foreground">posts</div>
                   </div>
-                  <div className="text-center">
-                    <div className="font-semibold">{company.isPublic ? company.followers?.toLocaleString() || '0' : '0'}</div>
+                                    <div
+                    className="text-center cursor-pointer"
+                    onClick={() => setShowUserList("followers")}
+                  >
+                    <div className="font-semibold">{company.followers?.toLocaleString() || '0'}</div>
                     <div className="text-muted-foreground">followers</div>
                   </div>
-                  <div className="text-center">
-                    <div className="font-semibold">{company.isPublic ? company.following?.toLocaleString() || '0' : '0'}</div>
+
+                  <div
+                    className="text-center cursor-pointer"
+                    onClick={() => setShowUserList("following")}
+                  >
+                    <div className="font-semibold">{company.following?.toLocaleString() || '0'}</div>
                     <div className="text-muted-foreground">following</div>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -271,7 +145,7 @@ const CompanyProfile = () => {
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{company.location}</span>
               </div>
-              <p className="text-foreground/90 leading-relaxed">{company.description}</p>
+              <p className="text-foreground/90 leading-relaxed">{company.oneliner}</p>
             </div>
 
             {/* Follow and Message Buttons */}
@@ -347,8 +221,24 @@ const CompanyProfile = () => {
 
             {activeSection === 'expand' && (
               <div className="space-y-4">
-                {/* Company Details */}
                 <Card className="border-border/50">
+                  <div className="p-4 space-y-3">
+                    <h3 className="font-semibold text-sm">What's {company.name}</h3>
+                    <p className="text-sm text-foreground/90 leading-relaxed">{company.description}</p>
+                  </div>
+                 <div className="px-4 pb-4 flex items-center justify-between">
+                    <button
+                      onClick={() => setPitchRequested(true)}
+                      className={`py-1.5 px-3 rounded-lg text-xs font-medium transition-colors
+                        ${pitchRequested 
+                          ? "bg-primary/20 text-green border-primary" 
+                          : "border border-grey text-white hover:bg-primary/10"}`}
+                      disabled={pitchRequested}
+                    >
+                      {pitchRequested ? "Requested" : "Request Pitch Deck"}
+                    </button>
+                  </div>
+
                   <div className="p-4 space-y-3">
                     <h3 className="font-semibold text-sm">Company Details</h3>
                     <div className="space-y-2 text-sm">
@@ -360,10 +250,10 @@ const CompanyProfile = () => {
                         <Calendar className="h-4 w-4 text-primary" />
                         <span>Founded {company.founded}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      {/* <div className="flex items-center gap-2 text-muted-foreground">
                         <Users className="h-4 w-4 text-primary" />
                         <span>{company.teamSize} employees</span>
-                      </div>
+                      </div> */}
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Globe className="h-4 w-4 text-primary" />
                         <a href={`https://${company.website}`} className="hover:text-primary transition-colors">{company.website}</a>
@@ -371,43 +261,109 @@ const CompanyProfile = () => {
                     </div>
                   </div>
                 </Card>
-
-                {/* Financial Overview */}
+                
                 <Card className="border-border/50">
                   <div className="p-4 space-y-3">
-                    <h3 className="font-semibold text-sm">Financial Overview</h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <div className="text-muted-foreground">Pre-Valuation</div>
-                        <div className="font-semibold">{company.preValuation}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Post-Valuation</div>
-                        <div className="font-semibold">{company.postValuation}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Funds Raised</div>
-                        <div className="font-semibold">{company.fundsRaised}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Goal</div>
-                        <div className="font-semibold">{company.fundingGoal}</div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                    <h3 className="font-semibold text-sm">Team</h3>
 
-                {/* Current Investors */}
-                <Card className="border-border/50">
-                  <div className="p-4 space-y-3">
-                    <h3 className="font-semibold text-sm">Current Investors</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {company.currentInvestors?.map((investor: string, idx: number) => (
-                        <Badge key={idx} variant="secondary">{investor}</Badge>
+                    <div className="flex justify-center flex-wrap gap-6">
+                      {/* Example team data with profileId */}
+                      {[
+                        { name: "Alice Smith", profileId: "alice-smith" },
+                        { name: "Bob Johnson", profileId: "bob-johnson" },
+                        { name: "Carol Davis", profileId: null }, // no profile
+                      ].map((member, idx) => (
+                        <div
+                          key={idx}
+                          className="flex flex-col items-center gap-2 w-20 cursor-pointer"
+                          onClick={() => {
+                            if (member.profileId) {
+                              navigate(`/user/${member.profileId}`);
+                            }
+                          }}
+                        >
+                          <Avatar className="h-12 w-12 border border-border">
+                            <AvatarFallback className="bg-muted text-foreground text-lg">
+                              {member.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <span className="text-xs text-muted-foreground text-center">
+                            {member.name}
+                          </span>
+                        </div>
                       ))}
                     </div>
                   </div>
                 </Card>
+
+                {/* Financial Overview */}
+                <Card className="border-border/50">
+                    <div className="p-4 space-y-3">
+                      <h3 className="font-semibold text-sm">Financial Overview</h3>
+
+                      <div className="space-y-3 text-sm">
+
+                        {/* Startup Type */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Startup Type</span>
+                          <span className="font-semibold">{company.startupType}</span>
+                        </div>
+
+                        {/* Rounds */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Rounds Raised</span>
+                          <span className="font-semibold">{company.rounds}</span>
+                        </div>
+
+                        {/* Total Raised */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Total Raised</span>
+                          <span className="font-semibold">{company.totalRaised}</span>
+                        </div>
+
+                        {/* Total Investors */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Investors</span>
+                          <span className="font-semibold">{company.investorNames.join(", ")}</span>
+                        </div>
+
+                        {/* Current Round */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Current Round</span>
+                          <span className="font-semibold">{company.currentRound}</span>
+                        </div>
+
+
+{/* Round Status */}
+
+{/* Round Progress Bar */}
+<div className="mt-2">
+  <div className="h-7 rounded-full bg-card border border-border overflow-hidden">
+    <div
+      className="h-full bg-gradient-to-r from-muted to-muted-foreground/20 transition-all"
+      style={{ width: "15%" }} // ← adjust dynamically if needed
+    />
+  </div>
+
+  <div className="flex justify-between items-center mt-1">
+    <span className="text-xs text-muted-foreground">180,000$ Filled</span>
+    <span className="text-xs text-muted-foreground">1,200,000 Target</span>
+  </div>
+</div>
+
+
+                      </div>
+
+                    </div>
+                  </Card>
+
+
+                {/* Current Investors */}
+                
               </div>
             )}
 
@@ -419,7 +375,97 @@ const CompanyProfile = () => {
           </div>
         </div>
       </main>
-      
+    {showUserList && (
+  <div className="fixed inset-0 bg-black/50 z-50 flex flex-col">
+
+    {/* Top bar */}
+    <div className="bg-background px-4 pt-4 pb-3 border-b flex items-center justify-between">
+      <button
+        onClick={() => setShowUserList(null)}
+        className="p-2 -ml-2"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </button>
+
+      <h2 className="text-base font-semibold">
+        {company.name.toLowerCase()}
+      </h2>
+
+      <div className="w-6" /> {/* spacer */}
+    </div>
+
+    {/* Tabs */}
+    <div className="bg-background border-b">
+      <div className="flex items-center justify-around text-sm">
+        <button
+          className={`py-3 flex-1 ${
+            showUserList === "followers"
+              ? "font-semibold border-b-2 border-white"
+              : "text-muted-foreground"
+          }`}
+          onClick={() => setShowUserList("followers")}
+        >
+          {company.followers.toLocaleString()} Followers
+        </button>
+
+        <button
+          className={`py-3 flex-1 ${
+            showUserList === "following"
+              ? "font-semibold border-b-2 border-white"
+              : "text-muted-foreground"
+          }`}
+          onClick={() => setShowUserList("following")}
+        >
+          {company.following.toLocaleString()} Following
+        </button>
+
+        
+      </div>
+    </div>
+
+    {/* Search Bar */}
+    <div className="px-4 py-2 bg-background border-b">
+      <div className="bg-muted px-3 py-2 rounded-lg text-sm text-muted-foreground">
+        Search
+      </div>
+    </div>
+
+    {/* User List */}
+    <div className="flex-1 overflow-y-auto bg-background">
+      {(showUserList === "followers" ? followersList : followingList).map(
+        (user) => (
+          <div
+            key={user.id}
+            className="px-4 py-3 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={user.avatar} />
+                <AvatarFallback>{user.name[0]}</AvatarFallback>
+              </Avatar>
+
+              <div>
+                <p className="text-sm font-semibold">{user.username}</p>
+                <p className="text-xs text-muted-foreground">{user.name}</p>
+              </div>
+            </div>
+
+            <button
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium ${
+                user.isFollowing
+                  ? "bg-muted text-white"
+                  : "bg-blue-600 text-white"
+              }`}
+            >
+              {user.isFollowing ? "Following" : "Follow"}
+            </button>
+          </div>
+        )
+      )}
+    </div>
+  </div>
+)}
+
       <BottomNav />
     </div>
   );

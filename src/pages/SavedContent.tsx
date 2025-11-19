@@ -1,50 +1,62 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, ShoppingBag, FileText, Briefcase } from "lucide-react";
+import { ArrowLeft, Play, ShoppingBag, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const SavedContent = () => {
   const navigate = useNavigate();
 
+  // ---------------------------
+  // Mock data from web (Unsplash)
+  // ---------------------------
+
+  const savedAds = [
+    "https://images.unsplash.com/photo-1516116216624-53e697fedbea",
+    "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f",
+    "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=800",
+    "https://images.unsplash.com/photo-1553456558-aff63285bdd1",
+  ];
+
+  const savedMedia = [
+    "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d",
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e",
+    "https://images.unsplash.com/photo-1538150940599-1f2f3e69e9f7",
+    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80",
+  ];
+
+  const savedCompanyCards = [
+    "https://images.unsplash.com/photo-1485217988980-11786ced9454",
+    "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70",
+    "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40",
+    "https://images.unsplash.com/photo-1521790945508-bf2a36314e85",
+  ];
+
   const categories = [
     {
-      title: "Sell Ads",
-      count: 0,
+      title: "Ads",
       icon: ShoppingBag,
-      iconBg: "bg-emerald-500/10",
-      iconColor: "text-emerald-500",
-      path: "/saved/sell-ads",
+      path: "/saved/ads",
+      preview: savedAds,
+    },
+    {
+      title: "Media",
+      icon: Play,
+      path: "/saved/media",
+      preview: savedMedia,
     },
     {
       title: "Company Cards",
-      count: 0,
       icon: Briefcase,
-      iconBg: "bg-blue-500/10",
-      iconColor: "text-blue-500",
       path: "/saved/company-cards",
-    },
-    {
-      title: "Reels",
-      count: 0,
-      icon: Play,
-      iconBg: "bg-pink-500/10",
-      iconColor: "text-pink-500",
-      path: "/saved/reels",
-    },
-    {
-      title: "Posts",
-      count: 0,
-      icon: FileText,
-      iconBg: "bg-purple-500/10",
-      iconColor: "text-purple-500",
-      path: "/saved/posts",
+      preview: savedCompanyCards,
     },
   ];
 
   return (
     <div className="min-h-screen bg-background">
+      
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border/50">
-        <div className="flex items-center gap-4 px-4 py-3 max-w-2xl mx-auto">
+        <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
           <Button
             variant="ghost"
             size="icon"
@@ -53,43 +65,54 @@ const SavedContent = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">Saved Content</h1>
+
+          <h1 className="text-lg font-semibold">Saved</h1>
+
+          <Button variant="ghost" size="icon">
+            <span className="text-3xl">+</span>
+          </Button>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <main className="px-4 py-6">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <p className="text-sm text-muted-foreground px-2">
-            Access your saved items by category
-          </p>
+        <div className="max-w-2xl mx-auto space-y-6">
 
-          {/* Category Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {categories.map((category, index) => {
-              const Icon = category.icon;
+          {/* Grid */}
+          <div className="grid grid-cols-2 gap-5">
+            {categories.map((cat, index) => {
+              const Icon = cat.icon;
               return (
-                <button
+                <div
                   key={index}
-                  onClick={() => navigate(category.path)}
-                  className="bg-card rounded-xl border border-border/50 p-6 text-left space-y-4 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  onClick={() => navigate(cat.path)}
+                  className="cursor-pointer"
                 >
-                  {/* Icon */}
-                  <div className={`w-12 h-12 rounded-lg ${category.iconBg} flex items-center justify-center`}>
-                    <Icon className={`h-6 w-6 ${category.iconColor}`} />
+                  {/* Preview Box */}
+                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 rounded-xl overflow-hidden bg-muted mb-3">
+                    {cat.preview.slice(0, 4).map((img, i) => (
+                      <div
+                        key={i}
+                        className="w-full h-20 bg-muted"
+                        style={{
+                          backgroundImage: `url(${img})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }}
+                      />
+                    ))}
                   </div>
 
-                  {/* Title and Count */}
-                  <div className="space-y-1">
-                    <h3 className="font-semibold text-foreground">{category.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {category.count} {category.count === 1 ? 'item' : 'items'} saved
-                    </p>
-                  </div>
-                </button>
+                  {/* Title */}
+                  <h3 className="text-sm text-foreground font-medium flex items-center gap-1.5">
+                    <Icon className="h-4 w-4 opacity-70" />
+                    {cat.title}
+                  </h3>
+                </div>
               );
             })}
           </div>
+
         </div>
       </main>
     </div>

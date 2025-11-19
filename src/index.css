@@ -112,7 +112,27 @@
     --border-subtle: 0 0% 15%;
   }
 }
+@keyframes pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
 
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+
+  60% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
 @layer base {
   * {
     @apply border-border;

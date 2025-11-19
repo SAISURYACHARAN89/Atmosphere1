@@ -2,131 +2,60 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-
-type SignupStep = "email" | "username" | "code" | "password";
+import { Loader2, Check } from "lucide-react";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<SignupStep>("email");
   const [loading, setLoading] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(false);
   
-  // Form data
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const progress = {
-    email: 25,
-    username: 50,
-    code: 75,
-    password: 100,
-  };
-
-  const handleEmailNext = async () => {
-    if (!email || !fullName) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter your email and full name",
-        variant: "destructive",
-      });
+  const checkUsernameAvailability = async (value: string) => {
+    if (value.length < 3) {
+      setUsernameAvailable(false);
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    localStorage.setItem("signupEmail", email);
-    localStorage.setItem("signupFullName", fullName);
-    setStep("username");
-  };
-
-  const handleUsernameNext = async () => {
-    if (!username) {
-      toast({
-        title: "Missing Username",
-        description: "Please enter a username",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (username.length < 3) {
-      toast({
-        title: "Invalid Username",
-        description: "Username must be at least 3 characters",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    
-    // Check if username is available
+    setCheckingUsername(true);
     const { data: existingUser } = await supabase
       .from("profiles")
       .select("username")
-      .eq("username", username)
+      .eq("username", value)
       .maybeSingle();
 
-    if (existingUser) {
-      toast({
-        title: "Username Taken",
-        description: "This username is already taken. Please choose another.",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
-    localStorage.setItem("signupUsername", username);
-    setLoading(false);
-
-    toast({
-      title: "Username Available",
-      description: "Please enter any verification code to continue",
-    });
-
-    setStep("code");
+    setUsernameAvailable(!existingUser);
+    setCheckingUsername(false);
   };
 
-  const handleCodeNext = () => {
-    if (!code) {
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+    if (value.length >= 3) {
+      checkUsernameAvailability(value);
+    } else {
+      setUsernameAvailable(false);
+    }
+  };
+
+  const handleSignup = async () => {
+    if (!email || !username || !password) {
       toast({
-        title: "Missing Code",
-        description: "Please enter any verification code",
+        title: "Missing Information",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
       return;
     }
 
-    // Accept any code as dummy verification
-    localStorage.setItem("signupCode", code);
-    toast({
-      title: "Code Verified",
-      description: "Verification successful",
-    });
-    setStep("password");
-  };
-
-  const handlePasswordNext = async () => {
-    if (!password || !confirmPassword) {
+    if (!usernameAvailable) {
       toast({
-        title: "Missing Password",
-        description: "Please enter and confirm your password",
+        title: "Username Unavailable",
+        description: "Please choose a different username",
         variant: "destructive",
       });
       return;
@@ -141,18 +70,8 @@ const Signup = () => {
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast({
-        title: "Passwords Don't Match",
-        description: "Please make sure your passwords match",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
 
-    // Create account with email and password
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: email,
       password: password,
@@ -160,7 +79,6 @@ const Signup = () => {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           username: username,
-          full_name: fullName,
         },
       },
     });
@@ -175,153 +93,68 @@ const Signup = () => {
       return;
     }
 
-    // Create profile
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: authData.user?.id,
-      username: username,
-      full_name: fullName,
-      email: email,
-    });
-
-    if (profileError) {
-      console.error("Profile creation error:", profileError);
-      toast({
-        title: "Error",
-        description: "Failed to create profile. Please contact support.",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
-    // Store signup data for role selection
     localStorage.setItem("signupUserId", authData.user?.id || "");
-    localStorage.setItem("signupComplete", "true");
-
+    localStorage.setItem("signupEmail", email);
+    localStorage.setItem("signupUsername", username);
+    
     setLoading(false);
-
-    toast({
-      title: "Success",
-      description: "Account created successfully!",
-    });
-
-    // Navigate to role selection
-    navigate("/role-selection");
+    navigate("/signup-confirm");
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-['Pacifico'] text-foreground mb-2">
-            Atmosphere
-          </h1>
-          <h2 className="text-2xl font-bold text-foreground">
-            Create Account
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Step {Object.keys(progress).indexOf(step) + 1} of 4
-          </p>
-        </div>
+    <div className="min-h-screen bg-background flex flex-col items-center pt-20 px-4">
+      <h1 className="text-4igxl font-['Pacifico'] text-foreground mb-20">
+        Atmosphere
+      </h1>
 
-        <Progress value={progress[step]} className="w-full" />
+      <div className="w-full max-w-sm space-y-4">
+        <Input
+          type="email"
+          placeholder="Email or phone"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full h-12"
+        />
 
-        <div className="space-y-4">
-          {step === "email" && (
-            <>
-              <div className="space-y-2">
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full"
-                />
-                <Input
-                  type="text"
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <Button onClick={handleEmailNext} className="w-full">
-                Next
-              </Button>
-            </>
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => handleUsernameChange(e.target.value)}
+            className="w-full h-12 pr-10"
+          />
+          {checkingUsername && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
           )}
-
-          {step === "username" && (
-            <>
-              <Input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full"
-              />
-              <Button onClick={handleUsernameNext} className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Next"}
-              </Button>
-            </>
-          )}
-
-          {step === "code" && (
-            <>
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground text-center">
-                  Enter the 6-digit code sent to {email}
-                </p>
-                <Input
-                  type="text"
-                  placeholder="000000"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  maxLength={6}
-                  className="w-full text-center text-2xl tracking-widest"
-                />
-              </div>
-              <Button onClick={handleCodeNext} className="w-full">
-                Next
-              </Button>
-            </>
-          )}
-
-          {step === "password" && (
-            <>
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full"
-                />
-                <Input
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <Button onClick={handlePasswordNext} className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
-              </Button>
-            </>
+          {!checkingUsername && usernameAvailable && username.length >= 3 && (
+            <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
           )}
         </div>
 
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <button
-              onClick={() => navigate("/login")}
-              className="text-primary hover:underline"
-            >
-              Log in
-            </button>
-          </p>
+        <Input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full h-12"
+        />
+
+        <Button 
+          onClick={handleSignup} 
+          className="w-full h-12 mt-6"
+          disabled={loading || !usernameAvailable}
+        >
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Sign up"}
+        </Button>
+
+        <div className="text-center mt-6">
+          <button
+            onClick={() => navigate("/login")}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Already have an account? <span className="text-primary">Log in</span>
+          </button>
         </div>
       </div>
     </div>

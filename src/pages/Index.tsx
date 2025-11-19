@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import StartupPost from "@/components/StartupPost";
-import Stories from "@/components/Stories";
+// import Stories from "@/components/Stories";
 import { Separator } from "@/components/ui/separator";
 
 const mockStartups = [
@@ -144,12 +144,12 @@ const Index = () => {
       <main className="pt-14 pb-16">
         <div className="max-w-2xl mx-auto px-4 py-6 overflow-y-auto space-y-6">
           {/* Stories Section */}
-          <Stories />
+          {/* <Stories /> */}
 
           {/* Suggested For You Header */}
-          <div className="flex items-center justify-between mb-4">
+          {/* <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">Suggested for you</h2>
-          </div>
+          </div> */}
 
           {/* Startup Posts */}
           {mockStartups.map((startup, index) => (
