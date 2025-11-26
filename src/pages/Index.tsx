@@ -17,7 +17,7 @@ const mockStartups = [
     fundsRaised: "$2M",
     currentInvestors: ["Y Combinator", "Sequoia", "a16z"],
     lookingToDilute: true,
-    dilutionAmount: "15% for $3M",
+    dilutionAmount: "$3,000,000",
     images: [
       "https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&h=600&fit=crop",
       "https://images.unsplash.com/photo-1508614999368-9260051292e5?w=800&h=600&fit=crop",
@@ -142,7 +142,7 @@ const Index = () => {
 
       {/* Main Feed Area */}
       <main className="pt-14 pb-16">
-        <div className="max-w-2xl mx-auto px-4 py-6 overflow-y-auto space-y-6">
+        <div className="max-w-2xl mx-auto  py-6 overflow-y-auto space-y-6">
           {/* Stories Section */}
           {/* <Stories /> */}
 

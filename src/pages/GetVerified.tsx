@@ -73,7 +73,7 @@ const GetVerified = () => {
           <div className="mt-6 space-y-4">
             {/* KYC */}
             <button
-              onClick={() => navigate("/kyc-verification")}
+              onClick={() => navigate("/kyc")}
               className="w-full flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/2 hover:bg-white/4 transition"
             >
               <div>

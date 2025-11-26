@@ -9,10 +9,10 @@ import {
   Crown,
   MessageCircle,
   Bookmark,
-  Share2,
+  Send,
   ShieldCheck,
   Plus,
-  Send,
+  MoreHorizontal,
 } from "lucide-react";
 
 import {
@@ -51,6 +51,8 @@ const StartupPost = ({ company }: StartupPostProps) => {
   const [likes, setLikes] = useState(349);
   const [crowns, setCrowns] = useState(19);
   const [comments] = useState(32);
+  const [sends] = useState(12);
+  const [following, setFollowing] = useState(false);
 
   // COMMENT HOOKS
   const commentFileRef = useRef<HTMLInputElement>(null);
@@ -107,69 +109,69 @@ const StartupPost = ({ company }: StartupPostProps) => {
   };
 
   const addComment = () => {
-  if (!newComment.trim() && !commentImage) return;
+    if (!newComment.trim() && !commentImage) return;
 
-  setCommentList(prev => [
-    {
-      id: Date.now(),
-      name: "You",
-      verified: false,
-      time: "now",
-      avatar: "",
-      text: newComment,
-      image: commentImage || null,
-    },
-    ...prev,
-  ]);
+    setCommentList(prev => [
+      {
+        id: Date.now(),
+        name: "You",
+        verified: false,
+        time: "now",
+        avatar: "",
+        text: newComment,
+        image: commentImage || null,
+      },
+      ...prev,
+    ]);
 
-  setNewComment("");
-  setCommentImage(null);
+    setNewComment("");
+    setCommentImage(null);
 
-  // 🔥 Auto scroll to top
-  setTimeout(() => {
-    commentsTopRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, 50);
-};
-let tapTimeout: NodeJS.Timeout | null = null;
+    // 🔥 Auto scroll to top
+    setTimeout(() => {
+      commentsTopRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
+  };
+  let tapTimeout: NodeJS.Timeout | null = null;
 
-const handleDoubleTap = () => {
-  // Like the post
-  if (!liked) {
-    handleLike();
-  }
+  const handleDoubleTap = () => {
+    // Like the post
+    if (!liked) {
+      handleLike();
+    }
 
-  // Show animated big heart
-  setShowBigHeart(true);
+    // Show animated big heart
+    setShowBigHeart(true);
 
-  setTimeout(() => {
-    setShowBigHeart(false);
-  }, 700);
-};
+    setTimeout(() => {
+      setShowBigHeart(false);
+    }, 700);
+  };
 
-const handleImageTap = () => {
-  if (tapTimeout) {
-    clearTimeout(tapTimeout);
-    tapTimeout = null;
-    handleDoubleTap();
-  } else {
-    tapTimeout = setTimeout(() => {
+  const handleImageTap = () => {
+    if (tapTimeout) {
+      clearTimeout(tapTimeout);
       tapTimeout = null;
-    }, 250); // Instagram uses ~250ms double-tap window
-  }
-};
+      handleDoubleTap();
+    } else {
+      tapTimeout = setTimeout(() => {
+        tapTimeout = null;
+      }, 250); // Instagram uses ~250ms double-tap window
+    }
+  };
 
 
   return (
     <Card className="overflow-hidden border-0 bg-background shadow-none">
       {/* HEADER */}
-      <div
-        className="flex items-center justify-between p-4 cursor-pointer"
-        onClick={() =>
-          navigate(`/company/${company.id}`, { state: { from: "/" } })
-        }
-      >
-        <div className="flex items-center gap-3">
-          <Avatar className="h-11 w-11 border-2 border-border">
+      <div className="flex items-center justify-between p-2.5">
+        <div
+          className="flex items-center gap-3 cursor-pointer flex-1"
+          onClick={() =>
+            navigate(`/company/${company.id}`, { state: { from: "/" } })
+          }
+        >
+          <Avatar className="h-9 w-9 border-2 border-border">
             <AvatarImage src={company.logo} alt={company.name} />
             <AvatarFallback className="bg-muted text-foreground">
               {company.name[0]}
@@ -178,20 +180,44 @@ const handleImageTap = () => {
 
           <div>
             <div className="flex items-center gap-1.5">
-              <h3 className="font-semibold text-base">{company.name}</h3>
-              <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
+              <h3 className="font-semibold text-sm">{company.name.toLowerCase().replace('.', '')}</h3>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {company.tagline}
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Verified startup
             </p>
+
           </div>
+        </div>
+
+        {/* Follow Button and Menu */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-7 px-2.5 rounded-none bg-muted hover:bg-muted/80"
+            onClick={(e) => {
+              e.stopPropagation();
+              setFollowing(!following);
+            }}
+          >
+            <span className="text-xs font-medium">{following ? "Following" : "Follow"}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 w-5 p-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal className="w-5 h-5" />
+          </Button>
         </div>
       </div>
 
       {/* IMAGES */}
-      <div className="px-3 pb-3">
+      {/* IMAGES */}
+      <div className="pb-1">
         <div
-          className="relative bg-muted rounded-xl overflow-hidden select-none"
+          className="relative bg-muted overflow-hidden select-none"
           onClick={handleImageTap}
         >
           {showBigHeart && (
@@ -205,28 +231,26 @@ const handleImageTap = () => {
 
           <img
             src={company.images[currentImageIndex]}
-            className="w-full aspect-[4/3] object-cover"
+            className="w-full aspect-[16/9] object-cover"
           />
-
-          {company.images.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {company.images.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(index);
-                  }}
-                  className={`h-1.5 rounded-full transition-all ${
-                    index === currentImageIndex
-                      ? "w-6 bg-white"
-                      : "w-1.5 bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* SLIDE INDICATORS BELOW IMAGE (outside container) */}
+        {/* {company.images.length > 1 && (
+          <div className="flex justify-center mt-2  gap-1.5">
+            {company.images.map((_, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(index);
+                }}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentImageIndex ? "bg-cyan-400" : "bg-muted-foreground/40"
+                  }`}
+              />
+            ))}
+          </div>
+        )} */}
       </div>
 
       {/* ACTIONS */}
@@ -236,22 +260,22 @@ const handleImageTap = () => {
           {/* LIKE */}
           <Button
             variant="ghost"
-            size="sm"
-            className="h-auto p-0 flex items-center gap-1.5"
+            size="icon"
+            className="h-12 w-12 flex items-center justify-center rounded-full hover:bg-muted transition"
             onClick={(e) => {
               e.stopPropagation();
               handleLike();
             }}
           >
             <Heart
-              className={`h-6 w-6 transition-all ${
-                liked
+              className={`!h-6 !w-6 transition-all ${liked
                   ? "fill-current text-red-500"
                   : "text-foreground hover:text-red-500"
-              }`}
+                }`}
             />
 
-            <span className="text-sm font-medium">{likes}</span>
+
+            <span className="text-[17px] font-medium">{likes}</span>
           </Button>
 
           {/* CROWN */}
@@ -265,14 +289,14 @@ const handleImageTap = () => {
             }}
           >
             <Crown
-              className={`h-6 w-6 transition-all ${
-                crowned
+              className={`!h-6 !w-6 transition-all ${crowned
                   ? "fill-current text-yellow-500"
                   : "text-foreground hover:text-yellow-500"
-              }`}
+                }`}
             />
 
-            <span className="text-sm font-medium">{crowns}</span>
+
+            <span className="text-[17px] font-medium">{crowns}</span>
           </Button>
 
           {/* COMMENT DRAWER */}
@@ -284,13 +308,16 @@ const handleImageTap = () => {
                 className="h-auto p-0 flex items-center gap-1.5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <MessageCircle className="h-6 w-6 text-foreground hover:text-accent transition-colors" />
-                <span className="text-sm font-medium">{comments}</span>
+                <MessageCircle
+                  className="!h-6 !w-6 text-foreground hover:text-accent transition-colors"
+                />
+                <span className="text-[17px] font-medium">{comments}</span>
               </Button>
+
             </DrawerTrigger>
 
             <DrawerContent
-            className="
+              className="
               p-0 
               w-full 
               max-w-full 
@@ -298,7 +325,7 @@ const handleImageTap = () => {
               rounded-t-xl
               lg:max-w-[560px]
             "
-          >
+            >
 
               <DrawerHeader className="px-4 py-3">
                 <DrawerTitle>Comments</DrawerTitle>
@@ -362,49 +389,63 @@ const handleImageTap = () => {
               {/* COMMENT INPUT */}
               <DrawerFooter className="bg-background border-t p-3">
 
-                    <div className="w-full flex items-center gap-2">
+                <div className="w-full flex items-center gap-2">
 
-                      {/* + icon */}
-                      <button
-                        onClick={() => commentFileRef.current?.click()}
-                        className="p-2 rounded-full hover:bg-muted transition"
-                      >
-                        <Plus className="w-5 h-5 text-muted-foreground" />
-                      </button>
+                  {/* + icon */}
+                  <button
+                    onClick={() => commentFileRef.current?.click()}
+                    className="p-2 rounded-full hover:bg-muted transition"
+                  >
+                    <Plus className="w-5 h-5 text-muted-foreground" />
+                  </button>
 
-                      {/* hidden input */}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={commentFileRef}
-                        className="hidden"
-                        onChange={handleCommentImageUpload}
-                      />
+                  {/* hidden input */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={commentFileRef}
+                    className="hidden"
+                    onChange={handleCommentImageUpload}
+                  />
 
-                      {/* input field */}
-                      <Input
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="flex-1 rounded-full"
-                      />
+                  {/* input field */}
+                  <Input
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="flex-1 rounded-full"
+                  />
 
-                      {/* send icon */}
-                      <button
-                        onClick={addComment}
-                        disabled={!newComment.trim() && !commentImage}
-                        className="p-2 rounded-full hover:bg-primary/10 disabled:opacity-30 transition"
-                      >
-                        <Send className="w-5 h-5 text-primary" />
-                      </button>
+                  {/* send icon */}
+                  <button
+                    onClick={addComment}
+                    disabled={!newComment.trim() && !commentImage}
+                    className="p-2 rounded-full hover:bg-primary/10 disabled:opacity-30 transition"
+                  >
+                    <Send className="w-5 h-5 text-primary" />
+                  </button>
 
-                    </div>
+                </div>
 
-                  </DrawerFooter>
+              </DrawerFooter>
 
 
             </DrawerContent>
           </Drawer>
+
+          {/* SEND */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-auto p-0 flex items-center gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Send
+              className="!h-6 !w-6 text-foreground hover:text-accent transition-colors"
+            />
+            <span className="text-[17px] font-medium">{sends}</span>
+          </Button>
+
 
           <div className="flex-1" />
 
@@ -419,16 +460,11 @@ const handleImageTap = () => {
             }}
           >
             <Bookmark
-              className={`h-6 w-6 transition-all ${
-                saved ? "fill-foreground" : "text-foreground"
-              }`}
+              className={`!h-6 !w-6 transition-all ${saved ? "fill-foreground" : "text-foreground"
+                }`}
             />
           </Button>
 
-          {/* SHARE */}
-          <Button variant="ghost" size="sm" className="h-auto p-0">
-            <Share2 className="h-6 w-6 text-foreground hover:text-accent transition-colors" />
-          </Button>
 
         </div>
       </div>
@@ -443,53 +479,34 @@ const handleImageTap = () => {
         </p>
       </div>
 
-      {/* TRACTION */}
+      {/* STAGE */}
       <div className="px-4 pb-3">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">
-          TRACTION
+        <h4 className="text-xs font-semibold uppercase mb-1.5">
+          <span className="text-muted-foreground">STAGE :</span>{" "}
+          <span className="text-foreground font-semibold">MVP launched</span>
         </h4>
-        <p className="text-sm text-foreground/90">
-          Mvp functional, EOI signed, 1200+ test flights
-        </p>
       </div>
+
 
       {/* SMALL INFO BOXES */}
       <div className="px-4 pb-3">
-        <div className="grid grid-cols-3 gap-2">
-          <div className="px-3 py-2 rounded-lg border border-border bg-card text-center">
+        <div className="flex gap-2">
+          <div className="px-4 py-2 rounded-none border border-border bg-card">
             <p className="text-xs font-medium text-foreground">
-              {company.revenueGenerating ? "REVENUE" : "PRE REVENUE"}
+              {company.revenueGenerating ? "Revenue generating" : "Pre-revenue"}
             </p>
           </div>
 
-          <div className="px-3 py-2 rounded-lg border border-border bg-card text-center">
-            <p className="text-xs font-medium text-foreground">Age : 1yr</p>
+          <div className="px-4 py-2 rounded-none border border-border bg-card">
+            <p className="text-xs font-medium text-foreground">Funding rounds : 2</p>
           </div>
-
-          <div className="px-3 py-2 rounded-lg border border-border bg-card text-center">
-            <p className="text-xs font-medium text-foreground">Funding : 2</p>
+          <div className="px-4 py-2 rounded-none border border-border bg-card">
+            <p className="text-xs font-medium text-foreground">Age : 2 years</p>
           </div>
         </div>
       </div>
 
-      {/* FUNDING INFO */}
-      <div className="px-4 pb-4">
-        <div className="grid grid-cols-2">
-          <div>
-            <span className="text-xs text-muted-foreground">Funds raised</span>
-            <p className="font-bold text-base mt-0.5">
-              {company.fundsRaised}
-            </p>
-          </div>
 
-          <div>
-            <span className="text-xs text-muted-foreground">Current investors</span>
-            <p className="text-sm mt-0.5 text-foreground/90">
-              {company.currentInvestors.join(", ")}
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* ROUND STATUS */}
       {company.lookingToDilute && company.dilutionAmount ? (
@@ -502,19 +519,26 @@ const handleImageTap = () => {
           </div>
 
           <div className="relative">
-            <div className="h-8 rounded-full bg-card border border-border overflow-hidden">
+            <div className="h-8 rounded-none bg-card border border-border overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-muted to-muted-foreground/20 transition-all"
+                className="h-full bg-gradient-to-r from-muted-foreground/80 to-muted-foreground/80 transition-all"
                 style={{ width: "15%" }}
               />
             </div>
 
             <div className="flex justify-between items-center mt-1">
-              <span className="text-xs text-muted-foreground">180,000$ Filled.</span>
-              <span className="text-sm font-bold text-foreground">
+              <span className="text-xs text-foreground">180,000$ Filled</span>
+              <span className="text-xs font text-foreground">
                 {company.dilutionAmount}
               </span>
-            </div>
+                </div>
+            {/* <div className="flex justify-center relative">
+              <span className="text-xs font-semibold text-muted-foreground translate-y-3">
+                Know more
+              </span>
+            </div> */}
+
+
           </div>
         </div>
       ) : (

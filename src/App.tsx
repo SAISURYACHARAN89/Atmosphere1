@@ -50,7 +50,7 @@ import { Video } from "lucide-react";
 import Videocontain from "./pages/Videocontain";
 import StartupInvestor from "./pages/StartupInvestor";
 import StartupPortfolio from "./pages/StartupPortfolio";
-
+import DiditKycFrame from "./pages/Kyc";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -73,6 +73,7 @@ const App = () => {
             <Route path="/messages" element={<Messages />} />
             <Route path="/messages/:chatId" element={<ChatDetail />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/kyc" element={<DiditKycFrame />} />
             <Route path="/dashboard/views" element={<ViewsInsight />} />
             <Route path="/dashboard/profile-visits" element={<ProfileVisitsInsight />} />
             <Route path="/dashboard/followers" element={<FollowersInsight />} />

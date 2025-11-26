@@ -62,13 +62,13 @@ interface Event {
   location: string;
   date: string;
   type:
-    | "physical"
-    | "virtual"
-    | "hybrid"
-    | "e-summit"
-    | "conference"
-    | "workshop"
-    | "networking";
+  | "physical"
+  | "virtual"
+  | "hybrid"
+  | "e-summit"
+  | "conference"
+  | "workshop"
+  | "networking";
   description: string;
   attendees: string;
   url: string;
@@ -81,6 +81,7 @@ interface StartupRolePosting {
   roleTitle: string;
   sector: string;
   location: string;
+  companyType: string;
   isRemote: boolean;
   employmentType: "Full-time" | "Part-time";
   compensation: string;
@@ -91,43 +92,21 @@ interface StartupRolePosting {
 }
 
 const sectors = [
-  "All Sectors",
-  "Artificial Intelligence",
-  "Machine Learning",
-  "Blockchain",
-  "Cybersecurity",
-  "Cloud Computing",
-  "IoT",
-  "Healthcare",
-  "Biotechnology",
-  "Medical Devices",
-  "Green Energy",
-  "Renewable Energy",
-  "Clean Tech",
-  "Manufacturing",
-  "Robotics",
-  "Automation",
-  "Finance",
-  "FinTech",
-  "InsurTech",
-  "Education",
-  "EdTech",
-  "E-Learning",
-  "Agriculture",
-  "AgriTech",
-  "FoodTech",
-  "Retail",
-  "E-commerce",
-  "SaaS",
-  "Space Tech",
-  "Mobility",
-  "Transportation",
-  "Real Estate",
-  "PropTech",
-  "Entertainment",
-  "Gaming",
-  "Media",
+  "Verified Startup",
+
 ];
+const companytype = [
+  "Artificial Intelligence",
+  "Blockchain",
+  "HealthTech",
+  "FinTech",
+  "EdTech",
+  "AgriTech",
+  "AI Research",
+  "Retail",
+  "Manufacturing",
+  "AI Research",
+]
 
 const locations = [
   "All Locations",
@@ -153,7 +132,7 @@ const grantsData: Grant[] = [
     id: "1",
     name: "Tech Innovation Grant 2024",
     organization: "National Science Foundation",
-    sector: "Artificial Intelligence",
+    sector: "Verified Startup",
     location: "USA",
     amount: "$50,000 - $250,000",
     deadline: "Dec 31, 2024",
@@ -165,7 +144,7 @@ const grantsData: Grant[] = [
     id: "2",
     name: "Green Energy Accelerator",
     organization: "CleanTech Ventures",
-    sector: "Green Energy",
+    sector: "",
     location: "Global",
     amount: "$100,000 + Mentorship",
     deadline: "Jan 15, 2025",
@@ -177,7 +156,7 @@ const grantsData: Grant[] = [
     id: "3",
     name: "HealthTech Incubator",
     organization: "MedStart Hub",
-    sector: "Healthcare",
+    sector: "",
     location: "Europe",
     amount: "$75,000",
     deadline: "Nov 30, 2024",
@@ -189,7 +168,7 @@ const grantsData: Grant[] = [
     id: "4",
     name: "FinTech Growth Fund",
     organization: "Finance Innovation Lab",
-    sector: "FinTech",
+    sector: "Verified Startup",
     location: "Asia",
     amount: "$200,000 - $500,000",
     deadline: "Dec 15, 2024",
@@ -201,7 +180,7 @@ const grantsData: Grant[] = [
     id: "5",
     name: "EdTech Accelerator Program",
     organization: "Learn Ventures",
-    sector: "EdTech",
+    sector: "",
     location: "USA",
     amount: "$150,000",
     deadline: "Jan 31, 2025",
@@ -213,7 +192,7 @@ const grantsData: Grant[] = [
     id: "6",
     name: "AgriTech Innovation Grant",
     organization: "FarmFuture Foundation",
-    sector: "AgriTech",
+    sector: "",
     location: "Global",
     amount: "$80,000 - $300,000",
     deadline: "Feb 28, 2025",
@@ -225,7 +204,7 @@ const grantsData: Grant[] = [
     id: "7",
     name: "AI Research Incubator",
     organization: "DeepMind Labs",
-    sector: "Machine Learning",
+    sector: "Verified Startup",
     location: "UK",
     amount: "$120,000 + Resources",
     deadline: "Dec 20, 2024",
@@ -237,7 +216,7 @@ const grantsData: Grant[] = [
     id: "8",
     name: "Retail Innovation Fund",
     organization: "Commerce Accelerators",
-    sector: "E-commerce",
+    sector: "",
     location: "USA",
     amount: "$90,000",
     deadline: "Jan 10, 2025",
@@ -276,7 +255,7 @@ const eventsData: Event[] = [
     id: "e1",
     name: "AI & Machine Learning Summit 2024",
     organizer: "Tech Innovators Network",
-    sector: "Artificial Intelligence",
+    sector: "Verified Startup",
     location: "San Francisco, USA",
     date: "Dec 15-17, 2024",
     type: "physical",
@@ -289,7 +268,7 @@ const eventsData: Event[] = [
     id: "e2",
     name: "Global Climate Tech Conference",
     organizer: "Green Future Foundation",
-    sector: "Green Energy",
+    sector: "",
     location: "Online",
     date: "Jan 8-10, 2025",
     type: "virtual",
@@ -302,7 +281,7 @@ const eventsData: Event[] = [
     id: "e3",
     name: "HealthTech Innovation E-Summit",
     organizer: "MedTech Global",
-    sector: "Healthcare",
+    sector: "",
     location: "London",
     date: "Jan 22-23, 2025",
     type: "e-summit",
@@ -315,7 +294,7 @@ const eventsData: Event[] = [
     id: "e4",
     name: "FinTech Leaders Conference",
     organizer: "Financial Innovation Hub",
-    sector: "FinTech",
+    sector: "Verified Startup",
     location: "Singapore",
     date: "Feb 5-6, 2025",
     type: "conference",
@@ -405,7 +384,7 @@ const startupRolePostings: StartupRolePosting[] = [
     id: "1",
     startupName: "NeuralTech AI",
     roleTitle: "Co-Founder & CTO",
-    sector: "Artificial Intelligence",
+    sector: "Verified Startup",
     location: "San Francisco, USA",
     isRemote: true,
     employmentType: "Full-time",
@@ -415,13 +394,14 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "10+ years in software engineering, proven track record in AI/ML, startup experience preferred, strong leadership skills",
     applicantsCount: 24,
+    companyType: "Artificial Intelligence",
     customQuestions: [],
   },
   {
     id: "2",
     startupName: "GreenWave Energy",
     roleTitle: "Head of Marketing",
-    sector: "Green Energy",
+    sector: "",
     location: "Berlin, Germany",
     isRemote: false,
     employmentType: "Full-time",
@@ -431,6 +411,7 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "5+ years B2B marketing experience, climate tech interest, growth hacking expertise, fluent English and German",
     applicantsCount: 12,
+    companyType: "Renewable Energy",
     customQuestions: [],
   },
   {
@@ -447,6 +428,7 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "Healthcare or medtech design experience, user research skills, design systems expertise, passion for improving patient care",
     applicantsCount: 8,
+    companyType: "HealthTech",
     customQuestions: [],
   },
   {
@@ -463,6 +445,7 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "Logistics or supply chain experience, startup mindset, data-driven approach, willing to travel across Asia",
     applicantsCount: 15,
+    companyType: "Robotics",
     customQuestions: [],
   },
   {
@@ -479,6 +462,7 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "Investment banking or VC background, fintech experience, proven fundraising track record, financial modeling expertise",
     applicantsCount: 32,
+    companyType: "FinTech",
     customQuestions: [],
   },
   {
@@ -495,6 +479,7 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "Full-stack expertise, EdTech passion, experience with AI/ML, team building skills, scalability focus",
     applicantsCount: 18,
+    companyType: "EdTech",
     customQuestions: [],
   },
   {
@@ -511,6 +496,7 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "Agriculture industry knowledge, strong network in agritech, partnership development experience, sustainability focus",
     applicantsCount: 7,
+    companyType: "AgriTech",
     customQuestions: [],
   },
   {
@@ -527,6 +513,7 @@ const startupRolePostings: StartupRolePosting[] = [
     requirements:
       "Deep cybersecurity expertise, ethical hacking background, enterprise security experience, thought leadership",
     applicantsCount: 21,
+    companyType: "Cybersecurity",
     customQuestions: [],
   },
 ];
@@ -582,184 +569,205 @@ type RoleCardProps = {
   isMyAd?: boolean;
 };
 
+/* --------------------------------------------
+   NEW ROLE CARD — Matches Screenshot #1 
+----------------------------------------------*/
+
 const RoleCard: React.FC<RoleCardProps> = ({ posting, isMyAd = false }) => {
   const [showApplyBox, setShowApplyBox] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
   const [applicationText, setApplicationText] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [applied, setApplied] = useState(false);
   const [count, setCount] = useState(posting.applicantsCount);
+
   const [questionAnswers, setQuestionAnswers] = useState<string[]>(
     posting.customQuestions.map(() => "")
   );
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    if (!file) return;
-    setUploadedFile(file);
-  };
-
-  const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...questionAnswers];
-    newAnswers[index] = value;
-    setQuestionAnswers(newAnswers);
-  };
-
   const handleSubmit = () => {
-    // Check if all custom questions are answered (if they exist)
-    const hasQuestions = posting.customQuestions.some(q => q.trim() !== "");
-    const allQuestionsAnswered = questionAnswers.every((answer, index) => {
-      return posting.customQuestions[index] ? answer.trim() !== "" : true;
-    });
+    const hasQuestions = posting.customQuestions.some((q) => q.trim() !== "");
+    const answered = questionAnswers.every((ans, i) =>
+      posting.customQuestions[i] ? ans.trim() !== "" : true
+    );
 
-    if (hasQuestions && !allQuestionsAnswered) {
+    if (hasQuestions && !answered) {
       alert("Please answer all questions before submitting.");
       return;
     }
 
     if (!applicationText.trim() && !uploadedFile) return;
 
-    // Simulate an API call
     setApplied(true);
-    setShowApplyBox(false);
+    setExpanded(false);
     setCount((prev) => prev + 1);
-
-    // Clear inputs
-    setApplicationText("");
-    setUploadedFile(null);
-    setQuestionAnswers(posting.customQuestions.map(() => ""));
   };
 
   return (
-    <div className="border border-border rounded-xl p-5 space-y-4 hover:shadow-lg transition-all bg-card">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 flex-1">
-          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+    <div
+      className="
+        bg-[#111] 
+        border border-[#1d1d1d] 
+        rounded-2xl 
+        p-5 
+        space-y-3 
+        shadow-[0px_2px_10px_rgba(0,0,0,0.4)]
+      "
+    >
+      {/* ---------- TOP SECTION ---------- */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
             <Building2 className="w-6 h-6 text-primary" />
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-foreground text-lg">{posting.startupName}</h3>
+              <p className="font-semibold text-lg text-white">{posting.startupName}</p>
+
               {isMyAd && (
-                <Badge variant="secondary" className="text-xs">
-                  my ad
+                <Badge variant="secondary" className="text-[10px] px-2">
+                  My Ad
                 </Badge>
               )}
             </div>
 
-            <p className="text-base text-foreground/90 font-semibold mt-1">{posting.roleTitle}</p>
+            <p className="text-xs text-muted-foreground mt-1">{posting.sector}</p>
+
+            {/* FIX: Push down WITHOUT increasing card height */}
+            
           </div>
         </div>
 
-        <Badge variant="default" className="whitespace-nowrap font-medium">
-          {posting.employmentType}
+
+        {/* Job Type + Remote */}
+        <div className="flex flex-col items-end gap-2">
+          <Badge
+            variant="outline"
+            className="rounded-full px-3 py-1 text-[11px] text-white border-white/20"
+          >
+            {posting.employmentType}
+          </Badge>
+
+          <div className="flex items-center mr-2 gap-1 text-[11px] text-muted-foreground">
+            <Briefcase className="w-3 h-3" />
+            {posting.isRemote ? "Remote" : "On-site"}
+          </div>
+        </div>
+      </div>
+
+      {/* ---------- GREY BOX LIKE INSTAGRAM UI ---------- */}
+      <div className="flex gap-2 ml-2 translate-y-[1px]">
+        <Badge
+          variant="secondary"
+          className="text-[8px] bg-white/10 text-white border-none"
+        >
+          {posting.companyType}
         </Badge>
       </div>
+     
+      <div className="bg-[#1a1a1a]  p-3 rounded-xl border border-white/5">
+      
+      
+        <p className="text-xs  text-muted-foreground font-medium">
+          Looking for:{" "}
+          <span className="text-white font-semibold">{posting.roleTitle}</span>
+        </p>
 
-      {/* Description */}
-      <p className="text-sm text-foreground/80 leading-relaxed">{posting.description}</p>
-
-      {/* Requirements */}
-      <div className="bg-muted/50 rounded-lg p-3">
-        <p className="text-xs font-medium text-muted-foreground mb-1">Looking for:</p>
-        <p className="text-sm text-foreground/90">{posting.requirements}</p>
+        <p className="text-sm text-white mt-2">{posting.requirements}</p>
       </div>
 
-      {/* Compensation */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-semibold text-primary">Compensation:</span>
-        <span className="text-foreground/90">{posting.compensation}</span>
-      </div>
+      {/* ---------- COMPENSATION ---------- */}
+      <p className="text-sm">
+        <span className="text-[#888] font-semibold ml-2">Compensation: </span>
+        <span className="text-white">{posting.compensation}</span>
+      </p>
 
-      {/* Details Grid */}
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <MapPin className="w-3.5 h-3.5" />
-          <span>{posting.location}</span>
-        </div>
+      {/* ---------- APPLICANTS (EXPANDABLE ROW) ---------- */}
+      <button
+        onClick={() => setExpanded((prev) => !prev)}
+        className="
+            w-full flex items-center justify-center 
+            gap-3 py-2 border-t border-white/10 
+            text-sm text-white/80
+        "
+      >
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""
+            }`}
+        />
 
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Briefcase className="w-3.5 h-3.5" />
-          <span>{posting.isRemote ? "Remote" : "On-site"}</span>
-        </div>
-      </div>
+        <span className="font-medium flex items-center gap-1"> <Users></Users>{count} applicants</span>
 
-      {/* Sector */}
-      <Badge variant="secondary" className="text-xs">
-        {posting.sector}
-      </Badge>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""
+            }`}
+        />
+      </button>
 
-      {/* Applicants Count */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border">
-        <Users className="w-4 h-4" />
-        <span className="font-medium">{count} applicants</span>
-      </div>
-
-      {/* Apply Box */}
-      {showApplyBox && !applied && (
-        <div className="bg-muted/40 border border-border rounded-lg p-3 space-y-3">
-          <Textarea
-            value={applicationText}
-            onChange={(e) => setApplicationText(e.target.value)}
-            placeholder="Write a short introduction..."
-            className="w-full bg-background rounded-md border border-border p-2 text-sm resize-none"
-            rows={3}
-          />
-
-          {/* Custom Questions */}
-          {posting.customQuestions.filter(q => q.trim() !== "").map((question, index) => (
-            <div key={index} className="space-y-2">
-              <Label className="text-sm font-medium">{question}</Label>
-              <Textarea
-                value={questionAnswers[index]}
-                onChange={(e) => handleAnswerChange(index, e.target.value)}
-                placeholder="Your answer..."
-                className="w-full bg-background rounded-md border border-border p-2 text-sm resize-none"
-                rows={2}
-                required
-              />
-            </div>
-          ))}
-
-          {/* File upload */}
-          <div>
-            <label className="text-xs text-muted-foreground">Upload resume (PDF/DOC)</label>
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx"
-              onChange={handleFileUpload}
-              className="mt-1 text-xs"
-            />
-
-            {uploadedFile && <p className="text-xs mt-1 text-primary font-medium">{uploadedFile.name}</p>}
-          </div>
-
-          {/* Send Button */}
-          <Button size="sm" className="w-full font-medium" onClick={handleSubmit}>
-            Send Application
+      {/* ---------- EXPANDED PANEL ---------- */}
+      {expanded && (
+        <div className="pt-3 space-y-3">
+          <Button
+            size="sm"
+            className="w-full"
+            variant={applied ? "secondary" : "default"}
+            onClick={() => {
+              if (!applied) setShowApplyBox((p) => !p);
+            }}
+          >
+            {applied ? "Applied" : "Apply for Role"}
           </Button>
+
+          <Button size="sm" variant="outline" className="w-full">
+            <ExternalLink className="w-4 h-4 mr-1" />
+            View Profile
+          </Button>
+
+          {/* APPLY BOX */}
+          {showApplyBox && !applied && (
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 space-y-3">
+              <Textarea
+                value={applicationText}
+                onChange={(e) => setApplicationText(e.target.value)}
+                placeholder="Write a short introduction..."
+                className="bg-black/20 text-white border border-white/10"
+              />
+
+              {posting.customQuestions.map((q, i) =>
+                q.trim() ? (
+                  <div key={i}>
+                    <Label className="text-xs">{q}</Label>
+                    <Textarea
+                      value={questionAnswers[i]}
+                      onChange={(e) => {
+                        const updated = [...questionAnswers];
+                        updated[i] = e.target.value;
+                        setQuestionAnswers(updated);
+                      }}
+                      className="bg-black/20 text-white border border-white/10 mt-1 text-sm"
+                    />
+                  </div>
+                ) : null
+              )}
+
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) =>
+                  setUploadedFile(e.target.files?.[0] ?? null)
+                }
+                className="text-xs"
+              />
+
+              <Button size="sm" onClick={handleSubmit} className="w-full">
+                Send Application
+              </Button>
+            </div>
+          )}
         </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-3 pt-2">
-        <Button
-          size="sm"
-          className="flex-1 gap-2 font-medium"
-          variant={applied ? "secondary" : "default"}
-          onClick={() => {
-            if (!applied) setShowApplyBox((prev) => !prev);
-          }}
-        >
-          {applied ? "Applied" : "Apply for Role"}
-        </Button>
-
-        <Button size="sm" variant="outline" className="gap-2">
-          <ExternalLink className="w-3.5 h-3.5" />
-          View Profile
-        </Button>
-      </div>
     </div>
   );
 };
@@ -788,6 +796,9 @@ const Opportunities: React.FC = () => {
   const [teamRemoteOpen, setTeamRemoteOpen] = useState(false);
   const [teamEmploymentOpen, setTeamEmploymentOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("team");
+  
+
+  const [showTeamFilters, setShowTeamFilters] = useState(false);
 
   // User created job postings
   const [userPostings, setUserPostings] = useState<StartupRolePosting[]>([]);
@@ -867,6 +878,7 @@ const Opportunities: React.FC = () => {
     const employmentMatch = teamEmploymentType === "all" || posting.employmentType === teamEmploymentType;
     return sectorMatch && locationMatch && remoteMatch && employmentMatch;
   });
+  
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -888,23 +900,23 @@ const Opportunities: React.FC = () => {
 
           </TabsList>
           <TabsContent value="myteams" className="space-y-4">
-              <div className="text-sm text-muted-foreground py-2">
-                {userPostings.length} {userPostings.length === 1 ? "position" : "positions"} posted by you
-              </div>
+            <div className="text-sm text-muted-foreground py-2">
+              {userPostings.length} {userPostings.length === 1 ? "position" : "positions"} posted by you
+            </div>
 
-              <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
-                {userPostings.map((posting) => (
-                  <RoleCard key={posting.id} posting={posting} isMyAd={true} />
-                ))}
-              </div>
+            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+              {userPostings.map((posting) => (
+                <RoleCard key={posting.id} posting={posting} isMyAd={true} />
+              ))}
+            </div>
 
-              {userPostings.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>You haven't posted any team roles yet</p>
-                </div>
-              )}
-            </TabsContent>
+            {userPostings.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Briefcase className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>You haven't posted any team roles yet</p>
+              </div>
+            )}
+          </TabsContent>
 
           {/* GRANTS TAB */}
           <TabsContent value="grants" className="space-y-4">
@@ -1204,8 +1216,8 @@ const Opportunities: React.FC = () => {
                 </DialogTrigger>
 
                 {/* NEW BUTTON — switches to My Teams tab */}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex-1"
                   onClick={() => setActiveTab("myteams")}
                 >
@@ -1320,7 +1332,7 @@ const Opportunities: React.FC = () => {
                     <p className="text-xs text-muted-foreground">
                       Add up to 3 questions for applicants to answer
                     </p>
-                    
+
                     {[0, 1, 2].map((index) => (
                       <div key={index} className="space-y-2">
                         <Label htmlFor={`question-${index}`} className="text-xs">
@@ -1348,143 +1360,187 @@ const Opportunities: React.FC = () => {
             </Dialog>
 
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Filter className="w-4 h-4" />
-                Filters
-              </div>
+              {/* FILTER TRIGGER */}
+              
 
-              <Collapsible open={teamSectorOpen} onOpenChange={setTeamSectorOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Sector: {teamSector}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", teamSectorOpen && "rotate-180")} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {sectors.map((sector) => (
-                      <button
-                        key={sector}
-                        onClick={() => {
-                          setTeamSector(sector);
-                          setTeamSectorOpen(false);
-                        }}
-                        className={cn(
-                          "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          teamSector === sector ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {sector}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+              {/* FILTER SHEET */}
+              <Dialog open={showTeamFilters} onOpenChange={setShowTeamFilters}>
+                <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl bg-card border-border p-4">
+                  <DialogHeader>
+                    <DialogTitle className="text-lg font-semibold">Filters</DialogTitle>
+                  </DialogHeader>
 
-              <Collapsible open={teamLocationOpen} onOpenChange={setTeamLocationOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Location: {teamLocation}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", teamLocationOpen && "rotate-180")} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {locations.map((location) => (
-                      <button
-                        key={location}
-                        onClick={() => {
-                          setTeamLocation(location);
-                          setTeamLocationOpen(false);
-                        }}
-                        className={cn(
-                          "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          teamLocation === location ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {location}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                  <div className="space-y-3 pt-3">
 
-              <Collapsible open={teamRemoteOpen} onOpenChange={setTeamRemoteOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Work Mode: {teamRemote === "all" ? "All" : teamRemote === "remote" ? "Remote" : "On-site"}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", teamRemoteOpen && "rotate-180")} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="flex gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {remoteOptions.map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => {
-                          setTeamRemote(option);
-                          setTeamRemoteOpen(false);
-                        }}
-                        className={cn(
-                          "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize",
-                          teamRemote === option ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {option === "all" ? "All" : option === "remote" ? "Remote" : "On-site"}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                    {/* SECTOR */}
+                    <Collapsible open={teamSectorOpen} onOpenChange={setTeamSectorOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                          <span className="text-sm font-medium">Sector: {teamSector}</span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", teamSectorOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
 
-              <Collapsible open={teamEmploymentOpen} onOpenChange={setTeamEmploymentOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Type: {teamEmploymentType === "all" ? "All" : teamEmploymentType}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", teamEmploymentOpen && "rotate-180")} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="flex gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {employmentOptions.map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => {
-                          setTeamEmploymentType(option);
-                          setTeamEmploymentOpen(false);
-                        }}
-                        className={cn(
-                          "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                          teamEmploymentType === option ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {option === "all" ? "All" : option}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                      <CollapsibleContent>
+                        <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
+                          {sectors.map((sector) => (
+                            <button
+                              key={sector}
+                              onClick={() => {
+                                setTeamSector(sector);
+                                setTeamSectorOpen(false);
+                              }}
+                              className={cn(
+                                "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
+                                teamSector === sector
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-card hover:bg-muted border border-border"
+                              )}
+                            >
+                              {sector}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-              {(teamSector !== "All Sectors" || teamLocation !== "All Locations" || teamRemote !== "all" || teamEmploymentType !== "all") && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setTeamSector("All Sectors");
-                    setTeamLocation("All Locations");
-                    setTeamRemote("all");
-                    setTeamEmploymentType("all");
-                  }}
-                  className="w-full gap-2"
-                >
-                  <X className="w-3 h-3" />
-                  Clear all filters
-                </Button>
-              )}
+                    {/* LOCATION */}
+                    <Collapsible open={teamLocationOpen} onOpenChange={setTeamLocationOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                          <span className="text-sm font-medium">Location: {teamLocation}</span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", teamLocationOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
+                          {locations.map((location) => (
+                            <button
+                              key={location}
+                              onClick={() => {
+                                setTeamLocation(location);
+                                setTeamLocationOpen(false);
+                              }}
+                              className={cn(
+                                "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
+                                teamLocation === location
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-card hover:bg-muted border border-border"
+                              )}
+                            >
+                              {location}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+
+                    {/* WORK MODE */}
+                    <Collapsible open={teamRemoteOpen} onOpenChange={setTeamRemoteOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                          <span className="text-sm font-medium">
+                            Work Mode: {teamRemote === "all" ? "All" : teamRemote === "remote" ? "Remote" : "On-site"}
+                          </span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", teamRemoteOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="flex gap-2 p-3 bg-muted/30 rounded-lg mt-2">
+                          {remoteOptions.map((option) => (
+                            <button
+                              key={option}
+                              onClick={() => {
+                                setTeamRemote(option);
+                                setTeamRemoteOpen(false);
+                              }}
+                              className={cn(
+                                "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize",
+                                teamRemote === option
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-card hover:bg-muted border border-border"
+                              )}
+                            >
+                              {option === "all" ? "All" : option === "remote" ? "Remote" : "On-site"}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+
+                    {/* EMPLOYMENT TYPE */}
+                    <Collapsible open={teamEmploymentOpen} onOpenChange={setTeamEmploymentOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                          <span className="text-sm font-medium">
+                            Type: {teamEmploymentType === "all" ? "All" : teamEmploymentType}
+                          </span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", teamEmploymentOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="flex gap-2 p-3 bg-muted/30 rounded-lg mt-2">
+                          {employmentOptions.map((option) => (
+                            <button
+                              key={option}
+                              onClick={() => {
+                                setTeamEmploymentType(option);
+                                setTeamEmploymentOpen(false);
+                              }}
+                              className={cn(
+                                "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                                teamEmploymentType === option
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-card hover:bg-muted border border-border"
+                              )}
+                            >
+                              {option === "all" ? "All" : option}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+
+                    {/* CLEAR FILTERS */}
+                    {(teamSector !== "All Sectors" ||
+                      teamLocation !== "All Locations" ||
+                      teamRemote !== "all" ||
+                      teamEmploymentType !== "all") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setTeamSector("All Sectors");
+                            setTeamLocation("All Locations");
+                            setTeamRemote("all");
+                            setTeamEmploymentType("all");
+                          }}
+                          className="w-full gap-2"
+                        >
+                          <X className="w-3 h-3" />
+                          Clear all filters
+                        </Button>
+                      )}
+
+                  </div>
+                </DialogContent>
+              </Dialog>
+
             </div>
 
-            <div className="text-sm text-muted-foreground py-2">
-              {filteredRolePostings.length} {filteredRolePostings.length === 1 ? "position" : "positions"} available
+            <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground py-2">
+             
+              {filteredRolePostings.length } {filteredRolePostings.length === 1 ? "position" : "positions"} available
+              <div
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground cursor-pointer"
+                onClick={() => setShowTeamFilters(true)}
+              >
+                <Filter className="w-4 h-4" />
+                {/* Filters */}
+              </div>
             </div>
 
             <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
