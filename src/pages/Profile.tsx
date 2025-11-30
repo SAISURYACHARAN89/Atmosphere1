@@ -589,38 +589,32 @@ const Profile = () => {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {investments.map((inv) => (
-                        <div
+                        <Card
                           key={inv.id}
-                          className="flex items-center justify-between p-3 border rounded-xl bg-background hover:bg-muted/50 transition cursor-pointer w-full"
+                          className="border border-border rounded-xl bg-background hover:bg-muted/40 transition cursor-pointer"
                         >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-14 w-14 rounded-lg">
+                          <CardContent className="p-4 flex items-center gap-3">
+                            <Avatar className="h-12 w-12 rounded-lg border">
                               <AvatarImage src={inv.companyLogo} />
                               <AvatarFallback>{inv.companyName[0]}</AvatarFallback>
                             </Avatar>
-
-                            <div>
-                              <h4 className="text-sm font-semibold">
-                                {inv.companyName}
-                              </h4>
-                              <span className="text-xs text-muted-foreground">
-                                Since {formatDate(inv.investmentDate)}
-                              </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-sm text-foreground truncate">{inv.companyName}</div>
+                              <div className="text-xs text-muted-foreground">{inv.sector}</div>
                             </div>
-                          </div>
-
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs px-3 py-1 rounded-lg"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(inv.companyWebsite, "_blank");
-                            }}
-                          >
-                            Visit
-                          </Button>
-                        </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs px-3 py-1 rounded-lg"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(inv.companyWebsite, "_blank");
+                              }}
+                            >
+                              View
+                            </Button>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   )}

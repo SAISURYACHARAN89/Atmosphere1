@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, Code, TrendingUp, Filter } from "lucide-react";
+import { ChevronDown, Code, TrendingUp, Filter, ChevronRight, Flame, Heart } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,99 @@ const industryTags = [
   "E-commerce", "EdTech", "AgriTech", "Blockchain", "IoT", "CleanTech",
   "FoodTech", "PropTech", "InsurTech", "LegalTech", "MarTech", "RetailTech",
   "TravelTech", "Logistics", "Cybersecurity", "Gaming", "Media", "SpaceTech"
+];
+
+const topStartups = [
+  {
+    id: 1,
+    name: "Airbound Pvt. Ltd.",
+    initials: "AR",
+    color: "bg-gradient-to-br from-yellow-400 to-orange-500",
+    tagline: "Revolutionizing last-mile delivery with drone technology",
+    likes: 1200,
+    logo: "",
+  },
+  {
+    id: 2,
+    name: "Syko Analytics",
+    initials: "SY",
+    color: "bg-gradient-to-br from-gray-300 to-gray-500",
+    tagline: "AI-powered customer behavior prediction platform",
+    likes: 950,
+    logo: "",
+  },
+  {
+    id: 3,
+    name: "GreenWave Energy",
+    initials: "GW",
+    color: "bg-gradient-to-br from-orange-300 to-yellow-200",
+    tagline: "Sustainable energy solutions for urban infrastructure",
+    likes: 870,
+    logo: "",
+  },
+  {
+    id: 4,
+    name: "MediConnect",
+    initials: "MC",
+    color: "bg-blue-500",
+    tagline: "Connecting patients with specialists through telemedicine",
+    likes: 820,
+    logo: "",
+  },
+  {
+    id: 5,
+    name: "Stellar Dynamics",
+    initials: "SD",
+    color: "bg-indigo-500",
+    tagline: "Next-gen satellite communication systems",
+    likes: 790,
+    logo: "",
+  },
+  {
+    id: 6,
+    name: "PayFlow Solutions",
+    initials: "PF",
+    color: "bg-amber-500",
+    tagline: "Digital payment infrastructure for emerging markets",
+    likes: 760,
+    logo: "",
+  },
+  {
+    id: 7,
+    name: "FoodFlow",
+    initials: "FF",
+    color: "bg-green-500",
+    tagline: "Smart logistics for food supply chains",
+    likes: 740,
+    logo: "",
+  },
+  {
+    id: 8,
+    name: "CodeMentor AI",
+    initials: "CM",
+    color: "bg-purple-500",
+    tagline: "AI-powered coding mentorship platform",
+    likes: 720,
+    logo: "",
+  },
+  {
+    id: 9,
+    name: "NeuralHealth",
+    initials: "NH",
+    color: "bg-pink-500",
+    tagline: "Neural network diagnostics for healthcare",
+    likes: 700,
+    logo: "",
+  },
+  {
+    id: 10,
+    name: "LogiChain Systems",
+    initials: "LC",
+    color: "bg-teal-500",
+    tagline: "Blockchain-based supply chain transparency",
+    likes: 680,
+    logo: "",
+  },
 ];
 
 const Launch = () => {
@@ -154,195 +247,92 @@ const Launch = () => {
 
       <main className="pt-14 pb-16">
         <div className="max-w-2xl mx-auto px-4 py-6">
-          {/* Startup Launches Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Startup Launches</h2>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setFilterDay(filterDay === "today" ? "last 7 days" : "today")}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  {filterDay === "today" ? "Today" : "Last 7 days"}
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <Filter className="w-5 h-5" />
-                </Button>
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
+              <Flame className="w-7 h-7 text-orange-500 animate-pulse" />
+              Hottest Startups This Week
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Discover the top 10 most liked companies in the past 7 days.
+            </p>
+          </div>
+
+          {/* Podium for Top 3 */}
+          <div className="flex items-end justify-center gap-6 mb-10">
+            {/* 2nd Place */}
+            <div className="flex flex-col items-center w-32">
+              <div className={`w-20 h-20 rounded-xl shadow-lg flex items-center justify-center text-2xl font-bold text-white ${topStartups[1].color}`}>
+                {topStartups[1].initials}
+              </div>
+              <div className="bg-gray-300 w-16 h-8 rounded-b-xl flex items-center justify-center mt-[-8px]">
+                <span className="font-semibold text-gray-700">2</span>
+              </div>
+              <div className="mt-2 text-center">
+                <div className="font-semibold text-base truncate">{topStartups[1].name}</div>
+                <div className="text-xs text-muted-foreground truncate">{topStartups[1].tagline}</div>
+                <div className="flex items-center justify-center gap-1 text-xs mt-1">
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  {topStartups[1].likes}
+                </div>
               </div>
             </div>
-
-            {/* Filters Box - Expands and pushes content down */}
-            {showFilters && (
-              <div className="bg-gradient-to-br from-muted/30 to-muted/20 border border-border/50 rounded-2xl p-5 shadow-sm animate-fade-in space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-base">Filters</h4>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setShowFilters(false)}
-                    className="h-8"
-                  >
-                    Close
-                  </Button>
+            {/* 1st Place */}
+            <div className="flex flex-col items-center w-36">
+              <div className={`w-24 h-24 rounded-2xl shadow-xl flex items-center justify-center text-3xl font-bold text-white ${topStartups[0].color} border-4 border-yellow-400`}>
+                {topStartups[0].initials}
+              </div>
+              <div className="bg-yellow-400 w-20 h-10 rounded-b-2xl flex items-center justify-center mt-[-10px]">
+                <span className="font-bold text-yellow-900 text-lg">1</span>
+              </div>
+              <div className="mt-2 text-center">
+                <div className="font-bold text-lg truncate">{topStartups[0].name}</div>
+                <div className="text-xs text-muted-foreground truncate">{topStartups[0].tagline}</div>
+                <div className="flex items-center justify-center gap-1 text-xs mt-1">
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  {topStartups[0].likes}
                 </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Type</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {startupTypes.map(type => (
-                      <button
-                        key={type}
-                        onClick={() => toggleStartupType(type)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                          startupTypeFilters.includes(type)
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-background/50 text-foreground hover:bg-background border border-border/40"
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
+              </div>
+            </div>
+            {/* 3rd Place */}
+            <div className="flex flex-col items-center w-32">
+              <div className={`w-20 h-20 rounded-xl shadow-lg flex items-center justify-center text-2xl font-bold text-white ${topStartups[2].color}`}>
+                {topStartups[2].initials}
+              </div>
+              <div className="bg-orange-300 w-16 h-8 rounded-b-xl flex items-center justify-center mt-[-8px]">
+                <span className="font-semibold text-orange-700">3</span>
+              </div>
+              <div className="mt-2 text-center">
+                <div className="font-semibold text-base truncate">{topStartups[2].name}</div>
+                <div className="text-xs text-muted-foreground truncate">{topStartups[2].tagline}</div>
+                <div className="flex items-center justify-center gap-1 text-xs mt-1">
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  {topStartups[2].likes}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid for 4th-10th */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {topStartups.slice(3).map((startup, idx) => (
+              <div key={startup.id} className="bg-card border border-border rounded-xl shadow-sm p-4 flex items-center gap-4">
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold text-white ${startup.color}`}>
+                  {startup.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-base truncate">{startup.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{startup.tagline}</div>
+                  <div className="flex items-center gap-1 text-xs mt-1">
+                    <Heart className="w-4 h-4 text-pink-500" />
+                    {startup.likes}
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Industries</Label>
-                  <ScrollArea className="h-40">
-                    <div className="flex flex-wrap gap-2 pr-4">
-                      {startupMainFilters.map(industry => (
-                        <button
-                          key={industry}
-                          onClick={() => toggleStartupIndustry(industry)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                            startupIndustryFilters.includes(industry)
-                              ? "bg-primary text-primary-foreground shadow-sm"
-                              : "bg-background/50 text-foreground hover:bg-background border border-border/40"
-                          }`}
-                        >
-                          {industry}
-                        </button>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => {
-                    setStartupTypeFilters([]);
-                    setStartupIndustryFilters([]);
-                  }}
-                >
-                  Clear All Filters
+                <Button size="sm" variant="outline" className="rounded-full px-3 py-1 flex items-center gap-1">
+                  View
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-            )}
-
-            {filterDay === "today" ? (
-              <div className="bg-card border rounded-lg p-6 shadow-sm">
-                <div className="text-center space-y-6 py-8">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Next Launch Starting In</h3>
-                    {/* <p className="text-sm text-muted-foreground">Airbound Pvt. Ltd. - Drone Delivery Platform</p> */}
-                  </div>
-                  
-                  <div className="flex justify-center gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
-                        <span className="text-3xl font-bold text-primary">{String(timeRemaining.hours).padStart(2, '0')}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground mt-2">Hours</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
-                        <span className="text-3xl font-bold text-primary">{String(timeRemaining.minutes).padStart(2, '0')}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground mt-2">Minutes</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 rounded-lg bg-primary/10 border-2 border-primary flex items-center justify-center">
-                        <span className="text-3xl font-bold text-primary">{String(timeRemaining.seconds).padStart(2, '0')}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground mt-2">Seconds</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    {/* <p className="text-sm text-muted-foreground mb-3">3 more launches scheduled today</p> */}
-                    <Button className="w-full">Set Reminder</Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredStartups.length > 0 ? (
-                  filteredStartups.map(startup => (
-                    <div key={startup.id} className="bg-card border rounded-lg p-4 shadow-sm space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-12 h-12 rounded-full ${startup.color} flex items-center justify-center text-white font-bold flex-shrink-0`}>
-                          {startup.initials}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-base">{startup.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{startup.tagline}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center flex-wrap gap-2">
-
-                          {/* Industry Pills */}
-                          {startup.industries.map(ind => (
-                            <span 
-                              key={ind} 
-                              className="px-2 py-1 bg-muted rounded-full text-xs"
-                            >
-                              {ind}
-                            </span>
-                          ))}
-
-                          {/* Divider Dot (optional, looks cleaner) */}
-                          {/* <span className="text-muted-foreground">•</span> */}
-
-                          {/* Pre-Revenue Row */}
-                          <div className="flex items-center gap-1 text-xs">
-                            <span className="text-muted-foreground">Pre Revenue</span>
-                            {/* <span className="font-medium">{startup.revenue}</span> */}
-                          </div>
-
-                        </div>
-
-                    
-                      
-                      
-
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Capital raised: </span>
-                          <span className="font-medium">{startup.valuation}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Current Round: </span>
-                          <span className={`font-medium `}>
-                            Pre seed  : 200K 
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No startups match your filters
-                  </div>
-                )}
-              </div>
-            )}
+            ))}
           </div>
         </div>
       </main>

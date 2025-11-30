@@ -395,7 +395,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "10+ years in software engineering, proven track record in AI/ML, startup experience preferred, strong leadership skills",
     applicantsCount: 24,
     companyType: "Artificial Intelligence",
-    customQuestions: [],
+    customQuestions: ["What's your experience with AI/ML?", "Tell us about your leadership style", "Why do you want to join us?"],
   },
   {
     id: "2",
@@ -412,7 +412,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "5+ years B2B marketing experience, climate tech interest, growth hacking expertise, fluent English and German",
     applicantsCount: 12,
     companyType: "Renewable Energy",
-    customQuestions: [],
+    customQuestions: ["What's your marketing strategy for B2B?", "How do you measure campaign success?", "Describe a successful project."],
   },
   {
     id: "3",
@@ -429,7 +429,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "Healthcare or medtech design experience, user research skills, design systems expertise, passion for improving patient care",
     applicantsCount: 8,
     companyType: "HealthTech",
-    customQuestions: [],
+    customQuestions: ["What design tools do you use?", "How do you approach user research?", "Describe your design process."],
   },
   {
     id: "4",
@@ -446,7 +446,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "Logistics or supply chain experience, startup mindset, data-driven approach, willing to travel across Asia",
     applicantsCount: 15,
     companyType: "Robotics",
-    customQuestions: [],
+    customQuestions: ["Describe your experience in logistics.", "How do you optimize supply chain processes?", "What challenges have you overcome?"],
   },
   {
     id: "5",
@@ -463,7 +463,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "Investment banking or VC background, fintech experience, proven fundraising track record, financial modeling expertise",
     applicantsCount: 32,
     companyType: "FinTech",
-    customQuestions: [],
+    customQuestions: ["What is your experience with fundraising?", "How do you approach financial modeling?", "Describe a successful financial strategy."],
   },
   {
     id: "6",
@@ -480,7 +480,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "Full-stack expertise, EdTech passion, experience with AI/ML, team building skills, scalability focus",
     applicantsCount: 18,
     companyType: "EdTech",
-    customQuestions: [],
+    customQuestions: ["What is your vision for AI in education?", "How do you ensure scalability in tech products?", "Describe your experience with K-12 education systems."],
   },
   {
     id: "7",
@@ -497,7 +497,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "Agriculture industry knowledge, strong network in agritech, partnership development experience, sustainability focus",
     applicantsCount: 7,
     companyType: "AgriTech",
-    customQuestions: [],
+    customQuestions: ["What is your experience in business development?", "How do you approach partnership building?", "Describe a successful project in AgriTech."],
   },
   {
     id: "8",
@@ -514,7 +514,7 @@ const startupRolePostings: StartupRolePosting[] = [
       "Deep cybersecurity expertise, ethical hacking background, enterprise security experience, thought leadership",
     applicantsCount: 21,
     companyType: "Cybersecurity",
-    customQuestions: [],
+    customQuestions: ["What are the latest trends in cybersecurity?", "How do you handle security breaches?", "Describe your experience with threat research."],
   },
 ];
 
@@ -567,21 +567,16 @@ const getEventTypeBadge = (type: string) => {
 type RoleCardProps = {
   posting: StartupRolePosting;
   isMyAd?: boolean;
+  expanded?: boolean;
+  onExpand?: () => void;
 };
 
-/* --------------------------------------------
-   NEW ROLE CARD — Matches Screenshot #1 
-----------------------------------------------*/
-
-const RoleCard: React.FC<RoleCardProps> = ({ posting, isMyAd = false }) => {
+const RoleCard: React.FC<RoleCardProps> = ({ posting, isMyAd = false, expanded = false, onExpand }) => {
   const [showApplyBox, setShowApplyBox] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-
-  const [applicationText, setApplicationText] = useState("");
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [applied, setApplied] = useState(false);
   const [count, setCount] = useState(posting.applicantsCount);
-
   const [questionAnswers, setQuestionAnswers] = useState<string[]>(
     posting.customQuestions.map(() => "")
   );
@@ -597,148 +592,88 @@ const RoleCard: React.FC<RoleCardProps> = ({ posting, isMyAd = false }) => {
       return;
     }
 
-    if (!applicationText.trim() && !uploadedFile) return;
-
     setApplied(true);
-    setExpanded(false);
     setCount((prev) => prev + 1);
   };
 
+  const tags = ["AI", "B2B", "SaaS", "Startup"];
+
   return (
-    <div
-      className="
-        bg-[#111] 
-        border border-[#1d1d1d] 
-        rounded-2xl 
-        p-5 
-        space-y-3 
-        shadow-[0px_2px_10px_rgba(0,0,0,0.4)]
-      "
-    >
-      {/* ---------- TOP SECTION ---------- */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
-            <Building2 className="w-6 h-6 text-primary" />
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-lg text-white">{posting.startupName}</p>
-
-              {isMyAd && (
-                <Badge variant="secondary" className="text-[10px] px-2">
-                  My Ad
-                </Badge>
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground mt-1">{posting.sector}</p>
-
-            {/* FIX: Push down WITHOUT increasing card height */}
-            
-          </div>
+    <div className="bg-background border border-border rounded-xl p-4 hover:border-primary/50 transition-all">
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Building2 className="w-5 h-5 text-primary" />
         </div>
-
-
-        {/* Job Type + Remote */}
-        <div className="flex flex-col items-end gap-2">
-          <Badge
-            variant="outline"
-            className="rounded-full px-3 py-1 text-[11px] text-white border-white/20"
-          >
-            {posting.employmentType}
-          </Badge>
-
-          <div className="flex items-center mr-2 gap-1 text-[11px] text-muted-foreground">
-            <Briefcase className="w-3 h-3" />
-            {posting.isRemote ? "Remote" : "On-site"}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-sm text-foreground truncate">{posting.startupName}</p>
+            {isMyAd && <Badge variant="secondary" className="text-[8px] px-1.5 py-0.5 flex-shrink-0">My Ad</Badge>}
           </div>
+          <p className="text-xs text-muted-foreground mt-0.5">{posting.companyType}</p>
         </div>
       </div>
 
-      {/* ---------- GREY BOX LIKE INSTAGRAM UI ---------- */}
-      <div className="flex gap-2 ml-2 translate-y-[1px]">
-        <Badge
-          variant="secondary"
-          className="text-[8px] bg-white/10 text-white border-none"
-        >
-          {posting.companyType}
-        </Badge>
+      {/* Role & Details */}
+      <div className="mb-3 space-y-2">
+        <p className="font-semibold text-sm text-foreground line-clamp-2">{posting.roleTitle}</p>
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            <span>{posting.location}</span>
+          </div>
+          <span className={posting.isRemote ? "text-primary" : ""}>{posting.isRemote ? "Remote" : "On-site"}</span>
+        </div>
       </div>
-     
-      <div className="bg-[#1a1a1a]  p-3 rounded-xl border border-white/5">
-      
-      
-        <p className="text-xs  text-muted-foreground font-medium">
-          Looking for:{" "}
-          <span className="text-white font-semibold">{posting.roleTitle}</span>
+
+      {/* Description with More/Less */}
+      <div className="mb-3">
+        <p className={`text-xs text-muted-foreground ${showFullDescription ? "" : "line-clamp-2"}`}>
+          {posting.description}
         </p>
-
-        <p className="text-sm text-white mt-2">{posting.requirements}</p>
+        {posting.description.length > 100 && (
+          <button
+            onClick={() => setShowFullDescription(!showFullDescription)}
+            className="text-xs text-primary hover:text-primary/80 mt-1 font-medium"
+          >
+            {showFullDescription ? "Less" : "More"}
+          </button>
+        )}
       </div>
 
-      {/* ---------- COMPENSATION ---------- */}
-      <p className="text-sm">
-        <span className="text-[#888] font-semibold ml-2">Compensation: </span>
-        <span className="text-white">{posting.compensation}</span>
-      </p>
+      {/* Tags */}
+      <div className="flex flex-wrap gap-1 mb-3">
+        {tags.map((tag, idx) => (
+          <Badge key={idx} variant="outline" className="text-[10px] px-2 py-0.5">
+            {tag}
+          </Badge>
+        ))}
+      </div>
 
-      {/* ---------- APPLICANTS (EXPANDABLE ROW) ---------- */}
-      <button
-        onClick={() => setExpanded((prev) => !prev)}
-        className="
-            w-full flex items-center justify-center 
-            gap-3 py-2 border-t border-white/10 
-            text-sm text-white/80
-        "
-      >
-        <ChevronDown
-          className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""
-            }`}
-        />
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3 border-t border-border">
+        <button
+          onClick={onExpand}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
+          <span>{count} applicants</span>
+        </button>
+        <div className="text-xs font-medium text-foreground">
+          {posting.employmentType} • {posting.isRemote ? "Remote" : "On-site"}
+        </div>
+      </div>
 
-        <span className="font-medium flex items-center gap-1"> <Users></Users>{count} applicants</span>
-
-        <ChevronDown
-          className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""
-            }`}
-        />
-      </button>
-
-      {/* ---------- EXPANDED PANEL ---------- */}
+      {/* Expanded Section */}
       {expanded && (
-        <div className="pt-3 space-y-3">
-          <Button
-            size="sm"
-            className="w-full"
-            variant={applied ? "secondary" : "default"}
-            onClick={() => {
-              if (!applied) setShowApplyBox((p) => !p);
-            }}
-          >
-            {applied ? "Applied" : "Apply for Role"}
-          </Button>
-
-          <Button size="sm" variant="outline" className="w-full">
-            <ExternalLink className="w-4 h-4 mr-1" />
-            View Profile
-          </Button>
-
-          {/* APPLY BOX */}
-          {showApplyBox && !applied && (
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 space-y-3">
-              <Textarea
-                value={applicationText}
-                onChange={(e) => setApplicationText(e.target.value)}
-                placeholder="Write a short introduction..."
-                className="bg-black/20 text-white border border-white/10"
-              />
-
-              {posting.customQuestions.map((q, i) =>
-                q.trim() ? (
-                  <div key={i}>
-                    <Label className="text-xs">{q}</Label>
+        <div className="mt-3 pt-3 border-t border-border space-y-3">
+          {!applied ? (
+            <>
+              {/* Questions */}
+              <div className="space-y-3">
+                {posting.customQuestions.map((q, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <Label className="text-xs font-medium">{q}</Label>
                     <Textarea
                       value={questionAnswers[i]}
                       onChange={(e) => {
@@ -746,24 +681,38 @@ const RoleCard: React.FC<RoleCardProps> = ({ posting, isMyAd = false }) => {
                         updated[i] = e.target.value;
                         setQuestionAnswers(updated);
                       }}
-                      className="bg-black/20 text-white border border-white/10 mt-1 text-sm"
+                      placeholder="Your answer..."
+                      className="text-xs h-20 resize-none"
                     />
                   </div>
-                ) : null
-              )}
+                ))}
+              </div>
 
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) =>
-                  setUploadedFile(e.target.files?.[0] ?? null)
-                }
-                className="text-xs"
-              />
+              {/* File Upload */}
+              <div>
+                <Label className="text-xs font-medium">Attach Resume (Optional)</Label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => setUploadedFile(e.target.files?.[0] ?? null)}
+                  className="text-xs w-full mt-1"
+                />
+                {uploadedFile && <p className="text-[10px] text-muted-foreground mt-1">{uploadedFile.name}</p>}
+              </div>
 
-              <Button size="sm" onClick={handleSubmit} className="w-full">
+              {/* Send Button */}
+              <Button
+                size="sm"
+                onClick={handleSubmit}
+                className="w-full h-8 text-xs"
+              >
                 Send Application
               </Button>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-xs text-green-600 font-medium">✓ Application Sent Successfully</p>
+              <p className="text-[10px] text-muted-foreground mt-1">You can track your application in My Jobs</p>
             </div>
           )}
         </div>
@@ -797,8 +746,8 @@ const Opportunities: React.FC = () => {
   const [teamEmploymentOpen, setTeamEmploymentOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("team");
   
-
   const [showTeamFilters, setShowTeamFilters] = useState(false);
+  const [expandedPostingId, setExpandedPostingId] = useState<string | null>(null);
 
   // User created job postings
   const [userPostings, setUserPostings] = useState<StartupRolePosting[]>([]);
@@ -920,116 +869,111 @@ const Opportunities: React.FC = () => {
 
           {/* GRANTS TAB */}
           <TabsContent value="grants" className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Filter className="w-4 h-4" />
-                Filters
+            {/* Filter Header */}
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Total grants: {filteredGrants.length}
               </div>
+              <Dialog open={grantTypeOpen || grantSectorOpen} onOpenChange={(open) => {
+                if (!open) {
+                  setGrantTypeOpen(false);
+                  setGrantSectorOpen(false);
+                } else {
+                  setGrantTypeOpen(true);
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[300px] w-72 p-0">
+                  <div className="space-y-0">
+                    <Collapsible open={grantTypeOpen} onOpenChange={setGrantTypeOpen} defaultOpen>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                          <span className="text-sm font-medium">Type</span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", grantTypeOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="flex flex-wrap gap-2 px-4 pb-3">
+                          {grantTypes.map((type) => (
+                            <button
+                              key={type}
+                              onClick={() => setGrantType(type)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                                grantType === type ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                              )}
+                            >
+                              {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-              <Collapsible open={grantTypeOpen} onOpenChange={setGrantTypeOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Type: {grantType === "all" ? "All" : grantType.charAt(0).toUpperCase() + grantType.slice(1)}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", grantTypeOpen && "rotate-180")} />
+                    <Collapsible open={grantSectorOpen} onOpenChange={setGrantSectorOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-t border-border">
+                          <span className="text-sm font-medium">Sector</span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", grantSectorOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="flex flex-wrap gap-2 px-4 pb-3">
+                          {sectors.map((sector) => (
+                            <button
+                              key={sector}
+                              onClick={() => setGrantSector(sector)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                                grantSector === sector ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                              )}
+                            >
+                              {sector}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {grantTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          setGrantType(type);
-                          setGrantTypeOpen(false);
-                        }}
-                        className={cn(
-                          "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                          grantType === type ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              <Collapsible open={grantSectorOpen} onOpenChange={setGrantSectorOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Sector: {grantSector}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", grantSectorOpen && "rotate-180")} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {sectors.map((sector) => (
-                      <button
-                        key={sector}
-                        onClick={() => {
-                          setGrantSector(sector);
-                          setGrantSectorOpen(false);
-                        }}
-                        className={cn(
-                          "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          grantSector === sector ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {sector}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              {(grantType !== "all" || grantSector !== "All Sectors") && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setGrantType("all");
-                    setGrantSector("All Sectors");
-                  }}
-                  className="w-full gap-2"
-                >
-                  <X className="w-3 h-3" />
-                  Clear all filters
-                </Button>
-              )}
+                </DialogContent>
+              </Dialog>
             </div>
 
-            <div className="text-sm text-muted-foreground py-2">
-              {filteredGrants.length} {filteredGrants.length === 1 ? "opportunity" : "opportunities"} found
-            </div>
-
-            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+            {/* Grants List */}
+            <div className="space-y-3">
               {filteredGrants.map((grant) => (
-                <div key={grant.id} className="border border-border rounded-xl p-4 space-y-3 hover:bg-muted/30 transition-colors bg-card">
-                  <div className="flex items-start justify-between gap-2">
+                <div key={grant.id} className="bg-background border border-border rounded-lg p-4 hover:border-primary/50 transition-all">
+                  <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">{grant.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{grant.organization}</p>
+                      <h3 className="font-semibold text-sm text-foreground">{grant.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{grant.organization}</p>
                     </div>
-                    <Badge variant={getGrantTypeBadge(grant.type)}>{grant.type}</Badge>
+                    <Badge variant={getGrantTypeBadge(grant.type)} className="text-[10px] px-2 py-0.5 flex-shrink-0">{grant.type}</Badge>
                   </div>
 
-                  <p className="text-sm text-foreground/80">{grant.description}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{grant.description}</p>
 
-                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3 pb-3 border-b border-border">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
-                      {grant.location}
+                      <span>{grant.location}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {grant.deadline}
+                      <span>{grant.deadline}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between">
                     <div className="font-semibold text-sm text-foreground">{grant.amount}</div>
-                    <Button variant="default" size="sm" className="gap-2">
-                      Apply Now
+                    <Button variant="default" size="sm" className="h-7 text-xs gap-1">
+                      Apply
                       <ExternalLink className="w-3 h-3" />
                     </Button>
                   </div>
@@ -1039,7 +983,7 @@ const Opportunities: React.FC = () => {
               {filteredGrants.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No grants found with current filters</p>
+                  <p>No grants found</p>
                 </div>
               )}
             </div>
@@ -1047,147 +991,139 @@ const Opportunities: React.FC = () => {
 
           {/* EVENTS TAB */}
           <TabsContent value="events" className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Filter className="w-4 h-4" />
-                Filters
+            {/* Filter Header */}
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Total events: {filteredEvents.length}
               </div>
+              <Dialog open={eventTypeOpen || eventSectorOpen || eventLocationOpen} onOpenChange={(open) => {
+                if (!open) {
+                  setEventTypeOpen(false);
+                  setEventSectorOpen(false);
+                  setEventLocationOpen(false);
+                } else {
+                  setEventTypeOpen(true);
+                }
+              }}>
+                <DialogTrigger asChild>
+                  <button className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[350px] w-72 p-0">
+                  <div className="space-y-0">
+                    <Collapsible open={eventTypeOpen} onOpenChange={setEventTypeOpen} defaultOpen>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                          <span className="text-sm font-medium">Type</span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", eventTypeOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="flex flex-wrap gap-2 px-4 pb-3">
+                          {eventTypes.map((type) => (
+                            <button
+                              key={type}
+                              onClick={() => setEventType(type)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                                eventType === type ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                              )}
+                            >
+                              {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-              <Collapsible open={eventTypeOpen} onOpenChange={setEventTypeOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Type: {eventType === "all" ? "All" : eventType.charAt(0).toUpperCase() + eventType.slice(1)}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", eventTypeOpen && "rotate-180")} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg mt-2">
-                    {eventTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          setEventType(type);
-                          setEventTypeOpen(false);
-                        }}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                          eventType === type ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {type === "all" ? "All" : type.charAt(0).toUpperCase() + type.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
+                    <Collapsible open={eventSectorOpen} onOpenChange={setEventSectorOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-t border-border">
+                          <span className="text-sm font-medium">Sector</span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", eventSectorOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="flex flex-wrap gap-2 px-4 pb-3">
+                          {sectors.map((sector) => (
+                            <button
+                              key={sector}
+                              onClick={() => setEventSector(sector)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                                eventSector === sector ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                              )}
+                            >
+                              {sector}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
 
-              <Collapsible open={eventSectorOpen} onOpenChange={setEventSectorOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Sector: {eventSector}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", eventSectorOpen && "rotate-180")} />
+                    <Collapsible open={eventLocationOpen} onOpenChange={setEventLocationOpen}>
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-t border-border">
+                          <span className="text-sm font-medium">Location</span>
+                          <ChevronDown className={cn("w-4 h-4 transition-transform", eventLocationOpen && "rotate-180")} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="flex flex-wrap gap-2 px-4 pb-3">
+                          {locations.map((location) => (
+                            <button
+                              key={location}
+                              onClick={() => setEventLocation(location)}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+                                eventLocation === location ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                              )}
+                            >
+                              {location}
+                            </button>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {sectors.map((sector) => (
-                      <button
-                        key={sector}
-                        onClick={() => {
-                          setEventSector(sector);
-                          setEventSectorOpen(false);
-                        }}
-                        className={cn(
-                          "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          eventSector === sector ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {sector}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              <Collapsible open={eventLocationOpen} onOpenChange={setEventLocationOpen}>
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium">Location: {eventLocation}</span>
-                    <ChevronDown className={cn("w-4 h-4 transition-transform", eventLocationOpen && "rotate-180")} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="grid grid-cols-2 gap-2 p-3 bg-muted/30 rounded-lg mt-2 max-h-[300px] overflow-y-auto">
-                    {locations.map((location) => (
-                      <button
-                        key={location}
-                        onClick={() => {
-                          setEventLocation(location);
-                          setEventLocationOpen(false);
-                        }}
-                        className={cn(
-                          "px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left",
-                          eventLocation === location ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border border-border"
-                        )}
-                      >
-                        {location}
-                      </button>
-                    ))}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              {(eventType !== "all" || eventSector !== "All Sectors" || eventLocation !== "All Locations") && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setEventType("all");
-                    setEventSector("All Sectors");
-                    setEventLocation("All Locations");
-                  }}
-                  className="w-full gap-2"
-                >
-                  <X className="w-3 h-3" />
-                  Clear all filters
-                </Button>
-              )}
+                </DialogContent>
+              </Dialog>
             </div>
 
-            <div className="text-sm text-muted-foreground py-2">
-              {filteredEvents.length} {filteredEvents.length === 1 ? "event" : "events"} found
-            </div>
-
-            <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+            {/* Events List */}
+            <div className="space-y-3">
               {filteredEvents.map((event) => (
-                <div key={event.id} className="border border-border rounded-xl p-4 space-y-3 hover:bg-muted/30 transition-colors bg-card">
-                  <div className="flex items-start justify-between gap-2">
+                <div key={event.id} className="bg-background border border-border rounded-lg p-4 hover:border-primary/50 transition-all">
+                  <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">{event.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{event.organizer}</p>
+                      <h3 className="font-semibold text-sm text-foreground">{event.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{event.organizer}</p>
                     </div>
-                    <Badge variant={getEventTypeBadge(event.type)}>{event.type}</Badge>
+                    <Badge variant={getEventTypeBadge(event.type)} className="text-[10px] px-2 py-0.5 flex-shrink-0">{event.type}</Badge>
                   </div>
 
-                  <p className="text-sm text-foreground/80">{event.description}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{event.description}</p>
 
-                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3 pb-3 border-b border-border">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
-                      {event.location}
+                      <span>{event.location}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {event.date}
+                      <span>{event.date}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="w-3 h-3" />
-                      {event.attendees}
+                      <span>{event.attendees}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end pt-2">
-                    <Button variant="default" size="sm" className="gap-2">
+                  <div className="flex items-center justify-end">
+                    <Button variant="default" size="sm" className="h-7 text-xs gap-1">
                       Register
                       <ExternalLink className="w-3 h-3" />
                     </Button>
@@ -1198,7 +1134,7 @@ const Opportunities: React.FC = () => {
               {filteredEvents.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No events found with current filters</p>
+                  <p>No events found</p>
                 </div>
               )}
             </div>
@@ -1532,21 +1468,28 @@ const Opportunities: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground py-2">
-             
               {filteredRolePostings.length } {filteredRolePostings.length === 1 ? "position" : "positions"} available
               <div
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground cursor-pointer"
                 onClick={() => setShowTeamFilters(true)}
               >
                 <Filter className="w-4 h-4" />
-                {/* Filters */}
               </div>
             </div>
 
             <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
               {filteredRolePostings.map((posting) => {
                 const isMyAd = posting.id.startsWith("user-");
-                return <RoleCard key={posting.id} posting={posting} isMyAd={isMyAd} />;
+                const isExpanded = expandedPostingId === posting.id;
+                return (
+                  <RoleCard
+                    key={posting.id}
+                    posting={posting}
+                    isMyAd={isMyAd}
+                    expanded={isExpanded}
+                    onExpand={() => setExpandedPostingId(isExpanded ? null : posting.id)}
+                  />
+                );
               })}
             </div>
 

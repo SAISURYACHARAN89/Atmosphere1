@@ -1,13 +1,11 @@
-import { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Lock, Send, FileText, Users, Building2, TrendingUp, Calendar, MapPin, Globe, ChevronLeft, BadgeCheck, MoreHorizontal, MoreVertical, Heart, Crown, MessageCircle } from "lucide-react";
+import { ChevronLeft, MoreHorizontal, MapPin, Building2, Calendar, Globe, Heart, Crown, MessageCircle, Send } from "lucide-react";
 
 // Mock data - in real app this would come from API/database
 const companyData: Record<string, any> = {
@@ -18,7 +16,8 @@ const companyData: Record<string, any> = {
     isPublic: true,
     followers: 2847,
     following: 124,
-    description: "Airbound.co is pioneering the future of urban logistics with our autonomous drone delivery network. We're building infrastructure to enable same-day delivery across major metropolitan areas.",
+    description:
+      "Airbound.co is pioneering the future of urban logistics with our autonomous drone delivery network. We're building infrastructure to enable same-day delivery across major metropolitan areas.",
     founded: "2022",
     startupType: "Pre-revenue",
     rounds: 2,
@@ -42,11 +41,10 @@ const companyData: Record<string, any> = {
     ],
     videos: [],
     reels: []
-
   }
 };
 
-const CompanyProfile = () => {
+const CompanyProfile: React.FC = () => {
   const { companyId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,7 +52,7 @@ const CompanyProfile = () => {
   const [pitchRequested, setPitchRequested] = useState(false);
 
   const company = companyId ? companyData[companyId] : null;
-  const fromPath = location.state?.from || null;
+  const fromPath = (location.state as any)?.from || null;
   const [showUserList, setShowUserList] = useState<null | "followers" | "following">(null);
 
   if (!company) {
@@ -74,6 +72,8 @@ const CompanyProfile = () => {
 
   const [activeSection, setActiveSection] = useState<'posts' | 'expand' | 'trades'>('posts');
   const [showReels, setShowReels] = useState(false);
+  const teamScrollRef = useRef<HTMLDivElement | null>(null);
+
   const followersList = [
     { id: 1, name: "Ava Johnson", username: "@avaj", avatar: "https://randomuser.me/api/portraits/women/1.jpg", isFollowing: false },
     { id: 2, name: "Michael Chen", username: "@mchen", avatar: "https://randomuser.me/api/portraits/men/2.jpg", isFollowing: true },
@@ -84,6 +84,21 @@ const CompanyProfile = () => {
     { id: 5, name: "Liam Parker", username: "@liamp", avatar: "https://randomuser.me/api/portraits/men/4.jpg", isFollowing: true },
     { id: 6, name: "Emma Davis", username: "@emd", avatar: "https://randomuser.me/api/portraits/women/5.jpg", isFollowing: true }
   ];
+
+  // Team members (fixed: use an array instead of an object-within-object)
+  const teamMembers = [
+    { name: "Alice Smith", profileId: "alice-smith" },
+    { name: "Bob Johnson", profileId: "bob-johnson" },
+    { name: "Carol Davis", profileId: null },
+    { name: "David Wilson", profileId: "david-wilson" },
+    { name: "Emma Brown", profileId: "emma-brown" }
+  ];
+
+  // Utility to make sure website has protocol
+  const normalizeUrl = (url: string) => {
+    if (!url) return "";
+    return /^(https?:)?\/\//.test(url) ? url : `https://${url}`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,7 +149,7 @@ const CompanyProfile = () => {
                     className="text-center cursor-pointer"
                     onClick={() => setShowUserList("followers")}
                   >
-                    <div className="font-semibold">{company.followers?.toLocaleString() || '0'}</div>
+                    <div className="font-semibold">{(company.followers ?? 0).toLocaleString()}</div>
                     <div className="text-muted-foreground text-xs">followers</div>
                   </div>
 
@@ -142,7 +157,7 @@ const CompanyProfile = () => {
                     className="text-center cursor-pointer"
                     onClick={() => setShowUserList("following")}
                   >
-                    <div className="font-semibold">{company.following?.toLocaleString() || '0'}</div>
+                    <div className="font-semibold">{(company.following ?? 0).toLocaleString()}</div>
                     <div className="text-muted-foreground text-xs">following</div>
                   </div>
                 </div>
@@ -152,14 +167,13 @@ const CompanyProfile = () => {
             {/* Verified Badge and Location */}
             <div className="space-y-1.5 text-sm mb-5">
               <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-              
+                <div className="flex items-center gap-1.5">
                   <span className="text-muted-foreground">Verified startup</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{company.location}</span>
-              </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>{company.location}</span>
+                </div>
               </div>
               <p className="text-foreground/90 leading-relaxed">{company.oneliner}</p>
             </div>
@@ -169,8 +183,12 @@ const CompanyProfile = () => {
               <Button
                 className="flex-1 h-8 text-sm  font-semibold bg-cyan-500 hover:bg-cyan-600 text-white rounded-[6px]"
                 variant="default"
+                onClick={() => {
+                  // For demo: toggle invitation state
+                  setInvitationSent((s) => !s);
+                }}
               >
-                Follow
+                {invitationSent ? "Following" : "Follow"}
               </Button>
 
               <Button
@@ -249,61 +267,47 @@ const CompanyProfile = () => {
             )}
 
             {activeSection === 'expand' && (
-              
               <div className="space-y-4">
                 <div className="-mx-4 sm:mx-0">
-                  <div className="w-full aspect-video bg-muted">
-                    Video comes here
+                  <div className="w-full aspect-video bg-muted flex items-center justify-center">
+                    <span className="text-sm text-muted-foreground">Video comes here</span>
                   </div>
                 </div>
-              <Card className="border-border/50 flex items-center p-2 justify-around">
-              <div className="flex items-center gap-2 p-2 space-y-1">
-                <Heart
-                  className={`!h-6 !w-6 transition-all`}
-                />
-                {22}
-                </div>
-              <div className="flex items-center gap-2 p-4 space-y-3">
-                    <Crown
-                      className={`!h-6 !w-6 transition-all`}
-                    />
-                {10}
-                </div>
-              <div className="flex items-center gap-2 p-4 space-y-3">
-                    <MessageCircle
-                      className="!h-6 !w-6 text-foreground hover:text-accent transition-colors"
-                    />
-                {20}
-                </div>
-              <div className="flex items-center gap-2 p-4 space-y-3">
+                <Card className="border-border/50 flex items-center p-2 justify-around">
+                  <div className="flex items-center gap-2 p-2 space-y-1">
+                    <Heart className="!h-6 !w-6" />
+                    <div className="font-semibold">22</div>
+                  </div>
+                  <div className="flex items-center gap-2 p-4 space-y-3">
+                    <Crown className="!h-6 !w-6" />
+                    <div className="font-semibold">10</div>
+                  </div>
+                  <div className="flex items-center gap-2 p-4 space-y-3">
+                    <MessageCircle className="!h-6 !w-6 text-foreground hover:text-accent transition-colors" />
+                    <div className="font-semibold">20</div>
+                  </div>
+                  <div className="flex items-center gap-2 p-4 space-y-3">
                     <Send className="w-5 h-5 text-foreground hover:text-accent" />
-                {8}
-                </div>
-              </Card>
+                    <div className="font-semibold">8</div>
+                  </div>
+                </Card>
 
                 <Card className="border-border/50">
                   <div className="p-4 space-y-3">
-                    <div className="flex items-center justify-start">
                     <h3 className="font-semibold text-sm">What's {company.name}</h3>
-                      <div className="px-4 pb-4 flex items-center justify-between">
-                        <button
-                          onClick={() => setPitchRequested(true)}
-                          className={`py-1 px-1.5 rounded-[6px] translate-y-2.5 text-[9px] font-sm transition-colors
-                        ${pitchRequested
-                              ? "bg-primary/20 text-green border-primary"
-                              : "border border-grey text-white hover:bg-primary/10"}`}
-                          disabled={pitchRequested}
-                        >
-                          {pitchRequested ? "Requested" : "Request Pitch Deck"}
-                        </button>
-                      </div>
-
-                    </div>
                     <p className="text-sm text-foreground/90 leading-relaxed">{company.description}</p>
-                    
-                    
                   </div>
-                  
+                </Card>
+
+                <button
+                  onClick={() => setPitchRequested(true)}
+                  className={`w-full py-2.5 px-4 rounded-[6px] text-sm font-semibold transition-colors ${pitchRequested ? "bg-primary/20 text-green border border-primary" : "border border-grey text-white hover:bg-primary/10"}`}
+                  disabled={pitchRequested}
+                >
+                  {pitchRequested ? "Requested" : "Request Pitch Deck"}
+                </button>
+
+                <Card className="border-border/50">
                   <div className="p-4 space-y-3">
                     <h3 className="font-semibold text-sm">Company Details</h3>
                     <div className="space-y-2 text-sm">
@@ -315,13 +319,10 @@ const CompanyProfile = () => {
                         <Calendar className="h-4 w-4 text-primary" />
                         <span>Founded {company.founded}</span>
                       </div>
-                      {/* <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-4 w-4 text-primary" />
-                        <span>{company.teamSize} employees</span>
-                      </div> */}
+
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Globe className="h-4 w-4 text-primary" />
-                        <a href={`https://${company.website}`} className="hover:text-primary transition-colors">{company.website}</a>
+                        <a href={normalizeUrl(company.website)} target="_blank" rel="noreferrer" className="hover:text-primary transition-colors">{company.website.replace(/(^https?:?:\/\/)/, '')}</a>
                       </div>
                     </div>
                   </div>
@@ -331,16 +332,15 @@ const CompanyProfile = () => {
                   <div className="p-4 space-y-3">
                     <h3 className="font-semibold text-sm">Team</h3>
 
-                    <div className="flex justify-center flex-wrap gap-6">
-                      {/* Example team data with profileId */}
-                      {[
-                        { name: "Alice Smith", profileId: "alice-smith" },
-                        { name: "Bob Johnson", profileId: "bob-johnson" },
-                        { name: "Carol Davis", profileId: null }, // no profile
-                      ].map((member, idx) => (
+                    <div
+                      ref={teamScrollRef}
+                      className="flex gap-6 overflow-x-auto scroll-smooth pb-2"
+                      style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none' }}
+                    >
+                      {teamMembers.map((member, idx) => (
                         <div
                           key={idx}
-                          className="flex flex-col items-center gap-2 w-20 cursor-pointer"
+                          className="flex flex-col items-center gap-2 w-20 flex-shrink-0 cursor-pointer"
                           onClick={() => {
                             if (member.profileId) {
                               navigate(`/user/${member.profileId}`);
@@ -356,12 +356,8 @@ const CompanyProfile = () => {
                             </AvatarFallback>
                           </Avatar>
 
-                          <span className="text-sm text-white-foreground text-center">
-                            {member.name}
-                          </span>
-                          <span className="text-xs text-muted-foreground text-center">
-                                CEO
-                          </span>
+                          <span className="text-sm text-white-foreground text-center">{member.name}</span>
+                          <span className="text-xs text-muted-foreground text-center">CEO</span>
                         </div>
                       ))}
                     </div>
@@ -396,8 +392,7 @@ const CompanyProfile = () => {
                       {/* Total Investors */}
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Investors</span>
-                        <span className="font-semibold">{company.investorNames.join(", ")}</span>
-                      
+                        <span className="font-semibold">{(company.investorNames || []).join(", ")}</span>
                       </div>
 
                       {/* Current Round */}
@@ -405,9 +400,6 @@ const CompanyProfile = () => {
                         <span className="text-muted-foreground">Current Round</span>
                         <span className="font-semibold">{company.currentRound}</span>
                       </div>
-
-
-                      {/* Round Status */}
 
                       {/* Round Progress Bar */}
                       <div className="mt-2">
@@ -419,19 +411,15 @@ const CompanyProfile = () => {
                         </div>
 
                         <div className="flex justify-between items-center mt-1">
-                          <span className="text-xs text-muted-foreground">180,000$ Filled</span>
+                          <span className="text-xs text-muted-foreground">$180,000 Filled</span>
                           <span className="text-xs text-muted-foreground">$1,200,000</span>
                         </div>
                       </div>
-
 
                     </div>
 
                   </div>
                 </Card>
-
-
-                {/* Current Investors */}
 
               </div>
             )}
@@ -444,6 +432,7 @@ const CompanyProfile = () => {
           </div>
         </div>
       </main>
+
       {showUserList && (
         <div className="fixed inset-0 bg-black/50 z-50 flex flex-col">
 
@@ -456,9 +445,7 @@ const CompanyProfile = () => {
               <ChevronLeft className="h-6 w-6" />
             </button>
 
-            <h2 className="text-base font-semibold">
-              {company.name.toLowerCase()}
-            </h2>
+            <h2 className="text-base font-semibold">{company.name.toLowerCase()}</h2>
 
             <div className="w-6" /> {/* spacer */}
           </div>
@@ -467,34 +454,25 @@ const CompanyProfile = () => {
           <div className="bg-background border-b">
             <div className="flex items-center justify-around text-sm">
               <button
-                className={`py-3 flex-1 ${showUserList === "followers"
-                    ? "font-semibold border-b-2 border-white"
-                    : "text-muted-foreground"
-                  }`}
+                className={`py-3 flex-1 ${showUserList === "followers" ? "font-semibold border-b-2 border-white" : "text-muted-foreground"}`}
                 onClick={() => setShowUserList("followers")}
               >
-                {company.followers.toLocaleString()} Followers
+                {(company.followers ?? 0).toLocaleString()} Followers
               </button>
 
               <button
-                className={`py-3 flex-1 ${showUserList === "following"
-                    ? "font-semibold border-b-2 border-white"
-                    : "text-muted-foreground"
-                  }`}
+                className={`py-3 flex-1 ${showUserList === "following" ? "font-semibold border-b-2 border-white" : "text-muted-foreground"}`}
                 onClick={() => setShowUserList("following")}
               >
-                {company.following.toLocaleString()} Following
+                {(company.following ?? 0).toLocaleString()} Following
               </button>
-
 
             </div>
           </div>
 
           {/* Search Bar */}
           <div className="px-4 py-2 bg-background border-b">
-            <div className="bg-muted px-3 py-2 rounded-lg text-sm text-muted-foreground">
-              Search
-            </div>
+            <div className="bg-muted px-3 py-2 rounded-lg text-sm text-muted-foreground">Search</div>
           </div>
 
           {/* User List */}
@@ -507,7 +485,7 @@ const CompanyProfile = () => {
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={user.avatar} />
+                      <AvatarImage src={user.avatar} alt={user.name} />
                       <AvatarFallback>{user.name[0]}</AvatarFallback>
                     </Avatar>
 
@@ -518,10 +496,7 @@ const CompanyProfile = () => {
                   </div>
 
                   <button
-                    className={`px-4 py-1.5 rounded-lg text-sm font-medium ${user.isFollowing
-                        ? "bg-muted text-white"
-                        : "bg-blue-600 text-white"
-                      }`}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium ${user.isFollowing ? "bg-muted text-white" : "bg-blue-600 text-white"}`}
                   >
                     {user.isFollowing ? "Following" : "Follow"}
                   </button>

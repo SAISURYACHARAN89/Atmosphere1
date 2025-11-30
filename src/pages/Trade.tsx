@@ -1155,173 +1155,92 @@ const [companyTypeOpen, setCompanyTypeOpen] = useState<boolean>(false);
               {!showSellers && !showSavedOnly && (
                 <div className="space-y-6">
                   <h2 className="text-base font-semibold text-foreground">Suggested for You</h2>
-                  
-                  {scanAds.map((ad) => (
-                    <div
-                      key={ad.id}
-                      className={`border rounded-xl p-4 transition-all cursor-pointer ${
-                         'border-border bg-card hover:shadow-sm'
-                      }`}
-                      onClick={() => setExpandedBuyId(expandedBuyId === ad.id ? null : ad.id)}
-                    >
-                      {/* Sponsored Badge */}
-                      {/* {ad.isSponsored && (
-                        <div className="flex items-center gap-1.5 mb-3">
-                          <Zap className="w-3.5 h-3.5 text-primary fill-primary" />
-                          <span className="text-xs font-bold text-primary uppercase tracking-wide">
-                            Sponsored
-                          </span>
-                        </div>
-                      )} */}
-
-                      {/* Main Content */}
-                      <div className="flex items-start gap-3">
-                        {/* Profile Pic */}
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate('/profile');
-                          }}
-                        >
-                          <Avatar className={"w-12 h-12"}>
-                            <AvatarImage src={ad.avatar} />
-                            <AvatarFallback className="bg-muted text-foreground font-semibold">
-                              {ad.name.split(" ").map((n) => n[0]).join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                        </button>
-
-                        {/* Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate('/profile');
-                              }}
-                              className="font-semibold text-foreground hover:text-primary transition-colors text-left text-sm"
-                            >
-                              {ad.companyName}
-                            </button>
-                          </div>
-                            <div className="flex gap-3">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate('/company-profile');
-                            }}
-                            className="text-sm text-muted-foreground hover:text-primary transition-colors mt-0.5 block font-medium"
-                          >
-                            {ad.name}
-                          </button>
-                            <Badge 
-                              variant="secondary" 
-                              className="text-[10px] px-1.5 py-0 h-4 mt-2 font-medium"
-                            >
-                              {ad.type}
-                            </Badge>
+                  {scanAds.map((ad) => {
+                    const isExpanded = expandedBuyId === ad.id;
+                    const photoIdx = currentPhotoIndex[ad.id] || 0;
+                    return (
+                      <div
+                        key={ad.id}
+                        className={`border border-border rounded-xl bg-card transition-all cursor-pointer ${isExpanded ? "shadow-lg" : "hover:shadow-sm"} p-0`}
+                        onClick={() => setExpandedBuyId(isExpanded ? null : ad.id)}
+                      >
+                        {/* Collapsed Card */}
+                        {!isExpanded && (
+                          <div className="flex items-center px-4 py-3">
+                            {/* Company Avatar */}
+                            <Avatar className="w-12 h-12 mr-3">
+                              <AvatarImage src={ad.avatar} />
+                              <AvatarFallback className="bg-muted text-foreground font-semibold">
+                                {ad.companyName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            {/* Company Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-base text-foreground truncate">{ad.companyName}</div>
+                              <div className="text-xs text-muted-foreground">{ad.name}</div>
+                              <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{ad.companyTagline}</div>
                             </div>
-                          {!expandedBuyId || expandedBuyId !== ad.id ? (
-                            <>
-                              <div className="mt-2.5 grid grid-cols-3 gap-2">
-                               <div className="rounded-lg px-2.5 py-1.5 flex items-center">
-                                <p className="text-xs font-semibold text-foreground">{ad.revenue}</p>
-                              </div>
-                                
-                              </div>
-                              
-                              <div className="mt-2 flex flex-col gap-1">
-
-                              {/* Top Row */}
-                              <div className="flex items-center gap-1.5">
-                                <Badge variant="outline" className="text-[11px] px-2 py-0.5">
-                                  {ad.minRange}% - {ad.maxRange}% Range
-                                </Badge>
-
-                                <span className="text-xs text-muted-foreground">
-                                  • {ad.companyAge}
-                                </span>
-                              </div>
-
-                              {/* Tagline Below */}
-                              <p className="text-sm text-muted-foreground leading-relaxed">
-                                "{ad.companyTagline}"
-                              </p>
-                              {ad.industries && ad.industries.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {ad.industries.map((ind) => (
-                                  <span
-                                    key={ind}
-                                    className="px-2 py-0.5 bg-primary/10 text-white text-[10px] rounded-md font-medium"
-                                  >
-                                    {ind}
-                                  </span>
-                                ))}
-                              </div>
-                              )}
-
-                              </div>
-
-                            </>
-                          ) : null}
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleSaveScanAd(ad.id);
-                            }}
-                            className="p-2 hover:bg-background/80 rounded-lg transition-colors"
-                          >
-                            <Bookmark 
-                              className={`w-4 h-4 ${savedScanAds.includes(ad.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`}
-                            />
-                          </button>
-                          <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-2 hover:bg-background/80 rounded-lg transition-colors"
-                          >
-                            <MessageCircle className="w-4 h-4 text-muted-foreground hover:fill-primary hover:text-primary transition-all" />
-
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Expanded Section */}
-                      {expandedBuyId === ad.id && (
-                        <div className="mt-4 space-y-4 animate-accordion-down">
-                          {/* Tagline */}
-                          <div className="px-1">
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              "{ad.companyTagline}"
-                            </p>
-                            {ad.industries && ad.industries.length > 0 && (
-  <div className="flex flex-wrap gap-1 mt-1">
-    {ad.industries.map((ind) => (
-      <span
-        key={ind}
-        className="px-2 py-0.5 bg-primary/10 text-white text-[10px] rounded-md font-medium"
-      >
-        {ind}
-      </span>
-    ))}
-  </div>
-)}
-
+                            {/* Actions */}
+                            <div className="flex flex-col gap-2 ml-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleSaveScanAd(ad.id);
+                                }}
+                                className="p-2 hover:bg-muted rounded-lg"
+                              >
+                                <Bookmark className={`w-4 h-4 ${savedScanAds.includes(ad.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+                              </button>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-2 hover:bg-muted rounded-lg"
+                              >
+                                <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                              </button>
+                            </div>
                           </div>
-
-                          {/* Scrollable Photo Gallery */}
-                          <div className="relative -mx-4 px-4">
-                            <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-muted">
-                              <img 
-                                src={ad.companyPhotos[currentPhotoIndex[ad.id] || 0]} 
-                                alt={`${ad.companyName} ${(currentPhotoIndex[ad.id] || 0) + 1}`}
+                        )}
+                        {/* Expanded Card */}
+                        {isExpanded && (
+                          <div className="px-4 py-5 space-y-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-14 h-14">
+                                <AvatarImage src={ad.avatar} />
+                                <AvatarFallback className="bg-muted text-foreground font-semibold">
+                                  {ad.companyName[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-lg text-foreground truncate">{ad.companyName}</div>
+                                <div className="text-xs text-muted-foreground">{ad.name}</div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleSaveScanAd(ad.id);
+                                  }}
+                                  className="p-2 hover:bg-muted rounded-lg"
+                                >
+                                  <Bookmark className={`w-4 h-4 ${savedScanAds.includes(ad.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+                                </button>
+                                <button
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-2 hover:bg-muted rounded-lg"
+                                >
+                                  <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                                </button>
+                              </div>
+                            </div>
+                            {/* Description */}
+                            <div className="text-sm text-muted-foreground mb-2">{ad.companyTagline}</div>
+                            {/* Photo Gallery */}
+                            <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-muted mb-2">
+                              <img
+                                src={ad.companyPhotos[photoIdx]}
+                                alt={ad.companyName}
                                 className="w-full h-full object-cover"
                               />
-                              
-                              {/* Navigation Buttons */}
                               {ad.companyPhotos.length > 1 && (
                                 <>
                                   <button
@@ -1332,11 +1251,9 @@ const [companyTypeOpen, setCompanyTypeOpen] = useState<boolean>(false);
                                         [ad.id]: Math.max(0, (prev[ad.id] || 0) - 1)
                                       }));
                                     }}
-                                    className={`absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center transition-opacity ${
-                                      (currentPhotoIndex[ad.id] || 0) === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                                    }`}
+                                    className={`absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/80 flex items-center justify-center transition-opacity ${photoIdx === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                                   >
-                                    <ChevronUp className="w-4 h-4 rotate-90" />
+                                    <ChevronDown className="w-4 h-4 rotate-90" />
                                   </button>
                                   <button
                                     onClick={(e) => {
@@ -1346,14 +1263,10 @@ const [companyTypeOpen, setCompanyTypeOpen] = useState<boolean>(false);
                                         [ad.id]: Math.min(ad.companyPhotos.length - 1, (prev[ad.id] || 0) + 1)
                                       }));
                                     }}
-                                    className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center transition-opacity ${
-                                      (currentPhotoIndex[ad.id] || 0) === ad.companyPhotos.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                                    }`}
+                                    className={`absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/80 flex items-center justify-center transition-opacity ${photoIdx === ad.companyPhotos.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                                   >
-                                    <ChevronUp className="w-4 h-4 -rotate-90" />
+                                    <ChevronDown className="w-4 h-4 -rotate-90" />
                                   </button>
-                                  
-                                  {/* Photo Indicators */}
                                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
                                     {ad.companyPhotos.map((_, index) => (
                                       <button
@@ -1365,69 +1278,48 @@ const [companyTypeOpen, setCompanyTypeOpen] = useState<boolean>(false);
                                             [ad.id]: index
                                           }));
                                         }}
-                                        className={`h-1.5 rounded-full transition-all ${
-                                          (currentPhotoIndex[ad.id] || 0) === index 
-                                            ? 'w-6 bg-primary' 
-                                            : 'w-1.5 bg-background/60'
-                                        }`}
+                                        className={`h-1.5 rounded-full transition-all ${photoIdx === index ? 'w-6 bg-primary' : 'w-1.5 bg-background/60'}`}
                                       />
                                     ))}
                                   </div>
                                 </>
                               )}
                             </div>
+                            {/* Minimal Stats */}
+                            <div className="flex flex-wrap gap-4 items-center">
+                              <div className="flex flex-col items-start">
+                                <span className="text-xs text-muted-foreground">Revenue</span>
+                                <span className="text-sm font-semibold text-foreground">{ad.revenue}</span>
+                              </div>
+                              <div className="flex flex-col items-start">
+                                <span className="text-xs text-muted-foreground">Age</span>
+                                <span className="text-sm font-semibold text-foreground">{ad.companyAge}</span>
+                              </div>
+                              <div className="flex flex-col items-start">
+                                <span className="text-xs text-muted-foreground">Range</span>
+                                <span className="text-sm font-semibold text-primary">{ad.minRange}% - {ad.maxRange}%</span>
+                              </div>
+                            </div>
+                            {/* Industries */}
+                            {ad.industries && ad.industries.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {ad.industries.map((ind) => (
+                                  <span
+                                    key={ind}
+                                    className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] rounded font-medium"
+                                  >
+                                    {ind}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {/* Express Interest Button */}
+                            <Button className="w-full h-10 font-semibold mt-3">Express Interest</Button>
                           </div>
-
-                          {/* Professional Stats Grid */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-lg p-3 border border-border/50">
-                              <div className="flex items-center gap-2 mb-1">
-                                <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                                  <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                                </div>
-                                <p className="text-xs font-medium text-muted-foreground">Revenue Status</p>
-                              </div>
-                              <p className="text-sm font-bold text-foreground">{ad.revenue}</p>
-                            </div>
-                            
-                          
-                            
-                            <div className="bg-gradient-to-br from-muted/50 to-muted/30 rounded-lg p-3 border border-border/50">
-                              <div className="flex items-center gap-2 mb-1">
-                                <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                                  <Calendar className="w-3.5 h-3.5 text-primary" />
-                                </div>
-                                <p className="text-xs font-medium text-muted-foreground">Company Age</p>
-                              </div>
-                              {/* <p className="text-sm font-bold text-foreground">{ad.companyAge}</p> */}
-                               <p className="text-sm font-bold text-foreground">1.5 years</p>
-                            </div>
-                            
-                            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-3 border border-primary/20">
-                              <div className="flex items-center gap-2 mb-1">
-                                <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
-                                  <Target className="w-3.5 h-3.5 text-primary" />
-                                </div>
-                                <p className="text-xs font-medium text-white">Buying Range</p>
-                              </div>
-                              <p className="text-sm font-bold text-white">{ad.minRange}% - {ad.maxRange}%</p>
-                            </div>
-                            
-                            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-3 border border-primary/20">
-                              <div className="flex items-center gap-2 mb-1">
-              
-                                <p className="text-xs font-medium text-white">LinkedIn</p>
-                              </div>
-                              <p className="text-sm font-bold text-white">{ad.minRange}% - {ad.maxRange}%</p>
-                            </div>
-                            
-                          </div>
-
-                        
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -1535,8 +1427,8 @@ const [companyTypeOpen, setCompanyTypeOpen] = useState<boolean>(false);
                                       [ad.id]: Math.max(0, (prev[ad.id] || 0) - 1)
                                     }));
                                   }}
-                                  className={`absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center transition-opacity ${
-                                    (currentPhotoIndex[ad.id] || 0) === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                                  className={`absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/80 flex items-center justify-center transition-opacity ${
+                                    photoIdx === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'
                                   }`}
                                 >
                                   <ChevronUp className="w-4 h-4 rotate-90" />
@@ -1549,8 +1441,8 @@ const [companyTypeOpen, setCompanyTypeOpen] = useState<boolean>(false);
                                       [ad.id]: Math.min(ad.companyPhotos.length - 1, (prev[ad.id] || 0) + 1)
                                     }));
                                   }}
-                                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center transition-opacity ${
-                                    (currentPhotoIndex[ad.id] || 0) === ad.companyPhotos.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-background/80 flex items-center justify-center transition-opacity ${
+                                    photoIdx === ad.companyPhotos.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'
                                   }`}
                                 >
                                   <ChevronUp className="w-4 h-4 -rotate-90" />
@@ -1561,7 +1453,7 @@ const [companyTypeOpen, setCompanyTypeOpen] = useState<boolean>(false);
                                     <div
                                       key={index}
                                       className={`h-1.5 rounded-full transition-all ${
-                                        (currentPhotoIndex[ad.id] || 0) === index ? 'w-6 bg-primary' : 'w-1.5 bg-background/60'
+                                        photoIdx === index ? 'w-6 bg-primary' : 'w-1.5 bg-background/60'
                                       }`}
                                     />
                                   ))}
