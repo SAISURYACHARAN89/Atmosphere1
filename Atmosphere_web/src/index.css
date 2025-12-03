@@ -1,0 +1,221 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Professional Startup Investment Platform Design System
+   Sophisticated yet approachable, modern and trustworthy
+*/
+
+@layer base {
+  :root {
+    /* Premium Background System */
+    --background: 200 100% 1%;
+    --background-subtle: 200 100% 1%;
+    /* --background: 180%, 11%, 6%; *
+    /* --background-subtle: 180%, 110%, 6%; */
+    --foreground: 0 0% 95%;
+    
+    /* Elevated Card System with depth */
+    --card: 0 0% 5%;
+    --card-hover: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
+    
+    /* Sophisticated Primary - Greyish Black */
+    --primary: 0 0% 25%;
+    --primary-hover: 0 0% 30%;
+    --primary-light: 0 0% 20%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Refined Secondary System */
+    --secondary: 0 0% 18%;
+    --secondary-hover: 0 0% 22%;
+    --secondary-foreground: 0 0% 95%;
+    
+    /* Elegant Muted Palette */
+    --muted: 0 0% 18%;
+    --muted-hover: 0 0% 22%;
+    --muted-foreground: 0 0% 65%;
+    
+    /* Vibrant Accent - Greyish Black */
+    --accent: 0 0% 30%;
+    --accent-light: 0 0% 20%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Success - Growth & Positive */
+    --success: 142 71% 45%;
+    --success-light: 142 71% 95%;
+    --success-foreground: 0 0% 100%;
+    
+    /* Warning System */
+    --warning: 38 92% 50%;
+    --warning-light: 38 92% 95%;
+    --warning-foreground: 0 0% 100%;
+    
+    /* Destructive - Careful Actions */
+    --destructive: 0 84% 60%;
+    --destructive-light: 0 84% 95%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Refined Border System */
+    --border: 0 0% 20%;
+    --border-subtle: 0 0% 15%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 35%;
+    
+    /* Popover System */
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    /* Professional Radius System */
+    --radius-sm: 0.5rem;
+    --radius: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    
+    /* Notification System */
+    --notification: 0 84% 60%;
+    
+    /* Gradient System */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 25%), hsl(0 0% 30%));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(158 64% 52%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 12%), hsl(0 0% 14%));
+    --gradient-shine: linear-gradient(135deg, hsla(0 0% 100% / 0.1), hsla(0 0% 100% / 0));
+    
+    /* Shadow System - Depth & Elevation */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+    --shadow-primary: 0 10px 25px -5px hsl(0 0% 25% / 0.5);
+    --shadow-success: 0 10px 25px -5px hsl(142 71% 45% / 0.2);
+  }
+  
+  .dark {
+    --background: 0 0% 0%;
+    --background-subtle: 0 0% 2%;
+    --foreground: 0 0% 95%;
+    
+    --card: 0 0% 5%;
+    --card-hover: 0 0% 7%;
+    --card-foreground: 0 0% 95%;
+    
+    --primary: 0 0% 30%;
+    --primary-hover: 0 0% 35%;
+    --primary-light: 0 0% 20%;
+    --primary-foreground: 0 0% 100%;
+    
+    --muted: 0 0% 20%;
+    --muted-hover: 0 0% 24%;
+    --muted-foreground: 0 0% 65%;
+    
+    --border: 0 0% 20%;
+    --border-subtle: 0 0% 15%;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+
+  60% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    font-optical-sizing: auto;
+  }
+
+  /* Professional smooth transitions */
+  button, a {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Selection styling */
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+}
+
+@layer components {
+  /* Enhanced Card System */
+  .card-elevated {
+    @apply bg-card rounded-xl border border-border shadow-md hover:shadow-lg transition-all duration-300;
+  }
+  
+  .card-premium {
+    @apply bg-gradient-to-br from-card to-card-hover rounded-xl border border-border shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+  
+  /* Glass Effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-border/50;
+  }
+  
+  /* Gradient Text */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  
+  /* Shimmer Effect */
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+  
+  .shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      hsla(0, 0%, 100%, 0.3) 50%,
+      transparent 100%
+    );
+    background-size: 1000px 100%;
+  }
+  
+  /* Floating Animation */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  /* Pulse Glow */
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+}
