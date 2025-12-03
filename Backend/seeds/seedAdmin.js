@@ -2,27 +2,27 @@ const { connect, close, models } = require('../index');
 const bcrypt = require('bcrypt');
 
 async function seed() {
-  await connect();
-  const { User } = models;
+    await connect();
+    const { User } = models;
 
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@local.dev';
-  const existing = await User.findOne({ email: adminEmail });
-  if (existing) {
-    console.log('Admin already exists');
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@local.dev';
+    const existing = await User.findOne({ email: adminEmail });
+    if (existing) {
+        console.log('Admin already exists');
+        await close();
+        return;
+    }
+
+    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'adminpass', 10);
+    const admin = new User({ email: adminEmail, username: 'admin', displayName: 'Admin', passwordHash, roles: ['admin'] });
+    await admin.save();
+    console.log('Admin user created:', admin.email);
     await close();
-    return;
-  }
-
-  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'adminpass', 10);
-  const admin = new User({ email: adminEmail, username: 'admin', displayName: 'Admin', passwordHash, roles: ['admin'] });
-  await admin.save();
-  console.log('Admin user created:', admin.email);
-  await close();
 }
 
 seed().catch((err) => {
-  console.error(err);
-  process.exit(1);
+    console.error(err);
+    process.exit(1);
 });
 const mongoose = require('mongoose');
 require('dotenv').config();
