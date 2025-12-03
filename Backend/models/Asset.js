@@ -7,7 +7,7 @@ const AssetSchema = new Schema(
         title: String,
         description: String,
         value: Number,
-        metadata: Schema.Types.Mixed,
+        metadata: { type: Schema.Types.Mixed },
         verified: { type: Boolean, default: false },
     },
     { timestamps: true }

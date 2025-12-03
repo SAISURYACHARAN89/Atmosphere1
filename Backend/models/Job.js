@@ -4,15 +4,17 @@ const { Schema } = mongoose;
 const JobSchema = new Schema(
     {
         poster: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-        startup: { type: Schema.Types.ObjectId, ref: 'StartupDetails' },
-        title: String,
-        sector: String,
-        locationType: String,
-        employmentType: String,
-        compensation: String,
-        requirements: [String],
-        customQuestions: [String],
+        startupId: { type: Schema.Types.ObjectId, ref: 'Company' },
+        title: { type: String, required: true },
+        sector: { type: String },
+        locationType: { type: String },
+        employmentType: { type: String },
+        compensation: { type: String },
+        requirements: { type: String },
+        customQuestions: { type: [String] },
         applicants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+        isVerifiedByAdmin: { type: Boolean, default: false },
+        meta: { type: Schema.Types.Mixed },
     },
     { timestamps: true }
 );

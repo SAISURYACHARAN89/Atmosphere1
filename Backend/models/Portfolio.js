@@ -5,7 +5,7 @@ const PortfolioSchema = new Schema(
     {
         owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         items: [{ type: Schema.Types.ObjectId, ref: 'Asset' }],
-        summary: String,
+        meta: { type: Schema.Types.Mixed },
     },
     { timestamps: true }
 );
