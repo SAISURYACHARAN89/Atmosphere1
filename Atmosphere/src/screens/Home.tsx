@@ -7,7 +7,7 @@ type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profi
 
 const navItems: { key: RouteKey; label: string; glyph: string }[] = [
     { key: 'home', label: 'Home', glyph: '⌂' },
-    { key: 'search', label: 'Search', glyph: '🔍' },
+    { key: 'search', label: 'Searc', glyph: '🔍' },
     { key: 'notifications', label: 'Notifications', glyph: '❤' },
     { key: 'chats', label: 'Chats', glyph: '💬' },
     { key: 'reels', label: 'Reels', glyph: '🎞' },
