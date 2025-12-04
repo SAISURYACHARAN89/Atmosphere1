@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import Logo from '../components/Logo';
 import { login } from '../lib/api';
+import { getBaseUrl, setBaseUrl } from '../lib/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeContext } from '../contexts/ThemeContext';
 
@@ -25,6 +26,19 @@ const SignIn = ({ onSignUp, onSignedIn }: { onSignUp?: () => void; onSignedIn?: 
         } finally {
             setLoading(false);
         }
+    };
+
+    const [baseUrl, setBaseUrlState] = useState('');
+    React.useEffect(() => {
+        (async () => {
+            const v = await getBaseUrl();
+            setBaseUrlState(v);
+        })();
+    }, []);
+
+    const saveBaseUrl = async () => {
+        await setBaseUrl(baseUrl);
+        Alert.alert('Saved', `Base URL set to ${baseUrl}`);
     };
 
     return (
@@ -55,6 +69,14 @@ const SignIn = ({ onSignUp, onSignedIn }: { onSignUp?: () => void; onSignedIn?: 
                     <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleLogin} disabled={loading}>
                         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log in</Text>}
                     </TouchableOpacity>
+
+                    <View style={styles.backendBlock}>
+                        <Text style={[styles.backendLabel, { color: theme.text }]}>Backend URL (phone):</Text>
+                        <TextInput value={baseUrl} onChangeText={setBaseUrlState} placeholder="http://192.168.x.y:4000" placeholderTextColor={theme.placeholder} style={[styles.input, { backgroundColor: theme.background, color: theme.text, borderColor: theme.border }]} />
+                        <TouchableOpacity onPress={saveBaseUrl} style={[styles.saveButton, { backgroundColor: theme.primary }]}>
+                            <Text style={styles.buttonText}>Save backend URL</Text>
+                        </TouchableOpacity>
+                    </View>
 
                     <View style={styles.dividerRow}>
                         <View style={[styles.separator, { backgroundColor: theme.border }]} />
@@ -109,6 +131,9 @@ const styles = StyleSheet.create({
     getAppText: { marginBottom: 8 },
     storeRow: { flexDirection: 'row', gap: 8 },
     storeImage: { width: 140, height: 44, resizeMode: 'contain', marginHorizontal: 6 },
+    saveButton: { height: 36, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
+    backendLabel: { marginTop: 12, marginBottom: 6 },
+    backendBlock: { marginTop: 12 },
 });
 
 export default SignIn;

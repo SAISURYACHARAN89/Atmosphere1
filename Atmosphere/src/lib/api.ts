@@ -4,9 +4,10 @@
  * For Android emulator use: 10.0.2.2:4000 (default here)
  * For physical device use your machine LAN IP, e.g. http://192.168.1.12:4000
  */
-const BASE_URL = 'http://10.0.2.2:4000';
+import { getBaseUrl } from './config';
 
 async function post(path: string, body: any) {
+    const BASE_URL = await getBaseUrl();
     const res = await fetch(`${BASE_URL}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,5 +33,3 @@ export async function login(email: string, password: string) {
 export async function register({ email, username, password, displayName }: { email: string; username: string; password: string; displayName?: string }) {
     return post('/api/auth/register', { email, username, password, displayName, accountType: 'personal' });
 }
-
-export { BASE_URL };
