@@ -24,6 +24,8 @@ async function request(path: string, body: any = {}, options: { method?: 'GET' |
     }
 
     const res = await fetch(url, fetchOptions);
+    // Treat 304 Not Modified as an OK with empty body (caller can use cached data)
+    if (res.status === 304) return {};
     const text = await res.text();
     let data: any = null;
     try { data = text ? JSON.parse(text) : null; } catch { data = text; }

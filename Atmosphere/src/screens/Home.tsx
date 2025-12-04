@@ -14,7 +14,22 @@ const Home = () => {
         const loadPosts = async () => {
             try {
                 const data = await fetchStartupPosts();
-                setPosts(data);
+                // Normalize posts to expected shape
+                const normalized = (data || []).map((p: any) => ({
+                    id: String(p.id || p._id || Math.random()),
+                    name: String(p.name || p.companyName || 'Unknown'),
+                    displayName: String(p.displayName || ''),
+                    verified: Boolean(p.verified || false),
+                    profileImage: p.profileImage || 'https://via.placeholder.com/400x240.png?text=Startup',
+                    description: String(p.description || p.about || ''),
+                    stage: String(p.stage || 'unknown'),
+                    rounds: Number(p.rounds || 0),
+                    age: Number(p.age || 0),
+                    fundingRaised: Number(p.fundingRaised || 0),
+                    fundingNeeded: Number(p.fundingNeeded || 0),
+                    stats: p.stats || { likes: 0, comments: 0, crowns: 0, shares: 0 },
+                }));
+                setPosts(normalized);
             } catch (err) {
                 console.error('Failed to fetch posts:', err);
                 setError('Failed to load posts');
@@ -53,48 +68,9 @@ const Home = () => {
             />
         );
     };
-
-    const handleBottomNavRoute = (routeName: string) => {
-        // Map web/mobile BottomNav route names to this screen's RouteKey values
-        const map: { [k: string]: RouteKey } = {
-            Home: 'home',
-            Search: 'search',
-            Reels: 'reels',
-            Profile: 'profile',
-            Launch: 'home',
-            Trade: 'home',
-            Opportunities: 'home',
-            Meetings: 'home',
-            Notifications: 'notifications',
-            Messages: 'chats',
-        };
-
-        const mapped = map[routeName] || 'home';
-        setRoute(mapped as RouteKey);
-    };
-
-    // Map current route state back to BottomNav route names
-    const getCurrentBottomNavRoute = (): string => {
-        const reverseMap: { [k: string]: string } = {
-            'home': 'Home',
-            'search': 'Search',
-            'reels': 'Reels',
-            'profile': 'Profile',
-            'notifications': 'Notifications',
-            'chats': 'Messages',
-        };
-        return reverseMap[route] || 'Home';
-    };
-
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={styles.header}>
-                <Text style={[styles.headerTitle, { color: theme.text }]}>Atmosphere</Text>
-            </View>
-
             {renderContent()}
-
-            <BottomNav onRouteChange={handleBottomNavRoute} activeRoute={getCurrentBottomNavRoute()} />
         </View>
     );
 };

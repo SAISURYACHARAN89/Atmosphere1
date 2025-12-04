@@ -14,12 +14,16 @@ type StartupCard = {
     age: number;
     fundingRaised: number;
     fundingNeeded: number;
-    stats: { likes: number; comments: number; crowns: number; shares: number };
+    stats?: { likes: number; comments: number; crowns: number; shares: number };
 };
 
-const StartupPost = ({ company }: { company: StartupCard }) => {
+const StartupPost = ({ post, company }: { post?: StartupCard; company?: StartupCard }) => {
+    const companyData = post || company;
+    if (!companyData) return null;
+
+    const stats = companyData.stats || { likes: 0, comments: 0, crowns: 0, shares: 0 };
     const [liked, setLiked] = useState(false);
-    const [likes, setLikes] = useState(company.stats.likes);
+    const [likes, setLikes] = useState<number>(stats.likes || 0);
     const [saved, setSaved] = useState(false);
     const { theme } = useContext(ThemeContext);
 
@@ -30,8 +34,8 @@ const StartupPost = ({ company }: { company: StartupCard }) => {
         });
     };
 
-    const totalFunding = company.fundingRaised + company.fundingNeeded;
-    const fundingPercent = totalFunding > 0 ? (company.fundingRaised / totalFunding) * 100 : 0;
+    const totalFunding = (companyData.fundingRaised || 0) + (companyData.fundingNeeded || 0);
+    const fundingPercent = totalFunding > 0 ? ((companyData.fundingRaised || 0) / totalFunding) * 100 : 0;
 
     const formatCurrency = (num: number) => {
         if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
@@ -44,8 +48,8 @@ const StartupPost = ({ company }: { company: StartupCard }) => {
             {/* Header with name and verified badge */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={[styles.companyName, { color: theme.text }]}>{company.name}</Text>
-                    {company.verified && <Text style={styles.badge}>✓ Verified startup</Text>}
+                    <Text style={[styles.companyName, { color: theme.text }]}>{companyData.name}</Text>
+                    {companyData.verified && <Text style={styles.badge}>✓ Verified startup</Text>}
                 </View>
                 <TouchableOpacity onPress={() => setSaved(!saved)}>
                     <Text style={{ fontSize: 20 }}>{saved ? '🔖' : '📑'}</Text>
@@ -53,7 +57,7 @@ const StartupPost = ({ company }: { company: StartupCard }) => {
             </View>
 
             {/* Profile image */}
-            <Image source={{ uri: company.profileImage }} style={styles.mainImage} />
+            <Image source={{ uri: companyData.profileImage }} style={styles.mainImage} />
 
             {/* Stats row: likes, crowns, comments, shares */}
             <View style={styles.statsRow}>
@@ -64,29 +68,29 @@ const StartupPost = ({ company }: { company: StartupCard }) => {
 
                 <View style={styles.statItem}>
                     <Text style={[styles.statIcon, { color: theme.placeholder }]}>👑</Text>
-                    <Text style={[styles.statCount, { color: theme.text }]}>{company.stats.crowns}</Text>
+                    <Text style={[styles.statCount, { color: theme.text }]}>{stats.crowns}</Text>
                 </View>
 
                 <View style={styles.statItem}>
                     <Text style={[styles.statIcon, { color: theme.placeholder }]}>💬</Text>
-                    <Text style={[styles.statCount, { color: theme.text }]}>{company.stats.comments}</Text>
+                    <Text style={[styles.statCount, { color: theme.text }]}>{stats.comments}</Text>
                 </View>
 
                 <View style={styles.statItem}>
                     <Text style={[styles.statIcon, { color: theme.placeholder }]}>📤</Text>
-                    <Text style={[styles.statCount, { color: theme.text }]}>{company.stats.shares}</Text>
+                    <Text style={[styles.statCount, { color: theme.text }]}>{stats.shares}</Text>
                 </View>
             </View>
 
             {/* Description */}
             <View style={styles.body}>
-                <Text style={[styles.label, { color: theme.placeholder }]}>WHAT'S {company.name.toUpperCase()}</Text>
-                <Text style={[styles.description, { color: theme.text }]} numberOfLines={3}>{company.description}</Text>
+                <Text style={[styles.label, { color: theme.placeholder }]}>WHAT'S {companyData.name.toUpperCase()}</Text>
+                <Text style={[styles.description, { color: theme.text }]} numberOfLines={3}>{companyData.description}</Text>
             </View>
 
             {/* Stage */}
             <View style={styles.stageSection}>
-                <Text style={[styles.stageLabel, { color: theme.text }]}>STAGE: {company.stage.toUpperCase()}</Text>
+                <Text style={[styles.stageLabel, { color: theme.text }]}>STAGE: {String(companyData.stage || '').toUpperCase()}</Text>
             </View>
 
             {/* Info boxes: Revenue, Rounds, Age */}
@@ -97,11 +101,11 @@ const StartupPost = ({ company }: { company: StartupCard }) => {
                 </View>
                 <View style={[styles.infoBox, { borderColor: theme.border }]}>
                     <Text style={[styles.infoBoxLabel, { color: theme.placeholder }]}>Rounds</Text>
-                    <Text style={[styles.infoBoxValue, { color: theme.text }]}>: {company.rounds}</Text>
+                    <Text style={[styles.infoBoxValue, { color: theme.text }]}>: {companyData.rounds ?? 0}</Text>
                 </View>
                 <View style={[styles.infoBox, { borderColor: theme.border }]}>
                     <Text style={[styles.infoBoxLabel, { color: theme.placeholder }]}>Age</Text>
-                    <Text style={[styles.infoBoxValue, { color: theme.text }]}>{company.age} yr</Text>
+                    <Text style={[styles.infoBoxValue, { color: theme.text }]}>{companyData.age ?? 0} yr</Text>
                 </View>
             </View>
 
@@ -116,8 +120,8 @@ const StartupPost = ({ company }: { company: StartupCard }) => {
                     />
                 </View>
                 <View style={styles.fundingLabels}>
-                    <Text style={[styles.fundingText, { color: theme.text }]}>{formatCurrency(company.fundingRaised)} Filled</Text>
-                    <Text style={[styles.fundingText, { color: theme.placeholder }]}>{formatCurrency(company.fundingNeeded)}</Text>
+                    <Text style={[styles.fundingText, { color: theme.text }]}>{formatCurrency(companyData.fundingRaised ?? 0)} Filled</Text>
+                    <Text style={[styles.fundingText, { color: theme.placeholder }]}>{formatCurrency(companyData.fundingNeeded ?? 0)}</Text>
                 </View>
             </View>
         </View>

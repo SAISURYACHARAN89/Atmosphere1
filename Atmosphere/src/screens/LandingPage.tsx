@@ -6,6 +6,8 @@ import Notifications from './Notifications';
 import Chats from './Chats';
 import Reels from './Reels';
 import Profile from './Profile';
+import Home from './Home';
+import BottomNav from '../components/BottomNav';
 
 type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile';
 
@@ -31,7 +33,7 @@ const LandingPage = ({ onLogout }: { onLogout?: () => void }) => {
     const renderContent = () => {
         switch (route) {
             case 'home':
-                return <Text style={[styles.text, { color: theme.text }]}>Welcome to Atmosphere!</Text>;
+                return <Home />;
             case 'search':
                 return <Search />;
             case 'notifications':
@@ -47,6 +49,30 @@ const LandingPage = ({ onLogout }: { onLogout?: () => void }) => {
         }
     };
 
+    const mapBottomToRoute = (routeName: string): RouteKey => {
+        const map: { [k: string]: RouteKey } = {
+            Home: 'home',
+            Search: 'search',
+            Reels: 'reels',
+            Profile: 'profile',
+            Notifications: 'notifications',
+            Messages: 'chats',
+        };
+        return map[routeName] || 'home';
+    };
+
+    const mapRouteToBottom = (r: RouteKey): string => {
+        const rev: { [k in RouteKey]: string } = {
+            home: 'Home',
+            search: 'Search',
+            notifications: 'Notifications',
+            chats: 'Messages',
+            reels: 'Reels',
+            profile: 'Profile',
+        };
+        return rev[r] || 'Home';
+    };
+
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             <View style={styles.header}>
@@ -55,31 +81,13 @@ const LandingPage = ({ onLogout }: { onLogout?: () => void }) => {
 
             {renderContent()}
 
-            <View style={[styles.sideNav, styles.sideNavOverlay]}>
-                {navItems.map((item) => {
-                    const active = route === item.key;
-                    return (
-                        <TouchableOpacity
-                            key={item.key}
-                            onPress={() => setRoute(item.key)}
-                            style={[styles.navItem, active ? dynamicStyles.navItemActive : null]}
-                        >
-                            <Text style={[styles.glyph, active ? dynamicStyles.glyphActiveColor : dynamicStyles.glyphColor]}>{item.glyph}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+            <BottomNav activeRoute={mapRouteToBottom(route)} onRouteChange={(r) => setRoute(mapBottomToRoute(r))} />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    sideNav: { position: 'absolute', right: 12, bottom: 24, alignItems: 'center', paddingHorizontal: 8, paddingVertical: 6, backgroundColor: 'transparent', flexDirection: 'row' },
-    navItem: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginHorizontal: 8 },
-    navItemActive: { backgroundColor: '#1f1f1f' },
-    glyph: { fontSize: 18 },
-    sideNavOverlay: { backgroundColor: 'transparent' },
+    container: { flex: 1, paddingBottom: 84 },
     content: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
     header: { height: 64, paddingHorizontal: 16, paddingTop: 12, justifyContent: 'center', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#00000010' },
     headerTitle: { fontSize: 20, fontWeight: '700' },
