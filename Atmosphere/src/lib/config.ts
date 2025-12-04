@@ -1,9 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const DEFAULT_BASE_URL = 'http://10.0.2.2:4000';
+let envUrl: string | undefined;
+try {
+    const env = require('../../env.json');
+    if (env && env.BACKEND_URL) envUrl = env.BACKEND_URL;
+} catch {
+    envUrl = undefined;
+}
+
+export const DEFAULT_BASE_URL = envUrl || 'http://192.168.0.106:4000';
 const KEY = '@app_base_url';
 
 export async function getBaseUrl(): Promise<string> {
+    if (envUrl) return envUrl;
     try {
         const v = await AsyncStorage.getItem(KEY);
         if (v) return v;
