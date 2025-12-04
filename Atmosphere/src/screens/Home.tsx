@@ -7,6 +7,7 @@ import Notifications from './Notifications';
 import Chats from './Chats';
 import Reels from './Reels';
 import Profile from './Profile';
+import BottomNav from '../components/BottomNav';
 
 type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile';
 
@@ -86,24 +87,43 @@ const Home = ({ onLogout }: { onLogout?: () => void }) => {
         }
     };
 
+    const handleBottomNavRoute = (routeName: string) => {
+        // Map web/mobile BottomNav route names to this screen's RouteKey values
+        const map: { [k: string]: RouteKey } = {
+            Home: 'home',
+            Search: 'search',
+            Reels: 'reels',
+            Profile: 'profile',
+            Launch: 'home',
+            Trade: 'home',
+            Opportunities: 'home',
+            Meetings: 'home',
+            Notifications: 'notifications',
+            Messages: 'chats',
+        };
+
+        const mapped = map[routeName] || 'home';
+        setRoute(mapped as RouteKey);
+    };
+
+    // Map current route state back to BottomNav route names
+    const getCurrentBottomNavRoute = (): string => {
+        const reverseMap: { [k: string]: string } = {
+            'home': 'Home',
+            'search': 'Search',
+            'reels': 'Reels',
+            'profile': 'Profile',
+            'notifications': 'Notifications',
+            'chats': 'Messages',
+        };
+        return reverseMap[route] || 'Home';
+    };
+
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             {renderContent()}
 
-            <View style={[styles.sideNav, styles.sideNavOverlay]}>
-                {navItems.map((item) => {
-                    const active = route === item.key;
-                    return (
-                        <TouchableOpacity
-                            key={item.key}
-                            onPress={() => setRoute(item.key)}
-                            style={[styles.navItem, active ? dynamicStyles.navItemActive : null]}
-                        >
-                            <Text style={[styles.glyph, active ? dynamicStyles.glyphActiveColor : dynamicStyles.glyphColor]}>{item.glyph}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+            <BottomNav onRouteChange={handleBottomNavRoute} activeRoute={getCurrentBottomNavRoute()} />
         </View>
     );
 };

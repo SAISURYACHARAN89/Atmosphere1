@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
+import React, { useEffect, useState, useContext } from "react";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { NavigationContext, NavigationRouteContext } from "@react-navigation/native";
 
 type AppMode = "left" | "right";
 
@@ -22,9 +22,14 @@ const rightModeTabs = [
   { id: "meetings", icon: "calendar", label: "Meetings", route: "Meetings" },
 ];
 
-const BottomNav: React.FC = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+type BottomNavProps = {
+  onRouteChange?: (routeName: string) => void;
+  activeRoute?: string;
+};
+
+const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => {
+  const navigation = useContext(NavigationContext) as any | undefined;
+  const route = useContext(NavigationRouteContext) as any | undefined;
 
   const [appMode, setAppMode] = useState<AppMode>("left");
   const [lastLeftPage, setLastLeftPage] = useState<string>(leftModeTabs[0].route);
@@ -37,7 +42,7 @@ const BottomNav: React.FC = () => {
         if (stored === "left" || stored === "right") {
           setAppMode(stored);
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     })();
@@ -47,26 +52,31 @@ const BottomNav: React.FC = () => {
     (async () => {
       try {
         await AsyncStorage.setItem(NAV_MODE_KEY, appMode);
-      } catch (e) {
+      } catch {
         // ignore
       }
     })();
   }, [appMode]);
 
   useEffect(() => {
-    const name = route.name as string | undefined;
+    const name = route?.name as string | undefined;
     if (!name) return;
     if (leftModeTabs.some((t) => t.route === name)) setLastLeftPage(name);
     if (rightModeTabs.some((t) => t.route === name)) setLastRightPage(name);
-  }, [route.name]);
+  }, [route?.name]);
 
   const tabs = appMode === "left" ? leftModeTabs : rightModeTabs;
 
   const handleTabPress = (tabRoute: string) => {
+    if (onRouteChange) {
+      onRouteChange(tabRoute);
+      return;
+    }
     // navigate by route name — assumes screens use these names
     // If your app uses different names, update the `route` fields above to match.
-    // @ts-ignore
-    navigation.navigate(tabRoute);
+    if (navigation && typeof navigation.navigate === 'function') {
+      navigation.navigate(tabRoute);
+    }
   };
 
   const toggleMode = () => {
@@ -82,7 +92,8 @@ const BottomNav: React.FC = () => {
   const shouldHideMobileNav = false; // customize if there are screens that should hide the nav
 
   const isTabActive = (tabRoute: string) => {
-    const current = route.name as string | undefined;
+    // Use activeRoute prop if provided, otherwise fall back to navigation route
+    const current = activeRoute || (route?.name as string | undefined);
     if (!current) return false;
     return current === tabRoute;
   };
@@ -92,23 +103,23 @@ const BottomNav: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        {tabs.slice(0, 2).map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            onPress={() => handleTabPress(tab.route)}
-            style={styles.tab}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons
-              name={tab.icon}
-              size={24}
-              color={isTabActive(tab.route) ? "#ffffff" : "#9aa0a6"}
-            />
-            {/* optional label
-            <Text style={[styles.label, isTabActive(tab.route) && styles.activeLabel]}>{tab.label}</Text>
-            */}
-          </TouchableOpacity>
-        ))}
+        {tabs.slice(0, 2).map((tab) => {
+          const active = isTabActive(tab.route);
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              onPress={() => handleTabPress(tab.route)}
+              style={[styles.tab]}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons
+                name={tab.icon}
+                size={30}
+                color={active ? "#fff" : "#9aa0a6"}
+              />
+            </TouchableOpacity>
+          );
+        })}
 
         <TouchableOpacity onPress={toggleMode} style={styles.toggle} activeOpacity={0.8}>
           <View style={[styles.toggleTrack]}>
@@ -116,20 +127,23 @@ const BottomNav: React.FC = () => {
           </View>
         </TouchableOpacity>
 
-        {tabs.slice(2, 4).map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            onPress={() => handleTabPress(tab.route)}
-            style={styles.tab}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons
-              name={tab.icon}
-              size={24}
-              color={isTabActive(tab.route) ? "#ffffff" : "#9aa0a6"}
-            />
-          </TouchableOpacity>
-        ))}
+        {tabs.slice(2, 4).map((tab) => {
+          const active = isTabActive(tab.route);
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              onPress={() => handleTabPress(tab.route)}
+              style={[styles.tab]}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons
+                name={tab.icon}
+                size={30}
+                color={active ? "#fff" : "#9aa0a6"}
+              />
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -144,27 +158,23 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(10,10,10,0.92)",
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: "rgba(255,255,255,0.06)",
-    paddingVertical: 8,
+    height: 70,
+    paddingVertical: 0,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
     marginHorizontal: 12,
+    height: 72,
   },
   tab: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 6,
-  },
-  label: {
-    fontSize: 12,
-    color: "#9aa0a6",
-    marginTop: 2,
-  },
-  activeLabel: {
-    color: "#fff",
+    height: 72,
+    borderRadius: 18,
+    marginHorizontal: 4,
   },
   toggle: {
     width: 56,
