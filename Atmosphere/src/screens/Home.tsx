@@ -2,13 +2,22 @@ import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import StartupPost from '../components/StartupPost';
+import BottomNav from '../components/BottomNav';
+import Search from './Search';
+import Reels from './Reels';
+import Profile from './Profile';
 import { fetchStartupPosts } from '../lib/api';
 
-const Home = () => {
+type HomeProps = {
+    onLogout?: () => void;
+};
+
+const Home: React.FC<HomeProps> = () => {
     const { theme } = useContext(ThemeContext);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [activeRoute, setActiveRoute] = useState('Home');
 
     useEffect(() => {
         const loadPosts = async () => {
@@ -42,6 +51,21 @@ const Home = () => {
     }, []);
 
     const renderContent = () => {
+        // Render different screens based on active route
+        switch (activeRoute) {
+            case 'Search':
+                return <Search />;
+            case 'Reels':
+                return <Reels />;
+            case 'Profile':
+                return <Profile />;
+            case 'Home':
+            default:
+                return renderHomeFeed();
+        }
+    };
+
+    const renderHomeFeed = () => {
         if (loading) {
             return (
                 <View style={styles.centerLoader}>
@@ -54,7 +78,7 @@ const Home = () => {
         if (error) {
             return (
                 <View style={styles.centerLoader}>
-                    <Text style={[styles.errorText, { color: '#e74c3c' }]}>Error: {error}</Text>
+                    <Text style={[styles.errorText, styles.errorColor]}>Error: {error}</Text>
                 </View>
             );
         }
@@ -62,7 +86,7 @@ const Home = () => {
         return (
             <FlatList
                 data={posts}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item: any) => item.id}
                 contentContainerStyle={styles.listContent}
                 renderItem={({ item }) => <StartupPost post={item} />}
             />
@@ -71,6 +95,7 @@ const Home = () => {
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             {renderContent()}
+            <BottomNav onRouteChange={setActiveRoute} activeRoute={activeRoute} />
         </View>
     );
 };
@@ -83,6 +108,7 @@ const styles = StyleSheet.create({
     centerLoader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     loadingText: { marginTop: 12, fontSize: 14 },
     errorText: { fontSize: 14 },
+    errorColor: { color: '#e74c3c' },
 });
 
 export default Home;
