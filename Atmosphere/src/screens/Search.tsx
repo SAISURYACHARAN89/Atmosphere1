@@ -225,49 +225,45 @@ const SearchScreen = () => {
                     // Startups tab
                     if (activeTab === 'startups') {
                         return (
-                            <View style={[styles.feedItem, { flexDirection: 'row', alignItems: 'center', borderBottomColor: theme.border }]}> 
-                                <Image
-                                    source={{ uri: item.profileImage || item.logo || item.avatar || 'https://via.placeholder.com/120x120.png?text=Startup' }}
-                                    style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, backgroundColor: '#eee' }}
-                                />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={[styles.feedTitle, { color: theme.text }]}>🏢 {item.name}</Text>
-                                    {item.stage && (
-                                        <Text style={[styles.feedStats, { color: theme.primary }]}>{String(item.stage).toUpperCase()}</Text>
-                                    )}
-                                    {item.description && (
-                                        <Text style={[styles.feedText, { color: theme.placeholder }]} numberOfLines={2}>{item.description}</Text>
-                                    )}
-                                    {item.tags && item.tags.length > 0 && (
-                                        <Text style={[styles.feedStats, { color: theme.primary }]} numberOfLines={1}>{item.tags.slice(0, 4).map((t: string) => `#${t}`).join(' ')}</Text>
-                                    )}
-                                </View>
+                            <View style={[styles.feedItem, { borderBottomColor: theme.border }]}>
+                                <Text style={[styles.feedTitle, { color: theme.text }]}>
+                                    🏢 {item.name}
+                                </Text>
+                                {item.description && (
+                                    <Text style={[styles.feedText, { color: theme.placeholder }]}>
+                                        {item.description}
+                                    </Text>
+                                )}
+                                {item.tags && item.tags.length > 0 && (
+                                    <Text style={[styles.feedStats, { color: theme.primary }]}>
+                                        {item.tags.join(', ')}
+                                    </Text>
+                                )}
                             </View>
                         );
                     }
 
                     // Investors & Personal tabs (Users)
-                    if (activeTab === 'investors' || activeTab === 'personal') {
-                        return (
-                            <View style={[styles.feedItem, { flexDirection: 'row', alignItems: 'center', borderBottomColor: theme.border }]}> 
-                                <Image
-                                    source={{ uri: item.avatar || item.profileImage || item.photo || 'https://via.placeholder.com/120x120.png?text=User' }}
-                                    style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, backgroundColor: '#eee' }}
-                                />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={[styles.feedTitle, { color: theme.text }]}>{item.displayName || item.name || item.username}</Text>
-                                    <Text style={[styles.feedStats, { color: theme.primary }]}>{activeTab === 'investors' ? 'Investor' : 'Personal'}</Text>
-                                    <Text style={[styles.feedText, { color: theme.placeholder }]}>@{item.username}</Text>
-                                    {item.bio && (
-                                        <Text style={[styles.feedText, { color: theme.placeholder }]} numberOfLines={2}>{item.bio}</Text>
-                                    )}
-                                    {item.verified && (
-                                        <Text style={[styles.feedStats, { color: theme.primary }]}>✓ Verified</Text>
-                                    )}
-                                </View>
-                            </View>
-                        );
-                    }
+                    return (
+                        <View style={[styles.feedItem, { borderBottomColor: theme.border }]}>
+                            <Text style={[styles.feedTitle, { color: theme.text }]}>
+                                👤 {item.displayName || item.username}
+                            </Text>
+                            <Text style={[styles.feedText, { color: theme.placeholder }]}>
+                                @{item.username}
+                            </Text>
+                            {item.bio && (
+                                <Text style={[styles.feedText, { color: theme.placeholder }]}>
+                                    {item.bio}
+                                </Text>
+                            )}
+                            {item.verified && (
+                                <Text style={[styles.feedStats, { color: theme.primary }]}>
+                                    ✓ Verified
+                                </Text>
+                            )}
+                        </View>
+                    );
                 }}
                 ListEmptyComponent={
                     initialLoadDone && !loading ? (
