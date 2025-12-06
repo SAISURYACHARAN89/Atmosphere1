@@ -11,7 +11,11 @@ const ITEM_SIZE = (width - 4) / 3; // 3 columns with 2px gaps
 
 type TabType = 'explore' | 'posts' | 'startups' | 'investors' | 'personal';
 
-const SearchScreen = () => {
+type SearchScreenProps = {
+    onPostPress?: (postId: string) => void;
+};
+
+const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress }) => {
     const { theme } = useContext(ThemeContext);
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
@@ -186,6 +190,7 @@ const SearchScreen = () => {
                             <TouchableOpacity 
                                 style={styles.gridItem}
                                 activeOpacity={0.9}
+                                onPress={() => onPostPress && (onPostPress(item._id || item.id))}
                             >
                                 <Image
                                     source={{ uri: imgUri }}
@@ -201,26 +206,6 @@ const SearchScreen = () => {
                         );
                     }
 
-                    // List view for other search results (startups, investors, personal)
-                    // Posts case is handled above
-                    if (activeTab === 'posts') {
-                        // fallback list rendering for posts without media
-                        return (
-                            <View style={[styles.feedItem, { borderBottomColor: theme.border }]}>
-                                <Text style={[styles.feedTitle, { color: theme.text }]}>
-                                    {item.author?.displayName || item.author?.username || item.name || 'Post'}
-                                </Text>
-                                <Text style={[styles.feedText, { color: theme.placeholder }]}>
-                                    {item.content || item.description || item.title || '[Post Content]'}
-                                </Text>
-                                {item.likesCount !== undefined && (
-                                    <Text style={[styles.feedStats, { color: theme.primary }]}>
-                                        ❤️ {item.likesCount || 0} | 💬 {item.commentsCount || 0}
-                                    </Text>
-                                )}
-                            </View>
-                        );
-                    }
 
                     // Startups tab
                     if (activeTab === 'startups') {

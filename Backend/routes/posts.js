@@ -12,7 +12,11 @@ router.get('/me', authMiddleware, postService.listMyPosts);
 router.get('/:id', postService.getPost);
 router.put('/:id', authMiddleware, postService.updatePost);
 router.delete('/:id', authMiddleware, postService.deletePost);
+
 router.post('/:id/like', authMiddleware, postService.likePost);
 router.delete('/:id/like', authMiddleware, postService.unlikePost);
+
+// Share post
+router.post('/:id/share', authMiddleware, postService.sharePost);
 
 module.exports = router;

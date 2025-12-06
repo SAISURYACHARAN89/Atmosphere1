@@ -15,6 +15,7 @@ const PostSchema = new Schema(
         visibility: { type: String, enum: ['public', 'private'], default: 'public' },
         likesCount: { type: Number, default: 0 },
         commentsCount: { type: Number, default: 0 },
+        sharesCount: { type: Number, default: 0 },
         tags: { type: [String], default: [] },
         meta: { type: Schema.Types.Mixed },
     },

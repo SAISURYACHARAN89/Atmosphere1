@@ -1,3 +1,13 @@
+// Share a post (increment sharesCount)
+exports.sharePost = async (req, res, next) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ error: 'Post not found' });
+        post.sharesCount = (post.sharesCount || 0) + 1;
+        await post.save();
+        res.json({ sharesCount: post.sharesCount });
+    } catch (err) { next(err); }
+};
 const { Post } = require('../models');
 
 exports.createPost = async (req, res, next) => {

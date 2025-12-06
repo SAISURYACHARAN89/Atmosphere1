@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import Search from './Search';
+import PostDetail from './PostDetail';
 import Notifications from './Notifications';
 import Chats from './Chats';
 import Reels from './Reels';
@@ -17,16 +18,29 @@ import SetupProfile from './SetupProfile';
 type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup';
 
 
+
 const LandingPage = () => {
     const [route, setRoute] = useState<RouteKey>('home');
+    const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const { theme } = useContext(ThemeContext);
 
+    const handlePostPress = (postId: string) => {
+        setSelectedPostId(postId);
+    };
+
+    const handleBackFromPost = () => {
+        setSelectedPostId(null);
+    };
+
     const renderContent = () => {
+        if (selectedPostId) {
+            return <PostDetail route={{ params: { postId: selectedPostId } }} onBackPress={handleBackFromPost} />;
+        }
         switch (route) {
             case 'home':
                 return <Home />;
             case 'search':
-                return <Search />;
+                return <Search onPostPress={handlePostPress} />;
             case 'notifications':
                 return <Notifications />;
             case 'chats':
