@@ -59,8 +59,10 @@ const styles = StyleSheet.create({
   container: {
     height: 56,
     width: '100%',
-    position: 'absolute', // Ensure it sticks to the top
+    position: 'absolute',
     top: 0,
+    left: 0,
+    right: 0,
     zIndex: 50,
     backgroundColor: '#000',
     borderBottomWidth: StyleSheet.hairlineWidth,
