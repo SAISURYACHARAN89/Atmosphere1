@@ -1,10 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const sharesRouter = require('./shares');
-const savedRouter = require('./saved');
-const grantsRouter = require('./grants');
-const eventsRouter = require('./events');
-const opportunitiesRouter = require('./opportunities');
 
 // Phase 1 routes
 router.use('/health', require('./health'));
@@ -26,13 +21,12 @@ router.use('/admin', require('./admin'));
 router.use('/chats', require('./chats'));
 router.use('/jobs', require('./jobs'));
 router.use('/meetings', require('./meetings'));
-router.use('/saved', savedRouter);
+router.use('/saved', require('./saved'));
 router.use('/search', require('./search'));
-router.use('/shares', sharesRouter);
-router.use('/grants', grantsRouter);
-router.use('/events', eventsRouter);
-router.use('/opportunities', opportunitiesRouter);
-router.use('/grants', grantsRouter);
-router.use('/events', eventsRouter);
+router.use('/shares', require('./shares'));
+router.use('/grants', require('./grants'));
+router.use('/events', require('events'));
+router.use('/opportunities', require('./opportunities'));
+router.use('/opportunities', require('./startup'));
 
 module.exports = router;
