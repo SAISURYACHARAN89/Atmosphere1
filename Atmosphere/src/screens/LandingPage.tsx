@@ -38,7 +38,7 @@ const LandingPage = () => {
         }
         switch (route) {
             case 'home':
-                return <Home />;
+                return <Home onNavigate={(r) => setRoute(r)} />;
             case 'search':
                 return <Search onPostPress={handlePostPress} />;
             case 'notifications':
@@ -98,13 +98,8 @@ const LandingPage = () => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            {/* <View style={styles.header}>
-                <Text style={[styles.headerTitle, { color: theme.text }]}>Atmosphere</Text>
-            </View> */}
-
+        <View style={[styles.container, { backgroundColor: theme.background }]}> 
             {renderContent()}
-
             {!selectedPostId && <BottomNav activeRoute={mapRouteToBottom(route)} onRouteChange={(r) => setRoute(mapBottomToRoute(r))} />}
         </View>
     );
@@ -113,8 +108,7 @@ const LandingPage = () => {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     content: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
-    header: { height: 64, paddingHorizontal: 16, paddingTop: 12, justifyContent: 'center', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#00000010' },
-    headerTitle: { fontSize: 20, fontWeight: '700' },
+    // header and headerTitle removed, now handled by TopNavbar
     text: { fontSize: 16 },
 });
 

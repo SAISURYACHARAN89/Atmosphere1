@@ -1,11 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import TopNavbar from '../components/TopNavbar';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import { ThemeContext } from '../contexts/ThemeContext';
 import StartupPost from '../components/StartupPost';
-import Search from './Search';
-import Reels from './Reels';
-import Profile from './Profile';
 import { fetchStartupPosts } from '../lib/api';
 
 interface Post {
@@ -23,12 +21,15 @@ interface Post {
     stats: { likes: number; comments: number; crowns: number; shares: number };
 }
 
-const Home = () => {
+interface HomeProps {
+    onNavigate?: (route: 'notifications' | 'chats') => void;
+}
+
+const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     const { theme } = useContext(ThemeContext);
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeRoute, setActiveRoute] = useState('Home');
 
     useEffect(() => {
         const loadPosts = async () => {
@@ -62,24 +63,19 @@ const Home = () => {
     }, []);
 
     const renderContent = () => {
-        // Render different screens based on active route
-        switch (activeRoute) {
-            case 'Search':
-                return <Search />;
-            case 'Reels':
-                return <Reels />;
-            case 'Profile':
-                return <Profile />;
-            case 'Home':
-            default:
-                return renderHomeFeed();
-        }
+        // Only render home feed here
+        return renderHomeFeed();
     };
 
     const renderHomeFeed = () => {
         if (loading) {
             return (
                 <View style={styles.centerLoader}>
+                    <TopNavbar 
+                        title="Atmosphere" 
+                        onNotificationsPress={() => onNavigate?.('notifications')}
+                        onChatsPress={() => onNavigate?.('chats')}
+                    />
                     <ActivityIndicator size="large" color={theme.primary} />
                     <Text style={[styles.loadingText, { color: theme.text }]}>Loading posts...</Text>
                 </View>
@@ -89,6 +85,11 @@ const Home = () => {
         if (error) {
             return (
                 <View style={styles.centerLoader}>
+                    <TopNavbar 
+                        title="Atmosphere" 
+                        onNotificationsPress={() => onNavigate?.('notifications')}
+                        onChatsPress={() => onNavigate?.('chats')}
+                    />
                     <Text style={[styles.errorText, styles.errorColor]}>Error: {error}</Text>
                 </View>
             );
@@ -96,9 +97,11 @@ const Home = () => {
 
         return (
             <>
-                <View style={[styles.header]}>
-                    <Text style={[styles.headerTitle, { color: theme.text }]}>Atmosphere</Text>
-                </View>
+                <TopNavbar 
+                    title="Atmosphere" 
+                    onNotificationsPress={() => onNavigate?.('notifications')}
+                    onChatsPress={() => onNavigate?.('chats')}
+                />
                 <FlatList
                     data={posts}
                     keyExtractor={(item) => item.id}
@@ -117,8 +120,7 @@ const Home = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    header: { height: 45, paddingHorizontal: 40, justifyContent: 'center', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#00000010' },
-    headerTitle: { fontSize: 25, fontWeight: '700' },
+    // header and headerTitle removed, now handled by TopNavbar
     listContent: { padding: 0 },
     centerLoader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     loadingText: { marginTop: 12, fontSize: 14 },
