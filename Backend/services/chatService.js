@@ -3,6 +3,8 @@ const { Chat, Message } = require('../models');
 exports.listChats = async (req, res, next) => {
     try {
         const { limit = 20, skip = 0 } = req.query;
+        
+        console.log('listChats called - User ID:', req.user._id);
 
         const chats = await Chat.find({ participants: req.user._id })
             .populate('participants', 'username displayName avatarUrl verified')
@@ -11,8 +13,10 @@ exports.listChats = async (req, res, next) => {
             .limit(parseInt(limit))
             .skip(parseInt(skip));
 
+        console.log('Chats found:', chats.length);
         res.json({ chats });
     } catch (err) {
+        console.error('Error in listChats:', err);
         next(err);
     }
 };

@@ -1,0 +1,157 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
+interface TopNavbarProps {
+  title?: string;
+  notificationsCount?: number;
+  messagesCount?: number;
+  onNotificationsPress?: () => void;
+  onChatsPress?: () => void;
+}
+
+const TopNavbar: React.FC<TopNavbarProps> = ({
+  title = 'Atmosphere',
+  notificationsCount = 0,
+  messagesCount = 3,
+  onNotificationsPress,
+  onChatsPress,
+}) => {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    setVisible(true);
+  }, []);
+
+  return (
+    <Animated.View style={[styles.container, { transform: [{ translateY: visible ? 0 : -56 }] }]}> 
+      <View style={styles.inner}>
+        {/* LEFT SIDE */}
+        <View style={styles.left}>
+          <TouchableOpacity onPress={onNotificationsPress} style={styles.iconButton}>
+            <MaterialCommunityIcons name="heart-outline" size={26} color="#fff" />
+            {notificationsCount > 0 && <View style={styles.badge} />}
+          </TouchableOpacity>
+        </View>
+
+        {/* CENTER LOGO */}
+        <View style={styles.center}>
+          <Text style={styles.title}>{title}</Text>
+        </View>
+
+        {/* RIGHT SIDE */}
+        <View style={styles.right}>
+          <TouchableOpacity onPress={onChatsPress} style={styles.iconButton}>
+            <MaterialCommunityIcons name="send-outline" size={26} color="#fff" />
+            {messagesCount > 0 && (
+              <View style={styles.msgBadge}>
+                <Text style={styles.msgBadgeText}>{messagesCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Animated.View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    height: 56,
+    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
+    backgroundColor: '#000',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#00000010',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  inner: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 56,
+    paddingHorizontal: 12,
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 60,
+    height: 56,
+  },
+  center: {
+    position: 'absolute',
+    left: '50%',
+    top: 0,
+    width: 160,
+    height: 56,
+    marginLeft: -80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'none',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    fontFamily: 'cursive',
+    color: '#fff',
+    letterSpacing: 1,
+  },
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 60,
+    height: 56,
+    justifyContent: 'flex-end',
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 2,
+  },
+  badge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#e74c3c',
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  msgBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#e67e22',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    borderWidth: 1,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+  },
+  msgBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+});
+
+export default TopNavbar;

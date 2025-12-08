@@ -19,6 +19,7 @@ router.use('/notifications', require('./notifications'));
 router.use('/verification', require('./verification'));
 router.use('/admin', require('./admin'));
 router.use('/chats', require('./chats'));
+router.use('/messages', require('./messages'));
 router.use('/jobs', require('./jobs'));
 router.use('/meetings', require('./meetings'));
 router.use('/saved', require('./saved'));
