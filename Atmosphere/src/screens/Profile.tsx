@@ -181,7 +181,7 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
                         </View>
 
                         <TouchableOpacity style={[styles.setupPill, { borderColor: theme.border }]} onPress={() => onNavigate ? onNavigate('setup') : null}>
-                            <Text style={[styles.setupPillText, { color: theme.text }]}>Setup Profile ({src.onboardingStep || 0}/4)</Text>
+                            <Text style={[styles.setupPillText, { color: theme.text }]}>Setup Profile</Text>
                         </TouchableOpacity>
 
                         <ProfilePager posts={posts} postsLoading={postsLoading} theme={theme} />
