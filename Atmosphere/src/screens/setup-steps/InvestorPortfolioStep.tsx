@@ -132,16 +132,26 @@ export default function InvestorPortfolioStep({ onBack, onDone }: { onBack: () =
 
     async function saveInvestorDetails(overrides: any = {}) {
         // Compose details payload from current state + overrides
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        let pending = {};
+        try {
+            const raw = await AsyncStorage.getItem('pending.investor.details');
+            if (raw) pending = JSON.parse(raw || '{}');
+        } catch {
+            pending = {};
+        }
+
         const detailsData: any = {
-            about,
-            location,
-            investmentFocus: selectedFocus,
-            interestedRounds: selectedRounds,
+            // prefer current screen values, fallback to pending saved values
+            about: about || pending.about,
+            location: location || pending.location,
+            investmentFocus: (selectedFocus && selectedFocus.length) ? selectedFocus : (pending.investmentFocus || []),
+            interestedRounds: (selectedRounds && selectedRounds.length) ? selectedRounds : (pending.interestedRounds || []),
             stage: selectedStages.join(', '),
-            geography: geography ? geography.split(',').map(s => s.trim()) : undefined,
+            geography: geography ? geography.split(',').map(s => s.trim()) : (pending.geography || undefined),
             checkSize: {
-                min: minCheck ? Number(minCheck) : undefined,
-                max: maxCheck ? Number(maxCheck) : undefined,
+                min: minCheck ? Number(minCheck) : (pending.checkSize ? pending.checkSize.min : undefined),
+                max: maxCheck ? Number(maxCheck) : (pending.checkSize ? pending.checkSize.max : undefined),
             },
             previousInvestments: holdings.map(h => ({ companyName: h.name, companyId: (h as any).companyId || undefined, date: h.date, amount: h.amount, docs: [] })),
             ...overrides,
@@ -151,6 +161,7 @@ export default function InvestorPortfolioStep({ onBack, onDone }: { onBack: () =
             await updateProfile({ detailsData });
             // feedback
             // in future update local cache / context
+            try { await AsyncStorage.removeItem('pending.investor.details'); } catch { }
         } catch (err: any) {
             console.error('Error saving investor details', err);
             Alert.alert('Save failed', err.message || 'Could not save investor details');
