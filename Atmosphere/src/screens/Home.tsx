@@ -26,9 +26,10 @@ interface Post {
 interface HomeProps {
     onNavigate?: (route: 'notifications' | 'chats') => void;
     onChatSelect?: (chatId: string) => void;
+    onOpenProfile?: (userId: string) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect }) => {
+const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, onOpenProfile }) => {
     const { theme } = useContext(ThemeContext);
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
@@ -168,7 +169,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect }) 
                 data={posts}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={[styles.listContent, { paddingBottom: BOTTOM_NAV_HEIGHT + 50 }]}
-                renderItem={({ item }) => <StartupPost post={item} currentUserId={currentUserId} />}
+                renderItem={({ item }) => <StartupPost post={item} currentUserId={currentUserId} onOpenProfile={onOpenProfile} />}
             />
         );
     };

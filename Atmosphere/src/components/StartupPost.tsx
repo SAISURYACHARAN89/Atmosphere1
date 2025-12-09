@@ -2,6 +2,7 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
+import { NavigationContext } from '@react-navigation/native';
 import { followUser, unfollowUser, checkFollowing } from '../lib/api';
 import { getImageSource } from '../lib/image';
 import { useEffect } from 'react';
@@ -22,7 +23,7 @@ type StartupCard = {
     stats?: { likes: number; comments: number; crowns: number; shares: number };
 };
 
-const StartupPost = ({ post, company, currentUserId }: { post?: StartupCard; company?: StartupCard; currentUserId?: string | null }) => {
+const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: StartupCard; company?: StartupCard; currentUserId?: string | null; onOpenProfile?: (id: string) => void }) => {
     const companyData = post || company;
     useContext(ThemeContext); // keep theme context in case other components rely on it
     const [liked, setLiked] = useState(false);
@@ -48,6 +49,8 @@ const StartupPost = ({ post, company, currentUserId }: { post?: StartupCard; com
         return () => { mounted = false; };
     }, [companyData]);
 
+    const navigation = useContext(NavigationContext) as any | undefined;
+
     if (!companyData) return null;
 
     const toggleLike = () => {
@@ -69,13 +72,29 @@ const StartupPost = ({ post, company, currentUserId }: { post?: StartupCard; com
     return (
         <View style={[styles.card, { backgroundColor: '#070707', borderColor: '#0b0b0b' }]}>
             <View style={styles.headerTop}>
-                <View style={styles.headerLeftRow}>
+                <TouchableOpacity style={styles.headerLeftRow} activeOpacity={0.8} onPress={() => {
+                    try {
+                        const rawTarget = (companyData as any).userId || (companyData as any).user || companyData.id;
+                        const targetId = rawTarget ? String(rawTarget) : null;
+                        if (onOpenProfile && targetId) {
+                            onOpenProfile(targetId);
+                            return;
+                        }
+                        if (targetId && navigation && typeof navigation.navigate === 'function') {
+                            navigation.navigate('Profile', { userId: targetId });
+                            return;
+                        }
+                        console.warn('StartupPost: no navigation available to open profile for', targetId);
+                    } catch (err) {
+                        console.warn('StartupPost: navigation error', err);
+                    }
+                }}>
                     <Image source={getImageSource(companyData.profileImage)} style={styles.avatar} onError={(e) => { console.warn('StartupPost avatar error', e.nativeEvent, companyData.profileImage); }} />
                     <View style={styles.headerLeft}>
                         <Text style={[styles.companyName, { color: '#fff' }]}>{companyData.name}</Text>
                         {companyData.verified && <Text style={styles.verifiedSmall}>Verified startup</Text>}
                     </View>
-                </View>
+                </TouchableOpacity>
                 {((companyData as any).userId || (companyData as any).user || companyData.id) !== String(currentUserId) && (
                     <TouchableOpacity
                         onPress={async () => {

@@ -99,7 +99,23 @@ export async function saveStartupProfile(payload: any) {
 }
 
 export async function getStartupProfile(userId: string) {
-    return request(`/api/startup/profile/${userId}`, {}, { method: 'GET' });
+    const data = await request(`/api/startup/profile/${userId}`, {}, { method: 'GET' });
+    // backend returns { startupDetails } where startupDetails.user is populated
+    if (data && data.startupDetails) {
+        return { user: data.startupDetails.user, details: data.startupDetails };
+    }
+    return data;
+}
+
+export async function getPostsByUser(userId: string) {
+    // Preferred backend route: /api/posts/user/:userId
+    try {
+        const data = await request(`/api/posts/user/${encodeURIComponent(userId)}`, {}, { method: 'GET' });
+        return (data.posts ?? data) || [];
+    } catch {
+        // If endpoint not available, bubble error to caller to decide fallback
+        throw new Error('Failed to fetch posts for user');
+    }
 }
 
 export async function followUser(targetId: string) {
@@ -112,6 +128,16 @@ export async function unfollowUser(targetId: string) {
 
 export async function checkFollowing(targetId: string) {
     return request(`/api/follows/check/${encodeURIComponent(targetId)}`, {}, { method: 'GET' });
+}
+
+export async function getFollowStatus(targetId: string) {
+    // returns { isFollowing: boolean }
+    try {
+        const data = await request(`/api/follows/check/${encodeURIComponent(targetId)}`, {}, { method: 'GET' });
+        return { isFollowing: Boolean(data?.isFollowing || data?.following || false) };
+    } catch {
+        return { isFollowing: false };
+    }
 }
 
 export async function getFollowersCount(userId: string) {

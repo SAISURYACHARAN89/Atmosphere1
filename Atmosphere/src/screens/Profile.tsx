@@ -2,12 +2,13 @@ import React, { useState, useContext, useEffect } from 'react';
 /* eslint-disable react-native/no-inline-styles */
 import { View, Text, ScrollView, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
-import { getProfile, getFollowersCount, getFollowingCount } from '../lib/api';
+import { getProfile, getFollowersCount, getFollowingCount, getStartupProfile } from '../lib/api';
 import { getImageSource } from '../lib/image';
 import ProfileHeader from './profile/ProfileHeader';
 import ProfilePager from './profile/ProfilePager';
 import SettingsOverlay from './profile/SettingsOverlay';
 import styles from './profile/Profile.styles';
+import { NavigationRouteContext } from '@react-navigation/native';
 
 const mockData = (() => {
     const userName = 'Airbound';
@@ -97,16 +98,25 @@ const normalizeProfile = (profileData: any) => {
 
 type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup';
 
-const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => {
+const Profile = ({ onNavigate, userId: propUserId, onClose }: { onNavigate?: (route: RouteKey) => void; userId?: string | null; onClose?: () => void }) => {
     const { theme } = useContext(ThemeContext);
     const [data, setData] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
+    const routeCtx: any = useContext(NavigationRouteContext) as any | undefined;
+    const routeUserId = routeCtx?.params?.userId || null;
+    const viewingUserId = propUserId || routeUserId || null;
+
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                const profileData = await getProfile();
+                let profileData: any;
+                if (viewingUserId) {
+                    profileData = await getStartupProfile(String(viewingUserId));
+                } else {
+                    profileData = await getProfile();
+                }
                 if (mounted) {
                     const normalized = normalizeProfile(profileData);
                     setData(normalized || mockData);
@@ -121,7 +131,7 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [viewingUserId]);
 
     // format helpers removed (not used in mobile layout)
 
@@ -130,6 +140,8 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
     const [postsLoading, setPostsLoading] = useState(true);
     const [followersCount, setFollowersCount] = useState<number | null>(null);
     const [followingCount, setFollowingCount] = useState<number | null>(null);
+    const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+    const [followLoading, setFollowLoading] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -137,7 +149,17 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
             try {
                 setPostsLoading(true);
                 const api = await import('../lib/api');
-                const all = await api.fetchMyPosts();
+                let all: any[] = [];
+                if (viewingUserId) {
+                    if (typeof api.getPostsByUser === 'function') {
+                        all = await api.getPostsByUser(String(viewingUserId));
+                    } else {
+                        const allPosts = await api.fetchStartupPosts();
+                        all = (allPosts || []).filter((p: any) => String(p.userId || p.user?._id || p.user?.id) === String(viewingUserId));
+                    }
+                } else {
+                    all = await api.fetchMyPosts();
+                }
                 if (mounted) setPosts((all || []));
             } catch {
                 if (mounted) setPosts([]);
@@ -146,23 +168,32 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
             }
         })();
         return () => { mounted = false; };
-    }, []);
+    }, [viewingUserId]);
 
     // fetch follower/following counts for the current logged in profile
     useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                // try to extract a user id from the fetched profile if available
-                const profileRaw: any = await getProfile();
-                const userId = profileRaw?.user?._id || profileRaw?.user?.id || null;
-                if (!userId) return;
+                const userId = viewingUserId || null;
+                // If viewing another user's profile and we have no id, skip
+                if (!userId) {
+                    // try to extract from the loaded data if available
+                    const profileRaw: any = await getProfile();
+                    const derived = profileRaw?.user?._id || profileRaw?.user?.id || null;
+                    if (!derived) return;
+                    const [fCount, foCount] = await Promise.all([getFollowersCount(String(derived)), getFollowingCount(String(derived))]);
+                    if (!mounted) return;
+                    setFollowersCount(Number(fCount || 0));
+                    setFollowingCount(Number(foCount || 0));
+                    return;
+                }
+
                 const [fCount, foCount] = await Promise.all([getFollowersCount(String(userId)), getFollowingCount(String(userId))]);
                 if (!mounted) return;
                 setFollowersCount(Number(fCount || 0));
                 setFollowingCount(Number(foCount || 0));
             } catch {
-                // ignore - fallback to zeros
                 if (mounted) {
                     setFollowersCount(0);
                     setFollowingCount(0);
@@ -170,14 +201,38 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
             }
         })();
         return () => { mounted = false; };
-    }, []);
+    }, [viewingUserId]);
+
+    // fetch follow status when viewing another user's profile
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                if (!viewingUserId) {
+                    setIsFollowing(null);
+                    return;
+                }
+                const api = await import('../lib/api');
+                if (typeof api.getFollowStatus === 'function') {
+                    const st = await api.getFollowStatus(String(viewingUserId));
+                    if (mounted) setIsFollowing(Boolean(st?.isFollowing));
+                } else {
+                    const st = await api.checkFollowing(String(viewingUserId));
+                    if (mounted) setIsFollowing(Boolean(st?.isFollowing));
+                }
+            } catch {
+                if (mounted) setIsFollowing(false);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [viewingUserId]);
 
     // only open setup when user explicitly taps the pill
 
     return (
         <View style={{ flex: 1 }}>
             <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={[styles.contentContainer]}>
-                <ProfileHeader name={src.name} onOpenSettings={() => setLeftDrawerOpen(true)} onCreate={() => { }} theme={theme} />
+                <ProfileHeader name={src.name} onOpenSettings={() => setLeftDrawerOpen(true)} onCreate={() => { }} onBack={onClose} theme={theme} />
 
                 {/* Setup is opened via parent navigation (LandingPage route 'setup') */}
 
@@ -213,9 +268,35 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
                             </View>
                         </View>
 
-                        <TouchableOpacity style={[styles.setupPill, { borderColor: theme.border }]} onPress={() => onNavigate ? onNavigate('setup') : null}>
-                            <Text style={[styles.setupPillText, { color: theme.text }]}>Setup Profile</Text>
-                        </TouchableOpacity>
+                        {viewingUserId ? (
+                            <TouchableOpacity
+                                style={[styles.setupPill, { borderColor: theme.border, backgroundColor: isFollowing ? '#111' : 'transparent' }]}
+                                onPress={async () => {
+                                    if (!viewingUserId || followLoading) return;
+                                    setFollowLoading(true);
+                                    const newState = !isFollowing;
+                                    setIsFollowing(newState);
+                                    try {
+                                        const api = await import('../lib/api');
+                                        if (newState) {
+                                            await api.followUser(String(viewingUserId));
+                                        } else {
+                                            await api.unfollowUser(String(viewingUserId));
+                                        }
+                                    } catch {
+                                        setIsFollowing(!newState);
+                                    } finally {
+                                        setFollowLoading(false);
+                                    }
+                                }}
+                            >
+                                <Text style={[styles.setupPillText, { color: '#fff' }]}>{isFollowing ? 'Following' : 'Follow'}</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity style={[styles.setupPill, { borderColor: theme.border }]} onPress={() => onNavigate ? onNavigate('setup') : null}>
+                                <Text style={[styles.setupPillText, { color: theme.text }]}>Setup Profile</Text>
+                            </TouchableOpacity>
+                        )}
 
                         <ProfilePager posts={posts} postsLoading={postsLoading} theme={theme} />
                     </>

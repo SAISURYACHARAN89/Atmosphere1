@@ -24,7 +24,10 @@ exports.getStartupByUser = async (req, res, next) => {
             : { user: userId };
         const startupDetails = await StartupDetails.findOne(query).populate('user', 'username displayName avatarUrl');
         if (!startupDetails) return res.status(404).json({ error: 'Startup details not found' });
-        res.json({ startupDetails });
+        // Populate user fields if not already populated
+        try { await startupDetails.populate('user', 'username displayName avatarUrl'); } catch (e) { /* ignore */ }
+        // Return both shapes for backward compatibility
+        return res.json({ startupDetails, user: startupDetails.user, details: startupDetails });
     } catch (err) {
         console.log('Error in getStartupByUser:', err);
         next(err);
