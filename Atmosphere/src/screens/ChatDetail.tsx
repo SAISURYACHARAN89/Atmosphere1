@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
+import { getImageSource } from '../lib/image';
 import { getBaseUrl } from '../lib/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -132,7 +133,8 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
             ]}>
                 {!isMe && (
                     <Image
-                        source={{ uri: item.sender.avatarUrl || 'https://via.placeholder.com/32' }}
+                        source={getImageSource(item.sender.avatarUrl || 'https://via.placeholder.com/32')}
+                        onError={(e) => { console.warn('ChatDetail sender avatar error', e.nativeEvent, item.sender.avatarUrl); }}
                         style={styles.senderAvatar}
                     />
                 )}
@@ -152,7 +154,7 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
                 </View>
                 {isMe && (
                     <Image
-                        source={{ uri: item.sender.avatarUrl || 'https://via.placeholder.com/32' }}
+                        source={getImageSource(item.sender.avatarUrl || 'https://via.placeholder.com/32')}
                         style={styles.senderAvatar}
                     />
                 )}

@@ -115,6 +115,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect }) 
                 // Normalize posts to expected shape
                 const normalized = (data || []).map((p: any) => ({
                     id: String(p.id || p._id || Math.random()),
+                    userId: String(p.userId || (p.user && (p.user._id || p.user.id)) || ''),
                     name: String(p.name || p.companyName || 'Unknown'),
                     displayName: String(p.displayName || ''),
                     verified: Boolean(p.verified || false),
@@ -167,7 +168,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect }) 
                 data={posts}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={[styles.listContent, { paddingBottom: BOTTOM_NAV_HEIGHT + 50 }]}
-                renderItem={({ item }) => <StartupPost post={item} />}
+                renderItem={({ item }) => <StartupPost post={item} currentUserId={currentUserId} />}
             />
         );
     };

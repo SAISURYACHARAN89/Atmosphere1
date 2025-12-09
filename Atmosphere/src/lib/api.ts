@@ -101,3 +101,25 @@ export async function saveStartupProfile(payload: any) {
 export async function getStartupProfile(userId: string) {
     return request(`/api/startup/profile/${userId}`, {}, { method: 'GET' });
 }
+
+export async function followUser(targetId: string) {
+    return request(`/api/follows/${encodeURIComponent(targetId)}`, {}, { method: 'POST' });
+}
+
+export async function unfollowUser(targetId: string) {
+    return request(`/api/follows/${encodeURIComponent(targetId)}`, {}, { method: 'DELETE' });
+}
+
+export async function checkFollowing(targetId: string) {
+    return request(`/api/follows/check/${encodeURIComponent(targetId)}`, {}, { method: 'GET' });
+}
+
+export async function getFollowersCount(userId: string) {
+    const data = await request(`/api/follows/${encodeURIComponent(userId)}/followers`, {}, { method: 'GET' });
+    return data?.count ?? (Array.isArray(data?.followers) ? data.followers.length : 0);
+}
+
+export async function getFollowingCount(userId: string) {
+    const data = await request(`/api/follows/${encodeURIComponent(userId)}/following`, {}, { method: 'GET' });
+    return data?.count ?? (Array.isArray(data?.following) ? data.following.length : 0);
+}

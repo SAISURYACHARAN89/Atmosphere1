@@ -2,7 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 /* eslint-disable react-native/no-inline-styles */
 import { View, Text, ScrollView, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
-import { getProfile } from '../lib/api';
+import { getProfile, getFollowersCount, getFollowingCount } from '../lib/api';
+import { getImageSource } from '../lib/image';
 import ProfileHeader from './profile/ProfileHeader';
 import ProfilePager from './profile/ProfilePager';
 import SettingsOverlay from './profile/SettingsOverlay';
@@ -127,6 +128,8 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
     const src = data || mockData;
     const [posts, setPosts] = useState<any[]>([]);
     const [postsLoading, setPostsLoading] = useState(true);
+    const [followersCount, setFollowersCount] = useState<number | null>(null);
+    const [followingCount, setFollowingCount] = useState<number | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -140,6 +143,30 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
                 if (mounted) setPosts([]);
             } finally {
                 if (mounted) setPostsLoading(false);
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
+
+    // fetch follower/following counts for the current logged in profile
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                // try to extract a user id from the fetched profile if available
+                const profileRaw: any = await getProfile();
+                const userId = profileRaw?.user?._id || profileRaw?.user?.id || null;
+                if (!userId) return;
+                const [fCount, foCount] = await Promise.all([getFollowersCount(String(userId)), getFollowingCount(String(userId))]);
+                if (!mounted) return;
+                setFollowersCount(Number(fCount || 0));
+                setFollowingCount(Number(foCount || 0));
+            } catch {
+                // ignore - fallback to zeros
+                if (mounted) {
+                    setFollowersCount(0);
+                    setFollowingCount(0);
+                }
             }
         })();
         return () => { mounted = false; };
@@ -162,19 +189,25 @@ const Profile = ({ onNavigate }: { onNavigate?: (route: RouteKey) => void }) => 
                     <>
                         <View style={styles.profileHeader}>
                             <View style={styles.avatarWrap}>
-                                <Image source={{ uri: src.logo }} style={styles.avatarLarge} />
+                                {src.logo && !src.logo.includes('placeholder.com') ? (
+                                    <Image source={getImageSource(src.logo)} style={styles.avatarLarge} onError={(e) => { console.warn('Profile avatar load error', e.nativeEvent, src.logo); }} />
+                                ) : (
+                                    <View style={[styles.avatarLarge, { alignItems: 'center', justifyContent: 'center' }]}>
+                                        <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700' }}>{(src.name || 'U').charAt(0).toUpperCase()}</Text>
+                                    </View>
+                                )}
                             </View>
                             <View style={styles.headerStats}>
                                 <View style={styles.statCol}>
-                                    <Text style={[styles.statNum, { color: theme.text }]}>{0}</Text>
+                                    <Text style={[styles.statNum, { color: theme.text }]}>{posts.length}</Text>
                                     <Text style={[styles.statLabel, { color: theme.placeholder }]}>posts</Text>
                                 </View>
                                 <View style={styles.statCol}>
-                                    <Text style={[styles.statNum, { color: theme.text }]}>{src.stats?.followers ?? 0}</Text>
+                                    <Text style={[styles.statNum, { color: theme.text }]}>{followersCount ?? src.stats?.followers ?? 0}</Text>
                                     <Text style={[styles.statLabel, { color: theme.placeholder }]}>followers</Text>
                                 </View>
                                 <View style={styles.statCol}>
-                                    <Text style={[styles.statNum, { color: theme.text }]}>{0}</Text>
+                                    <Text style={[styles.statNum, { color: theme.text }]}>{followingCount ?? 0}</Text>
                                     <Text style={[styles.statLabel, { color: theme.placeholder }]}>following</Text>
                                 </View>
                             </View>

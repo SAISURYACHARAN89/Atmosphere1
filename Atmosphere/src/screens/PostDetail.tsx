@@ -4,6 +4,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { getBaseUrl, DEFAULT_BASE_URL } from '../lib/config';
+import { getImageSource } from '../lib/image';
 
 
 
@@ -236,7 +237,7 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
         {/* Author Row */}
         {post.author && (
           <View style={styles.authorRow}>
-            <Image source={{ uri: post.author.profileImage || 'https://via.placeholder.com/100x100.png?text=User' }} style={styles.authorAvatar} />
+            <Image source={getImageSource(post.author.profileImage || 'https://via.placeholder.com/100x100.png?text=User')} style={styles.authorAvatar} />
             <View>
               <Text style={[styles.authorName, { color: theme.text }]}>{post.author.displayName || post.author.username}</Text>
               {post.createdAt && (
@@ -254,7 +255,7 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
           showsHorizontalScrollIndicator={false}
           keyExtractor={(_, idx) => `img-${idx}`}
           renderItem={({ item }) => (
-            <Image source={{ uri: item }} style={[styles.image, { width: windowWidth }, styles.imageFixedHeight]} resizeMode="cover" />
+            <Image source={getImageSource(item)} style={[styles.image, { width: windowWidth }, styles.imageFixedHeight]} resizeMode="cover" onError={(e) => { console.warn('PostDetail image error', e.nativeEvent, item); }} />
           )}
           onMomentumScrollEnd={e => {
             const index = Math.round(e.nativeEvent.contentOffset.x / windowWidth);
@@ -330,7 +331,7 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
               ) : (
                 comments.map((c, idx) => (
                   <View key={c._id || idx} style={styles.commentRow}>
-                    <Image source={{ uri: c.author?.avatarUrl || 'https://via.placeholder.com/40x40.png?text=U' }} style={styles.commentAvatar} />
+                    <Image source={getImageSource(c.author?.avatarUrl || 'https://via.placeholder.com/40x40.png?text=U')} style={styles.commentAvatar} />
                     <View style={styles.flex1}>
                       <Text style={[styles.commentAuthor, { color: theme.text }]}>{c.author?.displayName || c.author?.username || 'User'}</Text>
                       <Text style={[styles.commentText, { color: theme.text }]}>{c.text}</Text>

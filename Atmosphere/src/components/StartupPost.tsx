@@ -2,6 +2,10 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
+import { followUser, unfollowUser, checkFollowing } from '../lib/api';
+import { getImageSource } from '../lib/image';
+import { useEffect } from 'react';
+import { Alert } from 'react-native';
 
 type StartupCard = {
     id: string;
@@ -18,13 +22,31 @@ type StartupCard = {
     stats?: { likes: number; comments: number; crowns: number; shares: number };
 };
 
-const StartupPost = ({ post, company }: { post?: StartupCard; company?: StartupCard }) => {
+const StartupPost = ({ post, company, currentUserId }: { post?: StartupCard; company?: StartupCard; currentUserId?: string | null }) => {
     const companyData = post || company;
     useContext(ThemeContext); // keep theme context in case other components rely on it
     const [liked, setLiked] = useState(false);
     const stats = companyData?.stats || { likes: 0, comments: 0, crowns: 0, shares: 0 };
     const [likes, setLikes] = useState<number>(stats.likes || 0);
     const [followed, setFollowed] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+        const init = async () => {
+            try {
+                const target = (companyData as any).userId || (companyData as any).user || null;
+                if (!target) return;
+                const res = await checkFollowing(String(target));
+                if (!mounted) return;
+                setFollowed(Boolean(res?.isFollowing));
+            } catch {
+                // ignore init errors
+            }
+        };
+        init();
+        return () => { mounted = false; };
+    }, [companyData]);
 
     if (!companyData) return null;
 
@@ -48,19 +70,45 @@ const StartupPost = ({ post, company }: { post?: StartupCard; company?: StartupC
         <View style={[styles.card, { backgroundColor: '#070707', borderColor: '#0b0b0b' }]}>
             <View style={styles.headerTop}>
                 <View style={styles.headerLeftRow}>
-                    <Image source={{ uri: companyData.profileImage }} style={styles.avatar} />
+                    <Image source={getImageSource(companyData.profileImage)} style={styles.avatar} onError={(e) => { console.warn('StartupPost avatar error', e.nativeEvent, companyData.profileImage); }} />
                     <View style={styles.headerLeft}>
                         <Text style={[styles.companyName, { color: '#fff' }]}>{companyData.name}</Text>
                         {companyData.verified && <Text style={styles.verifiedSmall}>Verified startup</Text>}
                     </View>
                 </View>
-                <TouchableOpacity onPress={() => setFollowed((v) => !v)} style={[styles.followBtn, followed && styles.followBtnActive]}>
-                    <Text style={[styles.followBtnText, followed && styles.followBtnTextActive]}>{followed ? 'Following' : 'Follow'}</Text>
-                </TouchableOpacity>
+                {((companyData as any).userId || (companyData as any).user || companyData.id) !== String(currentUserId) && (
+                    <TouchableOpacity
+                        onPress={async () => {
+                            if (followLoading) return;
+                            const newState = !followed;
+                            setFollowed(newState); // optimistic
+                            setFollowLoading(true);
+                            try {
+                                const targetId = (companyData as any).userId || (companyData as any).user || companyData.id;
+                                if (!targetId) throw new Error('Missing target user id');
+                                if (newState) {
+                                    await followUser(String(targetId));
+                                } else {
+                                    await unfollowUser(String(targetId));
+                                }
+                            } catch (err: any) {
+                                // revert optimistic
+                                setFollowed(!newState);
+                                Alert.alert('Error', err?.message || 'Could not update follow status');
+                            } finally {
+                                setFollowLoading(false);
+                            }
+                        }}
+                        style={[styles.followBtn, followed && styles.followBtnActive]}
+                        disabled={followLoading}
+                    >
+                        <Text style={[styles.followBtnText, followed && styles.followBtnTextActive]}>{followed ? 'Following' : 'Follow'}</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <View style={styles.imageWrap}>
-                <Image source={{ uri: companyData.profileImage }} style={styles.mainImage} resizeMode="cover" />
+                <Image source={getImageSource(companyData.profileImage)} style={styles.mainImage} resizeMode="cover" onError={(e) => { console.warn('StartupPost main image error', e.nativeEvent, companyData.profileImage); }} />
             </View>
 
             <View style={styles.actionsRow}>

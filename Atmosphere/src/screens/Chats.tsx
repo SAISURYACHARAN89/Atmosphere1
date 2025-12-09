@@ -85,7 +85,8 @@ const Chats = ({ onChatSelect }: ChatsProps) => {
             >
                 <View style={styles.avatarContainer}>
                     <Image
-                        source={{ uri: other.avatarUrl || 'https://via.placeholder.com/50' }}
+                        source={getImageSource(other.avatarUrl || 'https://via.placeholder.com/50')}
+                        onError={(e) => { console.warn('Chats avatar error', e.nativeEvent, other.avatarUrl); }}
                         style={styles.avatar}
                     />
                     {hasUnread && (
