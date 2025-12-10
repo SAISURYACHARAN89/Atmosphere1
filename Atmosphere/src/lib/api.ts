@@ -120,14 +120,14 @@ export async function getStartupProfile(userId: string) {
         if (data && data.startupDetails) return { user: data.startupDetails.user, details: data.startupDetails };
         if (data && data.user) return { user: data.user, details: data };
         return data;
-    } catch (e) {
+    } catch (err) {
         // Try by startup details id (fallback)
         try {
             const data2 = await request(`/api/startup-details/by-id/${encodeURIComponent(userId)}`, {}, { method: 'GET' });
             if (data2 && data2.startupDetails) return { user: data2.startupDetails.user, details: data2.startupDetails };
             if (data2 && data2.user) return { user: data2.user, details: data2 };
             return data2;
-        } catch (e2) { throw e; }
+        } catch { throw err; }
     }
 }
 
@@ -136,7 +136,7 @@ export async function getPostsByUser(userId: string) {
     try {
         const data = await request('/api/posts', { userId }, { method: 'GET' });
         return (data.posts ?? data) || [];
-    } catch (e) {
+    } catch {
         // Fallback: try legacy route if present
         try {
             const data2 = await request(`/api/posts/user/${encodeURIComponent(userId)}`, {}, { method: 'GET' });
@@ -216,6 +216,14 @@ export async function getComments(postId: string) {
     return data.comments || [];
 }
 
+export async function deleteComment(commentId: string) {
+    return request(`/api/comments/${encodeURIComponent(commentId)}`, {}, { method: 'DELETE' });
+}
+
+export async function deleteStartupComment(commentId: string) {
+    return request(`/api/startup-comments/comment/${encodeURIComponent(commentId)}`, {}, { method: 'DELETE' });
+}
+
 // Crowns
 export async function crownPost(postId: string) {
     return request(`/api/crowns/post/${encodeURIComponent(postId)}`, {}, { method: 'POST' });
@@ -248,7 +256,7 @@ export async function isStartupLiked(startupId: string) {
     try {
         const data = await request(`/api/startup-likes/startup/${encodeURIComponent(startupId)}/check`, {}, { method: 'GET' });
         return Boolean(data?.liked);
-    } catch (e) { return false; }
+    } catch { return false; }
 }
 
 // Startup crowns
@@ -279,5 +287,5 @@ export async function getUserByIdentifier(identifier: string) {
     try {
         const data = await request(`/api/users/${encodeURIComponent(identifier)}`, {}, { method: 'GET' });
         return data?.user ? data.user : null;
-    } catch (e) { return null; }
+    } catch { return null; }
 }

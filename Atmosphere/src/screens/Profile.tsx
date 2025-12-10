@@ -141,7 +141,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose }: { onNavigate?: (ro
                             const fetched = await api.getUserByIdentifier(String(profileData.user));
                             if (fetched) profileData.user = fetched;
                         }
-                    } catch (e) { /* ignore */ }
+                    } catch { /* ignore */ }
                     const normalized = normalizeProfile(profileData);
                     setData(normalized || mockData);
                     // Ensure posts and follower counts are fetched when viewing another user's profile
@@ -157,7 +157,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose }: { onNavigate?: (ro
                                     const myPosts = await api.fetchStartupPosts();
                                     if (mounted) setPosts((myPosts || []).filter((p: any) => String(p.userId || p.user?._id || p.user?.id) === String(viewingUserId)));
                                 }
-                            } catch (e) { /* ignore for now */ }
+                            } catch { /* ignore for now */ }
 
                             // fetch follower/following counts if not provided
                             try {
@@ -167,9 +167,9 @@ const Profile = ({ onNavigate, userId: propUserId, onClose }: { onNavigate?: (ro
                                     setFollowersCount(Number(fCount || 0));
                                     setFollowingCount(Number(foCount || 0));
                                 }
-                            } catch (e) { /* ignore */ }
+                            } catch { /* ignore */ }
                         }
-                    } catch (e) { /* ignore */ }
+                    } catch { /* ignore */ }
                     // cache own profile id for subsequent requests to avoid refetch
                     if (!viewingUserId) {
                         const derived = profileData?.user?._id || profileData?.user?.id || null;
@@ -186,7 +186,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose }: { onNavigate?: (ro
         return () => {
             mounted = false;
         };
-    }, [viewingUserId, ownProfileId]);
+    }, [viewingUserId, ownProfileId, routeUserId, routeStartupDetailsId, src]);
 
     // format helpers removed (not used in mobile layout)
 
@@ -271,7 +271,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose }: { onNavigate?: (ro
             }
         })();
         return () => { mounted = false; };
-    }, [viewingUserId, ownProfileId]);
+    }, [viewingUserId, ownProfileId, src]);
 
     // fetch follow status when viewing another user's profile
     useEffect(() => {

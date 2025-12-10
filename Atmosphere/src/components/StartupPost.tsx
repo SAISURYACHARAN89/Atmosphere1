@@ -3,11 +3,12 @@ import React, { useState, useContext } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { NavigationContext } from '@react-navigation/native';
-import { followUser, unfollowUser, likePost, unlikePost, crownPost, uncrownPost, likeStartup, unlikeStartup } from '../lib/api';
+import { followUser, unfollowUser, likePost, unlikePost, likeStartup, unlikeStartup } from '../lib/api';
 import { getImageSource } from '../lib/image';
 import { useEffect } from 'react';
-import { Alert, TextInput } from 'react-native';
-import { addStartupComment, getStartupComments, crownStartup, uncrownStartup } from '../lib/api';
+import { Alert } from 'react-native';
+import CommentsOverlay from './CommentsOverlay';
+import { crownStartup, uncrownStartup } from '../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type StartupCard = {
@@ -36,13 +37,12 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
     const [likes, setLikes] = useState<number>(stats.likes || 0);
     const [crownsCount, setCrownsCount] = useState<number>(stats.crowns || 0);
     const [commentsCount, setCommentsCount] = useState<number>(stats.comments || 0);
-    const [showCommentInput, setShowCommentInput] = useState(false);
-    const [commentText, setCommentText] = useState('');
+
+    const [commentsOverlayVisible, setCommentsOverlayVisible] = useState(false);
     const [followed, setFollowed] = useState(Boolean((companyData as any).isFollowing));
     const [followLoading, setFollowLoading] = useState(false);
 
     useEffect(() => {
-        let mounted = true;
         // follow and liked state are provided by the feed as flags (likedByCurrentUser, isFollowing)
         // check stored role for investor privileges
         (async () => {
@@ -59,10 +59,10 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                         }
                     } catch { /* ignore parse errors */ }
                 }
-            } catch (e) { /* ignore */ }
+            } catch { /* ignore */ }
         })();
         // no per-item checks — initial state comes from the feed
-        return () => { mounted = false; };
+        return () => { /* cleanup */ };
     }, [companyData]);
 
     const navigation = useContext(NavigationContext) as any | undefined;
@@ -84,7 +84,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                 if (!prev) await likePost(id);
                 else await unlikePost(id);
             }
-        } catch (err) {
+        } catch {
             // revert optimistic
             setLiked(prev);
             setLikes(l => prev ? l + 1 : Math.max(0, l - 1));
@@ -110,7 +110,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
             // backend returns updated crowns count
             const newCount = typeof resp?.crowns === 'number' ? resp.crowns : undefined;
             if (typeof newCount === 'number') setCrownsCount(newCount);
-        } catch (err: any) {
+        } catch {
             // revert optimistic
             setCrowned(prev);
             setCrownsCount(c => prev ? c + 1 : Math.max(0, c - 1));
@@ -119,18 +119,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
         }
     };
 
-    const submitStartupComment = async () => {
-        try {
-            const id = String((companyData as any).id || (companyData as any).userId || (companyData as any).user);
-            await addStartupComment(id, commentText);
-            setCommentText('');
-            setShowCommentInput(false);
-            setCommentsCount(c => c + 1);
-            Alert.alert('Comment added');
-        } catch (err: any) {
-            Alert.alert('Error', err?.message || 'Could not add comment');
-        }
-    };
+
 
     const totalFunding = (companyData.fundingRaised || 0) + (companyData.fundingNeeded || 0);
     const fundingPercent = totalFunding > 0 ? ((companyData.fundingRaised || 0) / totalFunding) * 100 : 0;
@@ -214,23 +203,8 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                 )}
             </View>
 
-            {showCommentInput && (
-                <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
-                    <TextInput
-                        value={commentText}
-                        onChangeText={setCommentText}
-                        placeholder="Write a comment..."
-                        placeholderTextColor="#888"
-                        style={{ backgroundColor: '#111', color: '#fff', padding: 8, borderRadius: 6 }}
-                        multiline
-                    />
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
-                        <TouchableOpacity onPress={submitStartupComment} style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#1a73e8', borderRadius: 6 }}>
-                            <Text style={{ color: '#fff', fontWeight: '700' }}>Post</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            )}
+            {/* Comments overlay is used instead of inline input */}
+            <CommentsOverlay startupId={String((companyData as any).id || (companyData as any).userId || (companyData as any).user)} visible={commentsOverlayVisible} onClose={() => setCommentsOverlayVisible(false)} onCommentAdded={() => setCommentsCount(c => c + 1)} />
 
             <View style={styles.imageWrap}>
                 <Image source={getImageSource(companyData.profileImage)} style={styles.mainImage} resizeMode="cover" onError={(e) => { console.warn('StartupPost main image error', e.nativeEvent, companyData.profileImage); }} />
@@ -256,7 +230,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                         )}
                     </View>
                     <View style={styles.statItem}>
-                        <TouchableOpacity onPress={() => setShowCommentInput(s => !s)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <TouchableOpacity onPress={() => setCommentsOverlayVisible(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <Text style={[styles.statIcon, { color: '#ddd' }]}>💬</Text>
                             <Text style={[styles.statCount, { color: '#ddd' }]}>{commentsCount}</Text>
                         </TouchableOpacity>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, FlatList, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, ActivityIndicator } from 'react-native';
 import { Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import * as api from '../lib/api';
@@ -10,7 +10,7 @@ const { width } = Dimensions.get('window');
 type StartupCard = any;
 
 const HottestStartups = () => {
-    const [filterDay, setFilterDay] = useState<'today' | '7days'>('today');
+    const [filterDay] = useState<'today' | '7days'>('today');
     const [loading, setLoading] = useState(true);
     const [topList, setTopList] = useState<StartupCard[]>([]);
     const { theme } = useContext(ThemeContext);
@@ -31,15 +31,7 @@ const HottestStartups = () => {
         return () => { mounted = false; };
     }, [filterDay]);
 
-    async function safeGetStartupCrowns(id: string) {
-        try { if (!id) return 0; const c = await api.getStartupCrowns(String(id)); return Array.isArray(c) ? c.length : Number((c && (c.count || c.length)) || 0); } catch { return 0; }
-    }
-    async function safeGetStartupLikes(id: string) {
-        try { if (!id) return 0; const c = await api.getStartupLikes(String(id)); return Array.isArray(c) ? c.length : Number((c && (c.count || c.length)) || 0); } catch { return 0; }
-    }
-    async function safeGetStartupComments(id: string) {
-        try { if (!id) return 0; const c = await api.getStartupComments(String(id)); return Array.isArray(c) ? c.length : Number((c && (c.count || c.length)) || 0); } catch { return 0; }
-    }
+    // legacy safe getters removed — using server-provided `weekCounts` now
 
     const shortOf = (s: any) => s?.about || s?.tagline || s?.shortDescription || s?.description || s?.details?.about || s?.details?.tagline || s?.details?.shortDescription || '';
 
@@ -128,14 +120,14 @@ const HottestStartups = () => {
 
     const renderListItem = ({ item }: { item: any }) => (
         <View style={styles.listCard}>
-            <View style={[styles.listAvatar, { backgroundColor: item.color }]}>
+            <View style={styles.listAvatar}>
                 {(item.logo || item.profileImage || item.details?.profileImage || item.user?.avatarUrl || item.image) ? (
                     <Image source={{ uri: (item.logo || item.profileImage || item.details?.profileImage || item.user?.avatarUrl || item.image) }} style={styles.listImage} resizeMode="cover" />
                 ) : (
                     <Text style={styles.listInitials}>{item.initials || (item.name ? item.name.charAt(0).toUpperCase() : (item.companyName ? item.companyName.charAt(0).toUpperCase() : '?'))}</Text>
                 )}
             </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={styles.listBody}>
                 <Text style={[styles.listName, { color: theme?.text }]} numberOfLines={1} ellipsizeMode="tail">{item.name || item.companyName || item.company?.name || '—'}</Text>
                 <Text style={[styles.listTag, { color: theme?.placeholder }]} numberOfLines={1} ellipsizeMode="tail">{shortOf(item)}</Text>
                 <View style={styles.likesRow}>
@@ -154,7 +146,7 @@ const HottestStartups = () => {
     // Use a single FlatList as the main scroll container to avoid nesting VirtualizedLists
     if (loading) {
         return (
-            <View style={[styles.container, { backgroundColor: theme?.background || '#fff', justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.container, styles.loadingWrap, { backgroundColor: theme?.background || '#fff' }]}>
                 <ActivityIndicator size="large" color="#FB923C" />
             </View>
         );
@@ -165,22 +157,26 @@ const HottestStartups = () => {
             data={topList.slice(3)}
             keyExtractor={i => String(i._startupId || i.id || i._id)}
             renderItem={renderListItem}
-            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            ItemSeparatorComponent={Separator}
             contentContainerStyle={styles.content}
             style={[styles.container, { backgroundColor: theme?.background || '#fff' }]}
-            ListHeaderComponent={() => (
-                <>
-                    <View style={styles.headerCenter}>
-                        <Text style={[styles.heading, { color: theme?.text }]}>🔥 Hottest Startups This Week</Text>
-                        <Text style={[styles.sub, { color: theme?.placeholder }]}>Discover the top 10 most liked companies in the past 7 days.</Text>
-                    </View>
-                    {renderPodium()}
-                    <View style={{ height: 12 }} />
-                </>
-            )}
+            ListHeaderComponent={Header({ theme, renderPodium })}
         />
     );
 };
+
+const Separator = () => <View style={styles.separator} />;
+
+const Header = ({ theme, renderPodium }: { theme: any; renderPodium: () => JSX.Element | null; }) => () => (
+    <>
+        <View style={styles.headerCenter}>
+            <Text style={[styles.heading, { color: theme?.text }]}>🔥 Hottest Startups This Week</Text>
+            <Text style={[styles.sub, { color: theme?.placeholder }]}>Discover the top 10 most liked companies in the past 7 days.</Text>
+        </View>
+        {renderPodium()}
+        <View style={styles.headerSpacer} />
+    </>
+);
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#0f1724' },
@@ -215,12 +211,16 @@ const styles = StyleSheet.create({
     listAvatar: { width: 56, height: 56, borderRadius: 12, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
     listInitials: { color: '#fff', fontWeight: '800', textAlign: 'center' },
     listImage: { width: 56, height: 56, borderRadius: 12, alignSelf: 'stretch' },
+    listBody: { flex: 1, marginLeft: 12 },
     podiumImage: { width: 72, height: 72, borderRadius: 10 },
     championImage: { width: 84, height: 84, borderRadius: 14 },
     listName: { color: '#fff', fontWeight: '700', maxWidth: width - 160 },
     listTag: { color: '#9CA3AF', fontSize: 12, maxWidth: width - 160 },
     viewBtn: { borderWidth: 1, borderColor: '#1f2937', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999 },
     viewBtnText: { color: '#fff', fontWeight: '700' }
+    , separator: { height: 12 },
+    loadingWrap: { justifyContent: 'center', alignItems: 'center' },
+    headerSpacer: { height: 12 }
 });
 
 export default HottestStartups;
