@@ -16,6 +16,17 @@ export async function fetchAndStoreUserRole() {
     }
     return role;
 }
+
+export async function fetchChats(type?: 'group' | 'private') {
+    const query = type ? `?type=${type}` : '';
+    const data = await request(`/api/chats${query}`, {}, { method: 'GET' });
+    return data.chats || [];
+}
+
+export async function createGroup(payload: { name: string; description?: string; participants: string[]; type?: string; image?: string }) {
+    return request('/api/chats/create-group', payload, { method: 'POST' });
+}
+
 /**
  * Simple API client for auth endpoints.
  * Adjust BASE_URL if you run the backend on a different host or device.
@@ -167,6 +178,15 @@ export async function getFollowStatus(targetId: string) {
     } catch {
         return { isFollowing: false };
     }
+}
+
+export async function getFollowersList(userId: string) {
+    let data = await request(`/api/follows/${encodeURIComponent(userId)}/followers`, {}, { method: 'GET' });
+    return data?.followers || [];
+}
+
+export async function getChatDetails(chatId: string) {
+    return request(`/api/chats/${chatId}`, {}, { method: 'GET' });
 }
 
 export async function getFollowersCount(userId: string) {

@@ -78,7 +78,16 @@ const LandingPage = () => {
             case 'meetings':
                 return <Meetings />;
             case 'chatDetail':
-                return selectedChatId ? <ChatDetail chatId={selectedChatId} onBackPress={handleBackFromChat} /> : null;
+                return selectedChatId ? (
+                    <ChatDetail
+                        chatId={selectedChatId}
+                        onBackPress={handleBackFromChat}
+                        onProfileOpen={(userId: string) => {
+                            setSelectedProfileId(userId);
+                            setRoute('profile');
+                        }}
+                    />
+                ) : null;
             default:
                 return null;
         }
