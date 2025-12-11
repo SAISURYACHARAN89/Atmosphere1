@@ -1,17 +1,40 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { fetchMarkets, placeOrder } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const items = [
-    { id: '1', name: 'Zlyft Autonomy Pvt Ltd', person: 'Joshua Paul', tagline: 'Building next-gen autonomous vehicles for urban transportation', avatar: 'https://i.pravatar.cc/150?img=33' },
-    { id: '2', name: 'TechFlow Solutions', person: 'Priya Sharma', tagline: 'Streamlining enterprise workflows with intelligent automation', avatar: 'https://i.pravatar.cc/150?img=47' },
-    { id: '3', name: 'GreenTech Innovations', person: 'Sarah Williams', tagline: 'Sustainable energy solutions for a carbon-neutral future', avatar: 'https://i.pravatar.cc/150?img=25' },
-    { id: '4', name: 'FinNext Solutions', person: 'Michael Rodriguez', tagline: 'Digital banking infrastructure for the next generation', avatar: 'https://i.pravatar.cc/150?img=52' },
-    { id: '5', name: 'EduTech Pro', person: 'Aisha Patel', tagline: 'Personalized learning experiences powered by AI', avatar: 'https://i.pravatar.cc/150?img=38' },
-];
+
 
 const Trading = () => {
+    const [markets, setMarkets] = useState<any[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const m = await fetchMarkets();
+                setMarkets(Array.isArray(m) ? m : []);
+            } catch (e: any) {
+                console.warn('Failed to load markets', e);
+                setError(e?.message || 'Failed to load markets');
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []);
+
+    const handleBuy = async (assetId: string) => {
+        try {
+            await placeOrder(assetId, 'buy', 1);
+            Alert.alert('Order executed');
+        } catch (e: any) {
+            Alert.alert('Order failed', e?.message || String(e));
+        }
+    };
     return (
         <SafeAreaView style={styles.container}>
             {/* Fixed header */}
@@ -45,27 +68,40 @@ const Trading = () => {
             </View>
 
             {/* Scrollable cards only */}
-            <FlatList
-                data={items}
-                keyExtractor={i => i.id}
-                style={styles.cardsList}
-                contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <View style={styles.avatarWrap}>
-                            <View style={styles.avatarCircle} />
-                        </View>
-                        <View style={styles.cardBody}>
-                            <View style={styles.cardHeader}>
-                                <Text style={styles.companyName}>{item.name}</Text>
-                                <TouchableOpacity style={styles.iconBtn}><MaterialCommunityIcons name="bookmark-outline" size={18} color="#bfbfbf" /></TouchableOpacity>
+            {loading ? (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator size="large" color="#1a73e8" />
+                </View>
+            ) : error ? (
+                <View style={{ padding: 20 }}>
+                    <Text style={{ color: '#fff' }}>Error: {error}</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={markets}
+                    keyExtractor={(i) => i._id ? String(i._id) : String(i.id)}
+                    style={styles.cardsList}
+                    contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
+                    renderItem={({ item }) => (
+                        <View style={styles.card}>
+                            <View style={styles.avatarWrap}>
+                                <View style={styles.avatarCircle} />
                             </View>
-                            <Text style={styles.personName}>{item.person}</Text>
-                            <Text style={styles.tagline}>{item.tagline}</Text>
+                            <View style={styles.cardBody}>
+                                <View style={styles.cardHeader}>
+                                    <Text style={styles.companyName}>{item.title || item.name}</Text>
+                                    <TouchableOpacity style={styles.iconBtn}><MaterialCommunityIcons name="bookmark-outline" size={18} color="#bfbfbf" /></TouchableOpacity>
+                                </View>
+                                <Text style={styles.personName}>{item.owner || item.person || ''}</Text>
+                                <Text style={styles.tagline}>{item.description || item.tagline || ''}</Text>
+                                <TouchableOpacity style={{ marginTop: 8 }} onPress={() => handleBuy(item._id || item.id)}>
+                                    <Text style={{ color: '#1a73e8', fontWeight: '700' }}>Buy</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                )}
-            />
+                    )}
+                />
+            )}
         </SafeAreaView>
     );
 };

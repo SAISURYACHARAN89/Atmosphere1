@@ -34,7 +34,7 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
     const [messageText, setMessageText] = useState('');
     const [chatMessages, setChatMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [_error, setError] = useState<string | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [chatDetails, setChatDetails] = useState<any>(null);
     const [showGroupInfo, setShowGroupInfo] = useState(false);

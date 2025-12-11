@@ -5,36 +5,84 @@ exports.createComment = async (req, res, next) => {
         const { text, parent } = req.body;
         const startupId = req.params.startupId;
         if (!text) return res.status(400).json({ error: 'Comment text is required' });
-        const startup = await StartupDetails.findById(startupId);
+        let startup = await StartupDetails.findById(startupId);
+        if (!startup) {
+            startup = await StartupDetails.findOne({ user: startupId });
+        }
         if (!startup) return res.status(404).json({ error: 'Startup not found' });
-        const comment = new (require('../models/StartupComment'))({ startup: startupId, author: req.user._id, text, parent: parent || null });
-        await comment.save();
-        await comment.populate('author', 'username displayName avatarUrl');
-        // Atomic increment meta.commentsCount using aggregation pipeline if supported
-        try {
-            await StartupDetails.findOneAndUpdate(
-                { _id: startupId },
-                [
-                    {
-                        $set: {
-                            meta: {
-                                $let: {
-                                    vars: { current: { $ifNull: ['$meta', {}] } },
-                                    in: {
-                                        $mergeObjects: ['$$current', { commentsCount: { $add: [{ $ifNull: ['$$current.commentsCount', 0] }, 1] } }]
+        // Try to run creation + meta increment in a transaction
+        const mongoose = require('mongoose');
+        const session = await mongoose.startSession().catch(() => null);
+        let commentObj = null;
+        let updatedStartup = null;
+        if (session && typeof session.withTransaction === 'function') {
+            try {
+                await session.withTransaction(async () => {
+                    const created = await require('../models/StartupComment').create([{ startup: startupId, author: req.user._id, text, parent: parent || null }], { session });
+                    commentObj = created && created[0] ? created[0] : null;
+                    if (commentObj) await commentObj.populate('author', 'username displayName avatarUrl');
+
+                    updatedStartup = await StartupDetails.findOneAndUpdate(
+                        { _id: startupId },
+                        [
+                            {
+                                $set: {
+                                    meta: {
+                                        $let: {
+                                            vars: { current: { $ifNull: ['$meta', {}] } },
+                                            in: {
+                                                $mergeObjects: ['$$current', { commentsCount: { $add: [{ $ifNull: ['$$current.commentsCount', 0] }, 1] } }]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ],
+                        { new: true, session, updatePipeline: true }
+                    ).lean();
+                });
+            } catch (err) {
+                console.warn('Create comment transaction failed, falling back', err && err.message ? err.message : err);
+            } finally { try { session.endSession(); } catch { } }
+        }
+
+        // If not created in transaction, fallback to non-transactional create and update
+        if (!commentObj) {
+            const commentModel = require('../models/StartupComment');
+            const created = new commentModel({ startup: startupId, author: req.user._id, text, parent: parent || null });
+            await created.save();
+            commentObj = created;
+            await commentObj.populate('author', 'username displayName avatarUrl');
+
+            try {
+                updatedStartup = await StartupDetails.findOneAndUpdate(
+                    { _id: startupId },
+                    [
+                        {
+                            $set: {
+                                meta: {
+                                    $let: {
+                                        vars: { current: { $ifNull: ['$meta', {}] } },
+                                        in: {
+                                            $mergeObjects: ['$$current', { commentsCount: { $add: [{ $ifNull: ['$$current.commentsCount', 0] }, 1] } }]
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                ]
-            );
-        } catch (e) {
-            startup.meta = startup.meta || {};
-            startup.meta.commentsCount = (startup.meta.commentsCount || 0) + 1;
-            await startup.save();
+                    ],
+                    { new: true, updatePipeline: true }
+                ).lean();
+            } catch (e) {
+                startup.meta = startup.meta || {};
+                startup.meta.commentsCount = (startup.meta.commentsCount || 0) + 1;
+                await startup.save();
+                updatedStartup = await StartupDetails.findById(startupId).lean();
+            }
         }
-        res.status(201).json({ comment });
+
+        const commentsCount = (updatedStartup && updatedStartup.meta && typeof updatedStartup.meta.commentsCount === 'number') ? updatedStartup.meta.commentsCount : (updatedStartup && typeof updatedStartup.commentsCount === 'number' ? updatedStartup.commentsCount : (startup.meta && startup.meta.commentsCount) || 0);
+        res.status(201).json({ comment: commentObj, commentsCount });
     } catch (err) { next(err); }
 };
 
@@ -72,46 +120,59 @@ exports.deleteComment = async (req, res, next) => {
         if (!comment) return res.status(404).json({ error: 'Comment not found' });
         if (comment.author.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Forbidden' });
         const startupId = comment.startup;
-        await comment.deleteOne();
-        // Atomic decrement with clamp to zero using aggregation pipeline (MongoDB 4.2+)
-        try {
-            await StartupDetails.findOneAndUpdate(
-                { _id: startupId },
-                [
-                    {
-                        $set: {
-                            meta: {
-                                $let: {
-                                    vars: { current: { $ifNull: ['$meta', {}] } },
-                                    in: {
-                                        $mergeObjects: [
-                                            '$$current',
-                                            {
-                                                commentsCount: {
-                                                    $max: [0, { $subtract: [{ $ifNull: ['$$current.commentsCount', 0] }, 1] }]
-                                                }
+        // Try to perform delete + decrement in a transaction
+        const mongoose = require('mongoose');
+        const session = await mongoose.startSession().catch(() => null);
+        if (session && typeof session.withTransaction === 'function') {
+            try {
+                let ccount = undefined;
+                await session.withTransaction(async () => {
+                    await require('../models/StartupComment').findOneAndDelete({ _id: comment._id }, { session });
+                    const updated = await StartupDetails.findOneAndUpdate(
+                        { _id: startupId },
+                        [
+                            {
+                                $set: {
+                                    meta: {
+                                        $let: {
+                                            vars: { current: { $ifNull: ['$meta', {}] } },
+                                            in: {
+                                                $mergeObjects: [
+                                                    '$$current',
+                                                    {
+                                                        commentsCount: {
+                                                            $max: [0, { $subtract: [{ $ifNull: ['$$current.commentsCount', 0] }, 1] }]
+                                                        }
+                                                    }
+                                                ]
                                             }
-                                        ]
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
-                ],
-                { new: true }
-            );
-        } catch (e) {
-            // Fallback: decrement then clamp
-            await StartupDetails.findByIdAndUpdate(startupId, { $inc: { 'meta.commentsCount': -1 } });
-            const sd = await StartupDetails.findById(startupId);
-            if (sd) {
-                sd.meta = sd.meta || {};
-                if ((sd.meta.commentsCount || 0) < 0) {
-                    sd.meta.commentsCount = 0;
-                    await sd.save();
-                }
-            }
+                        ],
+                        { new: true, session, updatePipeline: true }
+                    ).lean();
+                    ccount = (updated && updated.meta && typeof updated.meta.commentsCount === 'number') ? updated.meta.commentsCount : (updated && typeof updated.commentsCount === 'number' ? updated.commentsCount : undefined);
+                });
+                if (typeof ccount === 'number') return res.json({ message: 'Comment deleted successfully', commentsCount: ccount });
+            } catch (err) {
+                console.warn('Delete comment transaction failed, falling back', err && err.message ? err.message : err);
+            } finally { try { session.endSession(); } catch { } }
         }
-        res.json({ message: 'Comment deleted successfully' });
+
+        // fallback: non-transactional delete (comment already removed above) then decrement via pipeline or fallback
+        await StartupDetails.findByIdAndUpdate(startupId, { $inc: { 'meta.commentsCount': -1 } });
+        const sd = await StartupDetails.findById(startupId);
+        let ccount = undefined;
+        if (sd) {
+            sd.meta = sd.meta || {};
+            if ((sd.meta.commentsCount || 0) < 0) {
+                sd.meta.commentsCount = 0;
+                await sd.save();
+            }
+            ccount = sd.meta.commentsCount;
+        }
+        return res.json({ message: 'Comment deleted successfully', commentsCount: typeof ccount === 'number' ? ccount : undefined });
     } catch (err) { next(err); }
 };

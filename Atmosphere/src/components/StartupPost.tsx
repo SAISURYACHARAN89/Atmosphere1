@@ -39,6 +39,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
     const [commentsCount, setCommentsCount] = useState<number>(stats.comments || 0);
 
     const [commentsOverlayVisible, setCommentsOverlayVisible] = useState(false);
+    const [likeLoading, setLikeLoading] = useState(false);
     const [followed, setFollowed] = useState(Boolean((companyData as any).isFollowing));
     const [followLoading, setFollowLoading] = useState(false);
 
@@ -65,11 +66,27 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
         return () => { /* cleanup */ };
     }, [companyData]);
 
+    // Keep local counts in sync if the parent feed updates the item
+    useEffect(() => {
+        const s = (companyData as any)?.stats || {};
+        if (typeof s.likes === 'number') setLikes(s.likes);
+        else if (typeof s.likesCount === 'number') setLikes(s.likesCount);
+        if (typeof s.crowns === 'number') setCrownsCount(s.crowns);
+        else if (typeof s.crownsCount === 'number') setCrownsCount(s.crownsCount);
+        if (typeof s.comments === 'number') setCommentsCount(s.comments);
+        else if (typeof s.commentsCount === 'number') setCommentsCount(s.commentsCount);
+        if (typeof (companyData as any).likedByCurrentUser === 'boolean') setLiked((companyData as any).likedByCurrentUser);
+        if (typeof (companyData as any).crownedByCurrentUser === 'boolean') setCrowned((companyData as any).crownedByCurrentUser);
+        if (typeof (companyData as any).isFollowing === 'boolean') setFollowed((companyData as any).isFollowing);
+    }, [companyData]);
+
     const navigation = useContext(NavigationContext) as any | undefined;
 
     if (!companyData) return null;
 
     const toggleLike = async () => {
+        if (likeLoading) return;
+        setLikeLoading(true);
         const prev = liked;
         setLiked(!prev);
         setLikes(l => prev ? Math.max(0, l - 1) : l + 1);
@@ -79,20 +96,25 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
             const id = String((companyData as any).id || (companyData as any).userId || (companyData as any).user);
             if (isStartupCard) {
                 if (!prev) {
-                    const resp: any = await likeStartup(id);
-                    if (resp && typeof resp.likes === 'number') setLikes(resp.likes);
+                    await likeStartup(id);
                 } else {
-                    const resp: any = await unlikeStartup(id);
-                    if (resp && typeof resp.likes === 'number') setLikes(resp.likes);
+                    await unlikeStartup(id);
                 }
             } else {
-                if (!prev) await likePost(id);
-                else await unlikePost(id);
+                if (!prev) {
+                    await likePost(id);
+                } else {
+                    await unlikePost(id);
+                }
             }
+            // Don't update state from API response - trust optimistic update
         } catch {
-            // revert optimistic
+            // revert optimistic on error
             setLiked(prev);
             setLikes(l => prev ? l + 1 : Math.max(0, l - 1));
+        }
+        finally {
+            setLikeLoading(false);
         }
     };
 
@@ -106,17 +128,14 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
         setCrownsCount(c => !prev ? c + 1 : Math.max(0, c - 1));
         setCrownLoading(true);
         try {
-            let resp: any;
             if (!prev) {
-                resp = await crownStartup(id);
+                await crownStartup(id);
             } else {
-                resp = await uncrownStartup(id);
+                await uncrownStartup(id);
             }
-            // backend returns updated crowns count
-            const newCount = typeof resp?.crowns === 'number' ? resp.crowns : undefined;
-            if (typeof newCount === 'number') setCrownsCount(newCount);
+            // Don't update state from API response - trust optimistic update
         } catch {
-            // revert optimistic
+            // revert optimistic on error
             setCrowned(prev);
             setCrownsCount(c => prev ? c + 1 : Math.max(0, c - 1));
         } finally {
@@ -213,8 +232,14 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                 startupId={String((companyData as any).id || (companyData as any).userId || (companyData as any).user)}
                 visible={commentsOverlayVisible}
                 onClose={() => setCommentsOverlayVisible(false)}
-                onCommentAdded={() => setCommentsCount(c => c + 1)}
-                onCommentDeleted={() => setCommentsCount(c => Math.max(0, c - 1))}
+                onCommentAdded={(newCount?: number) => {
+                    if (typeof newCount === 'number') setCommentsCount(newCount);
+                    else setCommentsCount(c => c + 1);
+                }}
+                onCommentDeleted={(newCount?: number) => {
+                    if (typeof newCount === 'number') setCommentsCount(newCount);
+                    else setCommentsCount(c => Math.max(0, c - 1));
+                }}
             />
 
             <View style={styles.imageWrap}>
