@@ -1,9 +1,12 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
-import { getBaseUrl } from '../lib/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchChats } from '../lib/api';
+import ChatList from '../components/ChatList';
+import GroupList from '../components/GroupList';
+import CreateGroupModal from '../components/CreateGroupModal';
 
 interface ChatsProps {
     onChatSelect?: (chatId: string) => void;
@@ -11,10 +14,13 @@ interface ChatsProps {
 
 const Chats = ({ onChatSelect }: ChatsProps) => {
     const { theme } = useContext(ThemeContext);
-    const [chats, setChats] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'chats' | 'groups'>('chats');
+
+    const [chats, setChats] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isCreateGroupVisible, setCreateGroupVisible] = useState(false);
 
     useEffect(() => {
         const fetchCurrentUser = async () => {
@@ -31,179 +37,114 @@ const Chats = ({ onChatSelect }: ChatsProps) => {
         fetchCurrentUser();
     }, []);
 
-    useEffect(() => {
-        const fetchChats = async () => {
-            try {
-                const baseUrl = await getBaseUrl();
-                const token = await AsyncStorage.getItem('token');
-                const headers: any = { 'Content-Type': 'application/json' };
-                if (token) {
-                    headers.Authorization = `Bearer ${token}`;
-                    console.log('Token found:', token.substring(0, 20) + '...');
-                } else {
-                    console.log('No token found!');
-                }
-                console.log('Fetching chats from:', `${baseUrl}/api/chats`);
-                const response = await fetch(`${baseUrl}/api/chats`, {
-                    credentials: 'include',
-                    headers,
-                });
-                console.log('Response status:', response.status);
-                const data = await response.json();
-                console.log('Response data:', data);
-                setChats(data.chats || []);
-            } catch (err) {
-                setError('Failed to load chats');
-                console.error('Error fetching chats:', err);
-            } finally {
-                setLoading(false);
+    const loadData = useCallback(async () => {
+        setLoading(true);
+        try {
+            if (activeTab === 'chats') {
+                const data = await fetchChats('private');
+                setChats(data);
+            } else {
+                const data = await fetchChats('group');
+                setGroups(data);
             }
-        };
-        fetchChats();
-    }, []);
+        } catch (err) {
+            console.error('Error loading chats:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleChatPress = (chatId: string) => {
         onChatSelect?.(chatId);
     };
 
-    const renderChatItem = ({ item }: { item: any }) => {
-        // Find the OTHER participant (not the current user)
-        const other = item.participants?.find((p: any) => p._id !== currentUserId) || item.participants?.[0] || {};
-        const unreadCount = item.unreadCounts?.[currentUserId!] || 0;
-        const hasUnread = unreadCount > 0;
-
-        return (
-            <TouchableOpacity
-                style={[
-                    styles.chatItem,
-                    {
-                        backgroundColor: hasUnread ? theme.primary + '15' : theme.cardBackground,
-                        borderColor: hasUnread ? theme.primary : theme.border
-                    }
-                ]}
-                onPress={() => handleChatPress(item._id)}
-            >
-                <View style={styles.avatarContainer}>
-                    <Image
-                        source={getImageSource(other.avatarUrl || 'https://via.placeholder.com/50')}
-                        onError={(e) => { console.warn('Chats avatar error', e.nativeEvent, other.avatarUrl); }}
-                        style={styles.avatar}
-                    />
-                    {hasUnread && (
-                        <View style={[styles.unreadBadge, { backgroundColor: theme.primary }]}>
-                            <Text style={styles.unreadBadgeText}>
-                                {unreadCount > 99 ? '99+' : unreadCount}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-                <View style={styles.chatInfo}>
-                    <Text style={[
-                        styles.chatName,
-                        {
-                            color: theme.text,
-                            fontWeight: hasUnread ? '700' : '600'
-                        }
-                    ]} numberOfLines={1}>
-                        {other.displayName || other.username || 'User'}
-                    </Text>
-                    <Text style={[styles.lastMessage, { color: theme.placeholder }]} numberOfLines={1}>
-                        {item.lastMessage?.body || 'No messages yet.'}
-                    </Text>
-                </View>
-                {/* Optional: Add timestamp */}
-                <Text style={[styles.timestamp, { color: theme.placeholder }]}>
-                    {item.updatedAt ? new Date(item.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
-                </Text>
-            </TouchableOpacity>
-        );
-    };
-
-    if (loading) {
-        return (
-            <View style={[styles.container, { backgroundColor: theme.background }]}>
-                <ActivityIndicator size="large" color={theme.text} />
-                <Text style={[styles.title, { color: theme.text }]}>Loading chats...</Text>
-            </View>
-        );
-    }
-
-    if (error) {
-        return (
-            <View style={[styles.container, { backgroundColor: theme.background }]}>
-                <Text style={[styles.title, { color: theme.text }]}>{error}</Text>
-            </View>
-        );
-    }
-
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <Text style={[styles.title, { color: theme.text }]}>Chats</Text>
-            <FlatList
-                data={chats}
-                renderItem={renderChatItem}
-                keyExtractor={item => item._id}
-                contentContainerStyle={styles.list}
-                ListEmptyComponent={<Text style={[styles.empty, { color: theme.placeholder }]}>No chats found.</Text>}
+            {/* Header / Tabs */}
+            <View style={[styles.header, { borderBottomColor: theme.border }]}>
+                <Text style={[styles.pageTitle, { color: theme.text }]}>Messages</Text>
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'chats' && { borderBottomColor: theme.primary, borderBottomWidth: 2 }]}
+                        onPress={() => setActiveTab('chats')}
+                    >
+                        <Text style={[styles.tabText, { color: activeTab === 'chats' ? theme.primary : theme.placeholder }]}>Chats</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'groups' && { borderBottomColor: theme.primary, borderBottomWidth: 2 }]}
+                        onPress={() => setActiveTab('groups')}
+                    >
+                        <Text style={[styles.tabText, { color: activeTab === 'groups' ? theme.primary : theme.placeholder }]}>Groups</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Content */}
+            <View style={styles.content}>
+                {loading ? (
+                    <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
+                ) : (
+                    activeTab === 'chats' ? (
+                        <ChatList
+                            chats={chats}
+                            currentUserId={currentUserId}
+                            onChatPress={handleChatPress}
+                        />
+                    ) : (
+                        <GroupList
+                            groups={groups}
+                            currentUserId={currentUserId}
+                            onChatPress={handleChatPress}
+                            onCreateGroupPress={() => setCreateGroupVisible(true)}
+                        />
+                    )
+                )}
+            </View>
+
+            <CreateGroupModal
+                visible={isCreateGroupVisible}
+                onClose={() => setCreateGroupVisible(false)}
+                onGroupCreated={() => {
+                    setCreateGroupVisible(false);
+                    loadData(); // Refresh list
+                }}
             />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 0 },
-    title: { fontSize: 24, fontWeight: '700', marginBottom: 16, textAlign: 'left', paddingHorizontal: 16, paddingTop: 12 },
-    list: { paddingBottom: 20 },
-    chatItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        marginHorizontal: 8,
-        marginBottom: 1,
-        borderRadius: 0,
-        borderBottomWidth: 1
+    container: { flex: 1 },
+    header: {
+        paddingTop: 12,
+        backgroundColor: 'transparent', // Web uses fixed header, here we just put it top
+        borderBottomWidth: 1,
     },
-    avatarContainer: { position: 'relative', marginRight: 12 },
-    avatar: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: '#e5e5e5'
-    },
-    unreadBadge: {
-        position: 'absolute',
-        top: -5,
-        right: -5,
-        minWidth: 24,
-        height: 24,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#fff'
-    },
-    unreadBadgeText: {
-        color: '#fff',
-        fontSize: 11,
+    pageTitle: {
+        fontSize: 24,
         fontWeight: '700',
-        paddingHorizontal: 6
+        marginBottom: 16,
+        paddingHorizontal: 16
     },
-    chatInfo: { flex: 1, justifyContent: 'center' },
-    chatName: {
+    tabContainer: {
+        flexDirection: 'row',
+    },
+    tab: {
+        flex: 1,
+        alignItems: 'center',
+        paddingVertical: 12,
+    },
+    tabText: {
         fontSize: 15,
-        fontWeight: '600',
-        marginBottom: 4
+        fontWeight: '600'
     },
-    lastMessage: {
-        fontSize: 13,
-        marginTop: 0,
-        opacity: 0.7
-    },
-    timestamp: {
-        fontSize: 12,
-        marginLeft: 8
-    },
-    empty: { textAlign: 'center', marginTop: 40, fontSize: 16 },
+    content: {
+        flex: 1
+    }
 });
 
 export default Chats;

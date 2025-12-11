@@ -6,6 +6,12 @@ const ChatSchema = new Schema(
         participants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         lastMessage: { type: Schema.Types.ObjectId, ref: 'Message' },
         unreadCounts: { type: Schema.Types.Mixed, default: {} },
+        isGroup: { type: Boolean, default: false },
+        groupName: { type: String },
+        groupDescription: { type: String },
+        groupImage: { type: String },
+        groupType: { type: String, enum: ['Public', 'Private', 'Verified'], default: 'Public' },
+        groupAdmin: { type: Schema.Types.ObjectId, ref: 'User' },
         meta: { type: Schema.Types.Mixed },
     },
     { timestamps: true }

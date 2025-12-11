@@ -2,11 +2,18 @@ const { Chat, Message } = require('../models');
 
 exports.listChats = async (req, res, next) => {
     try {
-        const { limit = 20, skip = 0 } = req.query;
+        const { limit = 20, skip = 0, type } = req.query;
         
         console.log('listChats called - User ID:', req.user._id);
 
-        const chats = await Chat.find({ participants: req.user._id })
+        const filter = { participants: req.user._id };
+        if (type === 'group') {
+            filter.isGroup = true;
+        } else if (type === 'private') {
+            filter.isGroup = false;
+        }
+
+        const chats = await Chat.find(filter)
             .populate('participants', 'username displayName avatarUrl verified')
             .populate('lastMessage')
             .sort({ updatedAt: -1 })
@@ -17,6 +24,33 @@ exports.listChats = async (req, res, next) => {
         res.json({ chats });
     } catch (err) {
         console.error('Error in listChats:', err);
+        next(err);
+    }
+};
+
+exports.createGroup = async (req, res, next) => {
+    try {
+        const { name, participants, description, type, image } = req.body;
+
+        if (!name) return res.status(400).json({ error: 'Group name is required' });
+
+        const allParticipants = [...new Set([req.user._id, ...(participants || [])])];
+
+        const chat = new Chat({
+            participants: allParticipants,
+            isGroup: true,
+            groupName: name,
+            groupDescription: description,
+            groupType: type || 'Public',
+            groupImage: image,
+            groupAdmin: req.user._id
+        });
+
+        await chat.save();
+        await chat.populate('participants', 'username displayName avatarUrl verified');
+
+        res.status(201).json({ chat });
+    } catch (err) {
         next(err);
     }
 };
@@ -34,14 +68,15 @@ exports.createOrFindChat = async (req, res, next) => {
         }
 
         const existingChat = await Chat.findOne({
-            participants: { $all: [req.user._id, participantId] },
+            participants: { $all: [req.user._id, participantId], $size: 2 },
+            isGroup: false
         })
             .populate('participants', 'username displayName avatarUrl verified')
             .populate('lastMessage');
 
         if (existingChat) return res.json({ chat: existingChat, isNew: false });
 
-        const chat = new Chat({ participants: [req.user._id, participantId] });
+        const chat = new Chat({ participants: [req.user._id, participantId], isGroup: false });
         await chat.save();
         await chat.populate('participants', 'username displayName avatarUrl verified');
 

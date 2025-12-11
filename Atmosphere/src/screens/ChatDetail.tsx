@@ -4,13 +4,16 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Activity
 import { ThemeContext } from '../contexts/ThemeContext';
 import { getImageSource } from '../lib/image';
 import { getBaseUrl } from '../lib/config';
+import { getChatDetails } from '../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GroupInfoModal from '../components/GroupInfoModal';
 
 interface User {
     _id: string;
     displayName: string;
     email: string;
     avatarUrl?: string;
+    username: string;
 }
 
 interface Message {
@@ -33,7 +36,8 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const [_chatDetails, _setChatDetails] = useState<{ participants: User[] } | null>(null);
+    const [chatDetails, setChatDetails] = useState<any>(null);
+    const [showGroupInfo, setShowGroupInfo] = useState(false);
 
     // Fetch current user ID
     useEffect(() => {
@@ -51,7 +55,7 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
         fetchCurrentUser();
     }, []);
 
-    // Fetch messages
+    // Fetch messages & details
     useEffect(() => {
         const fetchMessages = async () => {
             try {
@@ -73,7 +77,18 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
                 setLoading(false);
             }
         };
-        if (chatId) fetchMessages();
+
+        const fetchDetails = async () => {
+            try {
+                const details = await getChatDetails(chatId);
+                setChatDetails(details.chat || details);
+            } catch (e) { console.warn('Failed to fetch chat details', e); }
+        };
+
+        if (chatId) {
+            fetchMessages();
+            fetchDetails();
+        }
     }, [chatId]);
 
     // Scroll to bottom when messages change
@@ -101,7 +116,6 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
             });
             const data = await response.json();
             if (data.message) {
-                console.log('Sent message - Sender ID:', data.message.sender?._id, 'Current User ID:', currentUserId);
                 setChatMessages((prev) => [...prev, data.message as Message]);
             }
             setMessageText('');
@@ -115,9 +129,7 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
         if (!currentUserId || !message.sender._id) return false;
         const senderId = typeof message.sender._id === 'string' ? message.sender._id : message.sender._id.toString();
         const userId = typeof currentUserId === 'string' ? currentUserId : currentUserId.toString();
-        const isMine = senderId === userId;
-        console.log('Checking message - Sender:', senderId, 'Current:', userId, 'IsMine:', isMine);
-        return isMine;
+        return senderId === userId;
     };
 
     const renderMessage = ({ item }: { item: Message }) => {
@@ -134,7 +146,6 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
                 {!isMe && (
                     <Image
                         source={getImageSource(item.sender.avatarUrl || 'https://via.placeholder.com/32')}
-                        onError={(e) => { console.warn('ChatDetail sender avatar error', e.nativeEvent, item.sender.avatarUrl); }}
                         style={styles.senderAvatar}
                     />
                 )}
@@ -142,9 +153,9 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
                     styles.messageBubble,
                     isMe ? styles.myMessage : styles.theirMessage
                 ]}>
-                    {!isMe && (
+                    {!isMe && chatDetails?.isGroup && (
                         <Text style={[styles.senderName, { color: theme.text }]}>
-                            {item.sender.displayName}
+                            {item.sender.displayName || item.sender.username}
                         </Text>
                     )}
                     <View style={styles.messageContent}>
@@ -162,56 +173,60 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
         );
     };
 
-    if (loading) {
-        return (
-            <View style={[styles.container, { backgroundColor: theme.background }]}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={onBackPress}>
-                        <Text style={[styles.backButton, { color: theme.text }]}>← Back</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color={theme.text} />
-                    <Text style={[styles.loadingText, { color: theme.text }]}>Loading messages...</Text>
-                </View>
-            </View>
-        );
-    }
+    // Header Content Logic
+    let headerTitle = 'Chat';
+    let headerImage = null;
+    let isGroup = false;
 
-    if (error) {
-        return (
-            <View style={[styles.container, { backgroundColor: theme.background }]}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={onBackPress}>
-                        <Text style={[styles.backButton, { color: theme.text }]}>← Back</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.centerContainer}>
-                    <Text style={[styles.errorText, { color: '#ff6b6b' }]}>{error}</Text>
-                </View>
-            </View>
-        );
+    if (chatDetails) {
+        if (chatDetails.isGroup) {
+            headerTitle = chatDetails.groupName;
+            headerImage = chatDetails.groupImage || chatDetails.groupName;
+            isGroup = true;
+        } else {
+            const other = chatDetails.participants?.find((p: any) => p._id !== currentUserId) || chatDetails.participants?.[0] || {};
+            headerTitle = other.displayName || other.username || 'User';
+            headerImage = other.avatarUrl;
+        }
     }
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={onBackPress}>
-                    <Text style={[styles.backButton, { color: theme.text }]}>← Back</Text>
+            {/* Header */}
+            <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.background }]}>
+                <TouchableOpacity onPress={onBackPress} style={{ padding: 8 }}>
+                    <Text style={[styles.backButton, { color: theme.text }]}>←</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.headerInfo}
+                    onPress={() => isGroup && setShowGroupInfo(true)}
+                    activeOpacity={isGroup ? 0.7 : 1}
+                >
+                    <Image
+                        source={getImageSource(headerImage || 'https://via.placeholder.com/40')}
+                        style={styles.headerAvatar}
+                    />
+                    <Text style={[styles.headerTitle, { color: theme.text }]}>{headerTitle}</Text>
                 </TouchableOpacity>
             </View>
-            <FlatList
-                ref={flatListRef}
-                data={chatMessages}
-                renderItem={renderMessage}
-                keyExtractor={(item) => item._id}
-                contentContainerStyle={styles.messageList}
-                inverted={false}
-                scrollEnabled={true}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-                scrollEventThrottle={16}
-                removeClippedSubviews={true}
-            />
+
+            {loading ? (
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color={theme.text} />
+                </View>
+            ) : (
+                <FlatList
+                    ref={flatListRef}
+                    data={chatMessages}
+                    renderItem={renderMessage}
+                    keyExtractor={(item) => item._id}
+                    contentContainerStyle={styles.messageList}
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+                />
+            )}
+
+            {/* Input */}
             <View style={[styles.inputContainer, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
                 <TextInput
                     style={[styles.input, { color: theme.text, borderColor: theme.border }]}
@@ -229,20 +244,35 @@ const ChatDetail = ({ chatId, onBackPress }: ChatDetailProps) => {
                     <Text style={styles.sendButtonText}>Send</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Group Info Modal */}
+            <GroupInfoModal
+                visible={showGroupInfo}
+                onClose={() => setShowGroupInfo(false)}
+                chat={chatDetails}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f5f5f5' },
-    header: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#e5e5e5' },
-    backButton: { fontSize: 16, fontWeight: '600' },
+    container: { flex: 1 },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        elevation: 2,
+    },
+    backButton: { fontSize: 24, fontWeight: '600' },
+    headerInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: 8 },
+    headerAvatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10, backgroundColor: '#ccc' },
+    headerTitle: { fontSize: 18, fontWeight: '700' },
+
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    loadingText: { marginTop: 12, fontSize: 16 },
-    errorText: { fontSize: 16, textAlign: 'center' },
     messageList: { padding: 12, flexGrow: 1, justifyContent: 'flex-end' },
 
-    // Message styling
     messageRow: { flexDirection: 'row', marginVertical: 8, alignItems: 'flex-end', gap: 8 },
     messageRowMe: { justifyContent: 'flex-end' },
     messageRowThem: { justifyContent: 'flex-start' },
