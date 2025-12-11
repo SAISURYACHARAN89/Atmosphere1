@@ -10,7 +10,7 @@ type Comment = any;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SHEET_HEIGHT = Math.round(SCREEN_HEIGHT * 0.5);
 
-const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommentDeleted }: { startupId: string; visible: boolean; onClose: () => void; onCommentAdded?: () => void; onCommentDeleted?: () => void }) => {
+const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommentDeleted }: { startupId: string; visible: boolean; onClose: () => void; onCommentAdded?: (newCount?: number) => void; onCommentDeleted?: (newCount?: number) => void }) => {
     const { theme } = useContext(ThemeContext);
     const anim = useRef(new Animated.Value(0)).current; // 0 hidden -> 1 visible
     const [comments, setComments] = useState<Comment[]>([]);
@@ -67,7 +67,11 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
             const commentObj = newComment?.comment || newComment || { text: text.trim(), createdAt: new Date().toISOString() };
             setComments(prev => [commentObj, ...prev]);
             setText('');
-            if (typeof onCommentAdded === 'function') onCommentAdded();
+            // If API returned updated counts, prefer that
+            const newCount = (newComment && (newComment.commentsCount ?? newComment.count ?? newComment.totalComments)) || undefined;
+            if (typeof onCommentAdded === 'function') {
+                try { onCommentAdded(typeof newCount === 'number' ? newCount : undefined); } catch { onCommentAdded(); }
+            }
         } catch (err) {
             console.warn('CommentsOverlay: failed to submit comment', err);
         } finally {
@@ -160,15 +164,19 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
                                                                         try {
                                                                             setDeletingId(item._id || item.id || item.createdAt);
                                                                             // Prefer startup-specific delete endpoint when dealing with startup comments
+                                                                            let resp: any = null;
                                                                             try {
-                                                                                await deleteStartupComment(String(item._id || item.id));
+                                                                                resp = await deleteStartupComment(String(item._id || item.id));
                                                                             } catch {
-                                                                                // fallback to generic comment delete
-                                                                                await deleteComment(String(item._id || item.id));
+                                                                                try { resp = await deleteComment(String(item._id || item.id)); } catch { throw new Error('delete failed'); }
                                                                             }
                                                                             setComments(prev => prev.filter(c => String(c._id || c.id || c.createdAt) !== String(item._id || item.id || item.createdAt)));
                                                                             setShowDeleteFor(null);
-                                                                            if (typeof onCommentDeleted === 'function') onCommentDeleted();
+                                                                            // Read returned count if available
+                                                                            const newCount = resp?.commentsCount ?? resp?.comments ?? resp?.count ?? undefined;
+                                                                            if (typeof onCommentDeleted === 'function') {
+                                                                                try { onCommentDeleted(typeof newCount === 'number' ? newCount : undefined); } catch { try { onCommentDeleted(); } catch { } }
+                                                                            }
                                                                         } catch (err) {
                                                                             console.warn('CommentsOverlay: failed to delete comment', err);
                                                                         } finally {

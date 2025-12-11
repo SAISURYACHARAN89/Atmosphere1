@@ -156,8 +156,10 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
       });
       const data = await res.json();
       // Instantly show new comment at top
-      setComments((prev) => [data.comment, ...prev]);
-      setPost((prev: any) => ({ ...prev, commentsCount: (prev.commentsCount || 0) + 1 }));
+      setComments((prev) => [data.comment || data, ...prev]);
+      // Prefer server returned counts
+      const newCount = data?.commentsCount ?? data?.comments?.length ?? undefined;
+      setPost((prev: any) => ({ ...prev, commentsCount: typeof newCount === 'number' ? newCount : ((prev.commentsCount || 0) + 1) }));
       setCommentText('');
     } catch {
       // Optionally show error

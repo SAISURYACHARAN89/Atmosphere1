@@ -313,3 +313,18 @@ export async function getUserByIdentifier(identifier: string) {
         return data?.user ? data.user : null;
     } catch { return null; }
 }
+
+// Trade APIs
+export async function fetchMarkets() {
+    const data = await request('/api/trade/markets', {}, { method: 'GET' });
+    return data.markets || [];
+}
+
+export async function fetchMyPortfolio() {
+    const data = await request('/api/trade/portfolio', {}, { method: 'GET' });
+    return data.portfolio || { items: [] };
+}
+
+export async function placeOrder(assetId: string, side: 'buy' | 'sell', quantity: number) {
+    return request('/api/trade/order', { assetId, side, quantity }, { method: 'POST' });
+}

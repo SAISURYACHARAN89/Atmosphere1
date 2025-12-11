@@ -6,4 +6,7 @@ const StartupLikeSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+// Ensure unique like per user/startup
+StartupLikeSchema.index({ user: 1, startup: 1 }, { unique: true });
+
 module.exports = mongoose.model('StartupLike', StartupLikeSchema);

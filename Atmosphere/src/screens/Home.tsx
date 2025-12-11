@@ -113,7 +113,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
         const loadPosts = async () => {
             try {
                 const data = await fetchStartupPosts();
-                console.debug('[Home] fetched startup posts sample:', Array.isArray(data) ? data[0] : data);
+                console.log('[Home] fetched startup posts sample:', Array.isArray(data) ? data[0] : data);
                 // Normalize posts to expected shape
                 const normalized = (data || []).map((p: any) => ({
                     id: String(p.id || p._id || Math.random()),
