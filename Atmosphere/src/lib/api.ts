@@ -85,8 +85,8 @@ export async function register({ email, username, password, displayName, account
 }
 
 
-export async function fetchStartupPosts() {
-    const data = await request('/api/startup-details', {}, { method: 'GET' });
+export async function fetchStartupPosts(limit = 20, skip = 0) {
+    const data = await request('/api/startup-details', { limit, skip }, { method: 'GET' });
     return data.startups ?? [];
 }
 
