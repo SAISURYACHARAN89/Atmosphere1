@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Dimensions } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchAndStoreUserRole } from '../lib/api';
@@ -288,86 +288,119 @@ const Jobs = () => {
         setPostLoading(false);
     };
 
-    const loadMore = () => {
-        if (activeTab === 'Jobs') {
-            if (!jobsHasMore || jobsLoading) return;
-            loadJobs(jobsSkip);
-        } else if (activeTab === 'Grants') {
-            if (!grantsHasMore || grantsLoading) return;
-            loadGrants(grantsSkip);
-        } else if (activeTab === 'Events') {
-            if (!eventsHasMore || eventsLoading) return;
-            loadEvents(eventsSkip);
+    const { width } = Dimensions.get('window');
+    const flatListRef = React.useRef<FlatList>(null);
+
+    // Sync tab press with scroll
+    const handleTabPress = (tab: string, index: number) => {
+        setActiveTab(tab);
+        flatListRef.current?.scrollToIndex({ index, animated: true });
+    };
+
+    // Sync scroll with active tab state
+    const handleMomentumScrollEnd = (event: any) => {
+        const index = Math.round(event.nativeEvent.contentOffset.x / width);
+        const newTab = TABS[index];
+        if (newTab && newTab !== activeTab) {
+            setActiveTab(newTab);
         }
     };
 
-    // Generic list renderer
-    const renderList = () => {
-        let data = [];
+    // Generic list renderer for a specific tab
+    const renderTabContent = ({ item: tabName }: { item: string }) => {
+        let data: any[] = [];
         let type = '';
         let loading = false;
+        let hasMore = false;
+        let skip = 0;
 
-        if (activeTab === 'Jobs') { data = jobs; type = 'Job'; loading = jobsLoading && jobs.length === 0; }
-        else if (activeTab === 'Grants') { data = grants; type = 'Grant'; loading = grantsLoading && grants.length === 0; }
-        else if (activeTab === 'Events') { data = events; type = 'Event'; loading = eventsLoading && events.length === 0; }
+        if (tabName === 'Jobs') {
+            data = jobs; type = 'Job'; loading = jobsLoading && jobs.length === 0;
+            hasMore = jobsHasMore; skip = jobsSkip;
+        } else if (tabName === 'Grants') {
+            data = grants; type = 'Grant'; loading = grantsLoading && grants.length === 0;
+            hasMore = grantsHasMore; skip = grantsSkip;
+        } else if (tabName === 'Events') {
+            data = events; type = 'Event'; loading = eventsLoading && events.length === 0;
+            hasMore = eventsHasMore; skip = eventsSkip;
+        }
 
-        if (loading && data.length === 0) {
+        const loadMoreCurrent = () => {
+            if (tabName === 'Jobs') { if (!jobsHasMore || jobsLoading) return; loadJobs(jobsSkip); }
+            else if (tabName === 'Grants') { if (!grantsHasMore || grantsLoading) return; loadGrants(grantsSkip); }
+            else if (tabName === 'Events') { if (!eventsHasMore || eventsLoading) return; loadEvents(eventsSkip); }
+        };
+
+        if (loading) {
             return (
-                <View style={{ marginTop: 40, alignItems: 'center' }}>
+                <View style={{ width, alignItems: 'center', marginTop: 40 }}>
                     <ActivityIndicator size="large" color={theme.primary} />
                 </View>
             );
         }
 
         return (
-            <FlatList
-                data={data}
-                keyExtractor={(item) => String(item._id || item.id)}
-                contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 4 }}
-                renderItem={({ item }) => (
-                    <OpportunityCard
-                        item={item}
-                        type={type}
-                        expanded={expandedId === (item._id || item.id)}
-                        onExpand={() => setExpandedId(expandedId === (item._id || item.id) ? null : (item._id || item.id))}
-                    />
-                )}
-                onEndReached={loadMore}
-                onEndReachedThreshold={0.5}
-                ListHeaderComponent={() => (
-                    <View style={styles.listHeader}>
-                        <Text style={[styles.resultCount, { color: '#fff' }]}>Total {type.toLowerCase()}s: {data.length}</Text>
-                        <TouchableOpacity>
-                            <Text style={{ fontSize: 14, color: theme.primary, fontWeight: 'bold' }}>Filter</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-                ListFooterComponent={() => {
-                    // Show spinner at bottom if loading more
-                    const isLoadingMore = (activeTab === 'Jobs' && jobsLoading) || (activeTab === 'Grants' && grantsLoading) || (activeTab === 'Events' && eventsLoading);
-                    if (isLoadingMore && data.length > 0) return <ActivityIndicator style={{ marginVertical: 20 }} color={theme.primary} />;
-                    if (data.length === 0) return <Text style={styles.emptyText}>No {type.toLowerCase()}s found.</Text>;
-                    return null;
-                }}
-            />
+            <View style={{ width }}>
+                <FlatList
+                    data={data}
+                    keyExtractor={(item) => String(item._id || item.id)}
+                    contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 16 }}
+                    renderItem={({ item }) => (
+                        <OpportunityCard
+                            item={item}
+                            type={type}
+                            expanded={expandedId === (item._id || item.id)}
+                            onExpand={() => setExpandedId(expandedId === (item._id || item.id) ? null : (item._id || item.id))}
+                        />
+                    )}
+                    onEndReached={loadMoreCurrent}
+                    onEndReachedThreshold={0.5}
+                    ListHeaderComponent={() => (
+                        <View style={styles.listHeader}>
+                            <Text style={[styles.resultCount, { color: '#fff' }]}>Total {type.toLowerCase()}s: {data.length}</Text>
+                            <TouchableOpacity>
+                                <Text style={{ fontSize: 14, color: theme.primary, fontWeight: 'bold' }}>Filter</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    ListFooterComponent={() => {
+                        const isLoadingMore = (tabName === 'Jobs' && jobsLoading) || (tabName === 'Grants' && grantsLoading) || (tabName === 'Events' && eventsLoading);
+                        if (isLoadingMore && data.length > 0) return <ActivityIndicator style={{ marginVertical: 20 }} color={theme.primary} />;
+                        if (data.length === 0) return <Text style={styles.emptyText}>No {type.toLowerCase()}s found.</Text>;
+                        return null;
+                    }}
+                />
+            </View>
         );
     };
 
     return (
         <View style={[styles.container, { backgroundColor: '#000000' }]}>
             <View style={[styles.tabBar, { backgroundColor: '#111' }]}>
-                {TABS.map(tab => (
+                {TABS.map((tab, index) => (
                     <TouchableOpacity
                         key={tab}
                         style={[styles.tabBtn, activeTab === tab && { backgroundColor: '#333' }]}
-                        onPress={() => setActiveTab(tab)}
+                        onPress={() => handleTabPress(tab, index)}
                     >
                         <Text style={[styles.tabText, { color: activeTab === tab ? '#fff' : '#888', fontWeight: activeTab === tab ? 'bold' : 'normal' }]}>{tab}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
 
-            {renderList()}
+            <FlatList
+                ref={flatListRef}
+                data={TABS}
+                keyExtractor={(item) => item}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={handleMomentumScrollEnd}
+                renderItem={renderTabContent}
+                initialScrollIndex={TABS.indexOf(activeTab)}
+                getItemLayout={(data, index) => ({ length: width, offset: width * index, index })}
+            />
+            {/* Modal and FAB remain unchanged below... */}
 
             {/* Always show plus for now if role exists, or stick to logic but ensure zIndex */}
             {/* Adding zIndex to style below */}
@@ -438,8 +471,8 @@ const Jobs = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingTop: 16, paddingHorizontal: 12 },
-    tabBar: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, borderRadius: 25, padding: 4 },
+    container: { flex: 1, paddingTop: 16, paddingHorizontal: 0 }, // Removed paddingHorizontal for full width swipe
+    tabBar: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, borderRadius: 25, padding: 4, marginHorizontal: 12 }, // Moved margin to here
     tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
     tabText: { fontSize: 14 },
     listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 },
