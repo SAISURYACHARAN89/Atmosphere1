@@ -8,55 +8,76 @@ import { getBaseUrl } from '../lib/config';
 
 const TABS = ['Jobs', 'Grants', 'Events'];
 
-function OpportunityCard({ item, type, onExpand, expanded }) {
+function OpportunityCard({ item, type, onExpand, expanded }: { item: any, type: string, onExpand: () => void, expanded: boolean }) {
     const { theme } = useContext(ThemeContext) as any;
     const [showFullDesc, setShowFullDesc] = useState(false);
     const tags = [item.sector, item.employmentType, item.locationType, item.companyType].filter(Boolean);
+
+    // The user explicitly requested a "dark theme app" experience matching a specific image.
+    // We force these "Pitch Black" styles regardless of the theme context's current mode
+    // to ensure the premium look is always visible.
+    const isDark = true; // Forced true per user requirement
+    const cardBg = '#000000'; // Pitch black
+    const borderColor = '#333';
+    const textColor = '#f2f2f2';
+    const subTextColor = '#888';
+    const badgeBg = '#333';
+    const applyBtnBg = '#333';
+    const applyBtnText = '#fff';
+
     return (
-        <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
-            {/* Header */}
-            <View style={styles.cardHeader}>
-                <View style={styles.logoBox}>
-                    <Text style={styles.logoText}>{item.title?.charAt(0) || item.roleTitle?.charAt(0) || '?'}</Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor: borderColor }]}>
+            {/* Row 1: Title and Badge */}
+            <View style={styles.cardHeaderRow}>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text style={[styles.cardTitle, { color: textColor }]} numberOfLines={1}>{item.title || item.roleTitle}</Text>
+                    <Text style={[styles.cardCompany, { color: subTextColor }]}>{item.poster?.displayName || item.startupName || item.organization || 'Unknown Organization'}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={1}>{item.title || item.roleTitle}</Text>
-                    <Text style={styles.cardCompany}>{item.poster?.displayName || item.startupName || ''}</Text>
+                <View style={[styles.badge, { backgroundColor: badgeBg }]}>
+                    <Text style={[styles.badgeText, { color: textColor }]}>{type.toLowerCase()}</Text>
                 </View>
-                <View style={styles.badge}><Text style={styles.badgeText}>{type}</Text></View>
             </View>
-            {/* Details */}
-            <View style={styles.cardDetails}>
-                <Text style={styles.cardLocation}>{item.locationType || item.location || ''}</Text>
-                <Text style={styles.cardComp}>{item.compensation || ''}</Text>
-            </View>
-            {/* Tags */}
-            <View style={styles.tagRow}>
-                {tags.map((tag, idx) => (
-                    <View key={idx} style={styles.tag}><Text style={styles.tagText}>{tag}</Text></View>
-                ))}
-            </View>
-            {/* Description with More/Less */}
-            <View style={{ marginBottom: 8 }}>
-                <Text style={styles.cardDesc} numberOfLines={showFullDesc ? undefined : 2}>{item.requirements || item.description || ''}</Text>
+
+            {/* Row 2: Description */}
+            <View style={{ marginBottom: 12 }}>
+                <Text style={[styles.cardDesc, { color: subTextColor }]} numberOfLines={showFullDesc ? undefined : 2}>
+                    {item.requirements || item.description || 'No description provided.'}
+                </Text>
                 {(item.requirements?.length > 80 || item.description?.length > 80) && (
                     <TouchableOpacity onPress={() => setShowFullDesc(!showFullDesc)}>
                         <Text style={styles.moreLess}>{showFullDesc ? 'Less' : 'More'}</Text>
                     </TouchableOpacity>
                 )}
             </View>
-            {/* Applicants & Action */}
-            <View style={styles.cardFooter}>
-                <Text style={styles.applicants}>{item.applicants?.length ? `${item.applicants.length} applicants` : 'Be the first applicant!'}</Text>
-                <TouchableOpacity style={styles.applyBtn} onPress={onExpand}>
-                    <Text style={styles.applyBtnText}>{expanded ? 'Hide' : 'Apply'}</Text>
+
+            {/* Row 3: Meta (Location, Date) */}
+            <View style={styles.metaRow}>
+                <View style={styles.metaItem}>
+                    <Text style={{ fontSize: 14, color: subTextColor }}>📍 {item.locationType || item.location || 'Remote'}</Text>
+                </View>
+                {item.deadline || item.date ? (
+                    <View style={[styles.metaItem, { marginLeft: 16 }]}>
+                        <Text style={{ fontSize: 14, color: subTextColor }}>📅 {item.deadline || item.date}</Text>
+                    </View>
+                ) : null}
+            </View>
+
+            {/* Row 4: Bottom Action Bar (Price/Comp left, Apply right) */}
+            <View style={styles.actionRow}>
+                <Text style={[styles.compensationText, { color: textColor }]}>
+                    {item.compensation || item.amount || (type === 'Event' ? (item.time || 'Free') : 'Unpaid')}
+                </Text>
+
+                <TouchableOpacity style={[styles.applyBtn, { backgroundColor: applyBtnBg }]} onPress={onExpand}>
+                    <Text style={[styles.applyBtnText, { color: applyBtnText }]}>{expanded ? 'Hide' : 'Apply ↗'}</Text>
                 </TouchableOpacity>
             </View>
+
             {/* Expanded Section */}
             {expanded && (
-                <View style={styles.expandedBox}>
-                    <Text style={styles.expandedTitle}>Application</Text>
-                    <Text style={styles.expandedText}>Answer custom questions and upload resume (UI coming soon)</Text>
+                <View style={[styles.expandedBox, { backgroundColor: isDark ? '#111' : '#f9f9f9', borderColor: borderColor }]}>
+                    <Text style={[styles.expandedTitle, { color: textColor }]}>Application</Text>
+                    <Text style={[styles.expandedText, { color: subTextColor }]}>Answer custom questions and upload resume (UI coming soon)</Text>
                     <TouchableOpacity style={styles.sendBtn} onPress={() => Alert.alert('Application sent!')}>
                         <Text style={styles.sendBtnText}>Send Application</Text>
                     </TouchableOpacity>
@@ -69,6 +90,7 @@ function OpportunityCard({ item, type, onExpand, expanded }) {
 const Jobs = () => {
     const { theme } = useContext(ThemeContext) as any;
     const [activeTab, setActiveTab] = useState('Jobs');
+
     // State for each tab
     const [jobs, setJobs] = useState<any[]>([]);
     const [jobsSkip, setJobsSkip] = useState(0);
@@ -301,7 +323,7 @@ const Jobs = () => {
             <FlatList
                 data={data}
                 keyExtractor={(item) => String(item._id || item.id)}
-                contentContainerStyle={{ paddingBottom: 80 }}
+                contentContainerStyle={{ paddingBottom: 80, paddingHorizontal: 4 }}
                 renderItem={({ item }) => (
                     <OpportunityCard
                         item={item}
@@ -312,6 +334,14 @@ const Jobs = () => {
                 )}
                 onEndReached={loadMore}
                 onEndReachedThreshold={0.5}
+                ListHeaderComponent={() => (
+                    <View style={styles.listHeader}>
+                        <Text style={[styles.resultCount, { color: theme.text }]}>Total {type.toLowerCase()}s: {data.length}</Text>
+                        <TouchableOpacity>
+                            <Text style={{ fontSize: 14, color: theme.primary, fontWeight: 'bold' }}>Filter</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
                 ListFooterComponent={() => {
                     // Show spinner at bottom if loading more
                     const isLoadingMore = (activeTab === 'Jobs' && jobsLoading) || (activeTab === 'Grants' && grantsLoading) || (activeTab === 'Events' && eventsLoading);
@@ -324,15 +354,15 @@ const Jobs = () => {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <View style={styles.tabBar}>
+        <View style={[styles.container, { backgroundColor: '#000000' }]}>
+            <View style={[styles.tabBar, { backgroundColor: '#111' }]}>
                 {TABS.map(tab => (
                     <TouchableOpacity
                         key={tab}
-                        style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
+                        style={[styles.tabBtn, activeTab === tab && { backgroundColor: '#333' }]}
                         onPress={() => setActiveTab(tab)}
                     >
-                        <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+                        <Text style={[styles.tabText, { color: activeTab === tab ? '#fff' : '#888', fontWeight: activeTab === tab ? 'bold' : 'normal' }]}>{tab}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -351,48 +381,48 @@ const Jobs = () => {
                 onRequestClose={() => setModalVisible(false)}
             >
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalContainer}>
-                    <View style={styles.modalBox}>
-                        <Text style={styles.modalTitle}>Post a new {activeTab.slice(0, -1)}</Text>
+                    <View style={[styles.modalBox, { backgroundColor: theme.cardBackground }]}>
+                        <Text style={[styles.modalTitle, { color: theme.text }]}>Post a new {activeTab.slice(0, -1)}</Text>
                         {/* Jobs Form */}
                         {activeTab === 'Jobs' && (
                             <>
-                                <TextInput style={styles.input} placeholder="Title" value={form.title} onChangeText={v => handleFormChange('title', v)} />
-                                <TextInput style={styles.input} placeholder="Sector" value={form.sector} onChangeText={v => handleFormChange('sector', v)} />
-                                <TextInput style={styles.input} placeholder="Location Type" value={form.locationType} onChangeText={v => handleFormChange('locationType', v)} />
-                                <TextInput style={styles.input} placeholder="Employment Type" value={form.employmentType} onChangeText={v => handleFormChange('employmentType', v)} />
-                                <TextInput style={styles.input} placeholder="Compensation" value={form.compensation} onChangeText={v => handleFormChange('compensation', v)} />
-                                <TextInput style={[styles.input, { height: 60 }]} placeholder="Requirements" value={form.requirements} onChangeText={v => handleFormChange('requirements', v)} multiline />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Title" value={form.title} onChangeText={v => handleFormChange('title', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Sector" value={form.sector} onChangeText={v => handleFormChange('sector', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Location Type" value={form.locationType} onChangeText={v => handleFormChange('locationType', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Employment Type" value={form.employmentType} onChangeText={v => handleFormChange('employmentType', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Compensation" value={form.compensation} onChangeText={v => handleFormChange('compensation', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { height: 60, color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Requirements" value={form.requirements} onChangeText={v => handleFormChange('requirements', v)} multiline />
                             </>
                         )}
                         {/* Grants Form */}
                         {activeTab === 'Grants' && (
                             <>
-                                <TextInput style={styles.input} placeholder="Name" value={form.name} onChangeText={v => handleFormChange('name', v)} />
-                                <TextInput style={styles.input} placeholder="Organization" value={form.organization} onChangeText={v => handleFormChange('organization', v)} />
-                                <TextInput style={styles.input} placeholder="Sector" value={form.sector} onChangeText={v => handleFormChange('sector', v)} />
-                                <TextInput style={styles.input} placeholder="Location" value={form.location} onChangeText={v => handleFormChange('location', v)} />
-                                <TextInput style={styles.input} placeholder="Amount" value={form.amount} onChangeText={v => handleFormChange('amount', v)} />
-                                <TextInput style={styles.input} placeholder="Deadline (YYYY-MM-DD)" value={form.deadline} onChangeText={v => handleFormChange('deadline', v)} />
-                                <TextInput style={styles.input} placeholder="Type (grant/incubator/accelerator)" value={form.type} onChangeText={v => handleFormChange('type', v)} />
-                                <TextInput style={[styles.input, { height: 60 }]} placeholder="Description" value={form.description} onChangeText={v => handleFormChange('description', v)} multiline />
-                                <TextInput style={styles.input} placeholder="URL" value={form.url} onChangeText={v => handleFormChange('url', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Name" value={form.name} onChangeText={v => handleFormChange('name', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Organization" value={form.organization} onChangeText={v => handleFormChange('organization', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Sector" value={form.sector} onChangeText={v => handleFormChange('sector', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Location" value={form.location} onChangeText={v => handleFormChange('location', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Amount" value={form.amount} onChangeText={v => handleFormChange('amount', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Deadline (YYYY-MM-DD)" value={form.deadline} onChangeText={v => handleFormChange('deadline', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Type (grant/incubator/accelerator)" value={form.type} onChangeText={v => handleFormChange('type', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { height: 60, color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Description" value={form.description} onChangeText={v => handleFormChange('description', v)} multiline />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="URL" value={form.url} onChangeText={v => handleFormChange('url', v)} />
                             </>
                         )}
                         {/* Events Form */}
                         {activeTab === 'Events' && (
                             <>
-                                <TextInput style={styles.input} placeholder="Name" value={form.name} onChangeText={v => handleFormChange('name', v)} />
-                                <TextInput style={styles.input} placeholder="Organizer" value={form.organizer} onChangeText={v => handleFormChange('organizer', v)} />
-                                <TextInput style={styles.input} placeholder="Location" value={form.location} onChangeText={v => handleFormChange('location', v)} />
-                                <TextInput style={styles.input} placeholder="Date (YYYY-MM-DD)" value={form.date} onChangeText={v => handleFormChange('date', v)} />
-                                <TextInput style={styles.input} placeholder="Time (e.g. 18:00)" value={form.time} onChangeText={v => handleFormChange('time', v)} />
-                                <TextInput style={[styles.input, { height: 60 }]} placeholder="Description" value={form.description} onChangeText={v => handleFormChange('description', v)} multiline />
-                                <TextInput style={styles.input} placeholder="URL" value={form.url} onChangeText={v => handleFormChange('url', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Name" value={form.name} onChangeText={v => handleFormChange('name', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Organizer" value={form.organizer} onChangeText={v => handleFormChange('organizer', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Location" value={form.location} onChangeText={v => handleFormChange('location', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Date (YYYY-MM-DD)" value={form.date} onChangeText={v => handleFormChange('date', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Time (e.g. 18:00)" value={form.time} onChangeText={v => handleFormChange('time', v)} />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { height: 60, color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="Description" value={form.description} onChangeText={v => handleFormChange('description', v)} multiline />
+                                <TextInput placeholderTextColor={theme.placeholder} style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]} placeholder="URL" value={form.url} onChangeText={v => handleFormChange('url', v)} />
                             </>
                         )}
                         <View style={styles.modalActions}>
-                            <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} disabled={postLoading}>
-                                <Text style={styles.cancelText}>Cancel</Text>
+                            <TouchableOpacity style={[styles.cancelBtn, { backgroundColor: theme.border }]} onPress={() => setModalVisible(false)} disabled={postLoading}>
+                                <Text style={[styles.cancelText, { color: theme.text }]}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={postLoading}>
                                 <Text style={styles.submitText}>{postLoading ? 'Posting...' : 'Submit'}</Text>
@@ -406,115 +436,58 @@ const Jobs = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingTop: 16, paddingHorizontal: 8 },
-    tabBar: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, backgroundColor: '#f3f3f3', borderRadius: 16, padding: 4 },
-    tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center' },
-    tabBtnActive: { backgroundColor: '#fff', elevation: 2 },
-    tabText: { fontSize: 16, color: '#888' },
-    tabTextActive: { color: '#222', fontWeight: 'bold' },
-    scrollContent: { paddingBottom: 32 },
-    card: { borderRadius: 16, backgroundColor: '#fff', marginBottom: 18, padding: 18, elevation: 3 },
-    cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-    logoBox: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#e3e3e3', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-    logoText: { fontSize: 18, fontWeight: 'bold', color: '#007bff' },
-    cardTitle: { fontSize: 17, fontWeight: 'bold', marginBottom: 2 },
-    cardCompany: { fontSize: 13, color: '#888', marginBottom: 2 },
-    badge: { backgroundColor: '#f3f3f3', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
-    badgeText: { fontSize: 11, color: '#007bff', fontWeight: 'bold' },
-    cardDetails: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-    cardLocation: { fontSize: 13, color: '#666' },
-    cardComp: { fontSize: 13, color: '#666' },
-    tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 },
-    tag: { backgroundColor: '#e9ecef', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginRight: 4, marginBottom: 2 },
-    tagText: { fontSize: 11, color: '#444' },
-    cardDesc: { fontSize: 13, color: '#444' },
-    moreLess: { color: '#007bff', fontSize: 12, marginTop: 2 },
-    cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
-    applicants: { fontSize: 12, color: '#888' },
-    applyBtn: { backgroundColor: '#007bff', borderRadius: 8, paddingHorizontal: 18, paddingVertical: 7 },
-    applyBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
-    expandedBox: { marginTop: 14, backgroundColor: '#f9f9f9', borderRadius: 10, padding: 14 },
-    expandedTitle: { fontWeight: 'bold', marginBottom: 6, fontSize: 15 },
-    expandedText: { fontSize: 13, marginBottom: 14, color: '#444' },
+    container: { flex: 1, paddingTop: 16, paddingHorizontal: 12 },
+    tabBar: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, borderRadius: 25, padding: 4 },
+    tabBtn: { flex: 1, paddingVertical: 10, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    tabText: { fontSize: 14 },
+    listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 },
+    resultCount: { fontSize: 14, opacity: 0.7 },
+
+    // Card Styles
+    card: { borderRadius: 16, marginBottom: 16, padding: 16, borderWidth: 1 },
+    cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
+    cardTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+    cardCompany: { fontSize: 13 },
+    badge: { borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
+    badgeText: { fontSize: 11, fontWeight: '600' },
+
+    cardDesc: { fontSize: 13, lineHeight: 18 },
+    moreLess: { color: '#007bff', fontSize: 12, marginTop: 4 },
+
+    metaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+    metaItem: { flexDirection: 'row', alignItems: 'center' },
+
+    actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
+    compensationText: { fontSize: 18, fontWeight: 'bold' },
+    applyBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#444' },
+    applyBtnText: { fontSize: 13, fontWeight: '600' },
+
+    expandedBox: { marginTop: 16, borderRadius: 12, padding: 16, borderWidth: 1 },
+    expandedTitle: { fontWeight: 'bold', marginBottom: 8, fontSize: 15 },
+    expandedText: { fontSize: 13, marginBottom: 16 },
     sendBtn: { backgroundColor: '#28a745', borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
     sendBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
+
+    // Empty & Loading
     emptyText: { textAlign: 'center', color: '#888', marginTop: 32, fontSize: 16 },
+
+    // FAB
     floatingPlus: {
-        position: 'absolute',
-        right: 18,
-        bottom: 24,
-        backgroundColor: '#007bff',
-        borderRadius: 28,
-        width: 56,
-        height: 56,
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 6,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        position: 'absolute', right: 18, bottom: 24, backgroundColor: '#007bff', borderRadius: 28, width: 56, height: 56,
+        alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4,
     },
-    plusIcon: {
-        color: '#fff',
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 2,
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.3)',
-    },
-    modalBox: {
-        width: '90%',
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 20,
-        elevation: 8,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 10,
-        fontSize: 15,
-        backgroundColor: '#f9f9f9',
-    },
-    modalActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 16,
-    },
-    cancelBtn: {
-        backgroundColor: '#eee',
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 18,
-    },
-    cancelText: {
-        color: '#888',
-        fontSize: 15,
-    },
-    submitBtn: {
-        backgroundColor: '#007bff',
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 18,
-    },
-    submitText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: 'bold',
-    },
+    plusIcon: { color: '#fff', fontSize: 32, fontWeight: 'bold', marginBottom: 2 },
+
+    // Modal
+    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' },
+    modalBox: { width: '90%', borderRadius: 16, padding: 20, elevation: 8 },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
+    input: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 12, fontSize: 15 },
+    modalActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
+    cancelBtn: { borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20 },
+    cancelText: { fontSize: 15, fontWeight: '600' },
+    submitBtn: { backgroundColor: '#007bff', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 24 },
+    submitText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
 });
 
 export default Jobs;
