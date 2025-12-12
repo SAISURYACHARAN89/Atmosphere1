@@ -329,6 +329,37 @@ export async function placeOrder(assetId: string, side: 'buy' | 'sell', quantity
     return request('/api/trade/order', { assetId, side, quantity }, { method: 'POST' });
 }
 
+// New Trade APIs for trading section
+export async function createTrade(tradeData: any) {
+    return request('/api/trade/trades', tradeData, { method: 'POST' });
+}
+
+export async function getMyTrades() {
+    const data = await request('/api/trade/trades/my', {}, { method: 'GET' });
+    return data.trades || [];
+}
+
+export async function getAllTrades() {
+    const data = await request('/api/trade/trades', {}, { method: 'GET' });
+    return data.trades || [];
+}
+
+export async function updateTrade(id: string, tradeData: any) {
+    return request(`/api/trade/trades/${id}`, tradeData, { method: 'PUT' });
+}
+
+export async function deleteTrade(id: string) {
+    return request(`/api/trade/trades/${id}`, {}, { method: 'DELETE' });
+}
+
+export async function incrementTradeViews(id: string) {
+    return request(`/api/trade/trades/${id}/view`, {}, { method: 'POST' });
+}
+
+export async function toggleTradeSave(id: string, saved: boolean) {
+    return request(`/api/trade/trades/${id}/save`, { saved }, { method: 'POST' });
+}
+
 // Investor APIs
 export async function fetchInvestors(params?: { limit?: number; skip?: number }) {
     const data = await request('/api/investor-details', params || {}, { method: 'GET' });

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator, Dimensions, Animated, ScrollView, Image as RNImage } from 'react-native';
-import { fetchMarkets, fetchInvestors } from '../lib/api';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator, Dimensions, Animated, ScrollView, Image as RNImage, Alert } from 'react-native';
+import { fetchMarkets, fetchInvestors, createTrade, getMyTrades, getAllTrades, updateTrade, deleteTrade, incrementTradeViews } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -24,9 +24,10 @@ const categories = [
 ];
 
 interface Investment {
+    _id?: string;
     companyName: string;
     companyId?: string;
-    date?: Date;
+    date?: Date | string;
     amount?: number;
     docs?: string[];
 }
@@ -43,7 +44,8 @@ interface InvestorPortfolio {
 }
 
 interface ActiveTrade {
-    id: number;
+    _id?: string;
+    id?: number;
     companyId: string;
     companyName: string;
     companyType: string[];
@@ -60,6 +62,8 @@ interface ActiveTrade {
     isEdited: boolean;
     isManualEntry: boolean;
     selectedIndustries: string[];
+    externalLinkHeading?: string;
+    externalLinkUrl?: string;
 }
 
 const Trading = () => {
@@ -88,18 +92,22 @@ const Trading = () => {
     const [imageUris, setImageUris] = useState<string[]>([]);
     const [externalLinkHeading, setExternalLinkHeading] = useState<string>('');
     const [externalLinkUrl, setExternalLinkUrl] = useState<string>('');
+    const [selectedCompanyName, setSelectedCompanyName] = useState<string>('');
+    const [selectedCompanyAge, setSelectedCompanyAge] = useState<string>('');
 
     // Active trades
     const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
-    const [expandedTradeId, setExpandedTradeId] = useState<number | null>(null);
-    const [currentPhotoIndex] = useState<{ [key: number]: number }>({});
+    const [expandedTradeId, setExpandedTradeId] = useState<string | number | null>(null);
+    const [currentPhotoIndex, setCurrentPhotoIndex] = useState<{ [key: string]: number }>({});
 
     // BUY tab state
     const [searchValue, setSearchValue] = useState('');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [showSavedOnly, setShowSavedOnly] = useState(false);
-    const [savedItems, setSavedItems] = useState<number[]>([]);
+    const [savedItems, setSavedItems] = useState<string[]>([]);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [allTrades, setAllTrades] = useState<ActiveTrade[]>([]);
+    const [expandedBuyTradeId, setExpandedBuyTradeId] = useState<string | number | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -131,6 +139,30 @@ const Trading = () => {
         })();
     }, []);
 
+    // Load active trades
+    useEffect(() => {
+        (async () => {
+            try {
+                const trades = await getMyTrades();
+                setActiveTrades(Array.isArray(trades) ? trades : []);
+            } catch (e: any) {
+                console.warn('Failed to load trades', e);
+            }
+        })();
+    }, []);
+
+    // Load all trades for BUY tab
+    useEffect(() => {
+        (async () => {
+            try {
+                const trades = await getAllTrades();
+                setAllTrades(Array.isArray(trades) ? trades : []);
+            } catch (e: any) {
+                console.warn('Failed to load all trades', e);
+            }
+        })();
+    }, []);
+
     const togglePortfolio = (cardKey: string) => {
         setExpandedPortfolios(prev => {
             const newSet = new Set(prev);
@@ -141,6 +173,13 @@ const Trading = () => {
             }
             return newSet;
         });
+    };
+
+    const getYearsAgo = (date?: Date | string) => {
+        if (!date) return '';
+        const investmentDate = new Date(date);
+        const years = new Date().getFullYear() - investmentDate.getFullYear();
+        return years > 0 ? `${years} years ago` : 'This year';
     };
 
     const toggleIndustry = (industry: string) => {
@@ -185,55 +224,75 @@ const Trading = () => {
         setImageUris(imageUris.filter((_, i) => i !== index));
     };
 
-    const handleOpenTrade = () => {
+    const handleOpenTrade = async () => {
         if (!expandedCompany) return;
 
-        const newTrade: ActiveTrade = {
-            id: Date.now(),
+        // Use the company name and age that were stored when the portfolio card was expanded
+        const finalCompanyName = selectedCompanyName || 'Company';
+        const finalCompanyAge = selectedCompanyAge || companyAge || '';
+
+        const tradeData = {
             companyId: expandedCompany,
-            companyName: investors.find(inv =>
-                inv.previousInvestments.some(inv => `${inv.companyName}-${inv._id}` === expandedCompany)
-            )?.previousInvestments.find(inv => `${inv.companyName}-${inv._id}` === expandedCompany)?.companyName || 'Company',
+            companyName: finalCompanyName,
             companyType,
-            companyAge,
+            companyAge: finalCompanyAge,
             revenueStatus,
             description,
             startupUsername,
             sellingRangeMin,
             sellingRangeMax,
-            videoUrl: videoUri,
-            imageUrls: imageUris,
-            views: 0,
-            saves: 0,
-            isEdited: false,
-            isManualEntry,
             selectedIndustries,
+            isManualEntry,
+            externalLinkHeading,
+            externalLinkUrl,
+            // Note: videoUrl and imageUrls are excluded for now (future implementation)
         };
 
-        setActiveTrades([...activeTrades, newTrade]);
+        try {
+            const response = await createTrade(tradeData);
 
-        // Reset form
-        setExpandedCompany(null);
-        setSellingRangeMin(10);
-        setSellingRangeMax(40);
-        setCompanyAge('');
-        setRevenueStatus('pre-revenue');
-        setDescription('');
-        setStartupUsername('');
-        setIsManualEntry(false);
-        setSelectedIndustries([]);
-        setVideoUri('');
-        setImageUris([]);
-        setExternalLinkHeading('');
-        setExternalLinkUrl('');
+            // Add the new trade to local state
+            if (response && response.trade) {
+                setActiveTrades([...activeTrades, response.trade]);
+            }
+
+            // Reset form
+            setExpandedCompany(null);
+            setSellingRangeMin(10);
+            setSellingRangeMax(40);
+            setCompanyAge('');
+            setRevenueStatus('pre-revenue');
+            setDescription('');
+            setStartupUsername('');
+            setIsManualEntry(false);
+            setSelectedIndustries([]);
+            setVideoUri('');
+            setImageUris([]);
+            setExternalLinkHeading('');
+            setExternalLinkUrl('');
+            setSelectedCompanyName('');
+            setSelectedCompanyAge('');
+
+            Alert.alert('Success', 'Trade opened successfully!');
+        } catch (error: any) {
+            console.error('Failed to create trade:', error);
+            Alert.alert('Error', error.message || 'Failed to open trade');
+        }
     };
 
-    const handleDeleteTrade = (tradeId: number) => {
-        setActiveTrades(activeTrades.filter(trade => trade.id !== tradeId));
+    const handleDeleteTrade = async (tradeId: any) => {
+        try {
+            await deleteTrade(tradeId);
+            setActiveTrades(activeTrades.filter(trade => trade._id !== tradeId));
+            Alert.alert('Success', 'Trade deleted successfully!');
+        } catch (error: any) {
+            console.error('Failed to delete trade:', error);
+            Alert.alert('Error', error.message || 'Failed to delete trade');
+        }
     };
 
-    const handleUpdateTrade = (tradeId: number) => {
-        const trade = activeTrades.find(t => t.id === tradeId);
+    const handleUpdateTrade = (tradeId: any) => {
+        const trade = activeTrades.find(t => t._id === tradeId);
         if (trade) {
             setExpandedCompany(trade.companyId);
             setSellingRangeMin(trade.sellingRangeMin);
@@ -244,8 +303,10 @@ const Trading = () => {
             setStartupUsername(trade.startupUsername);
             setIsManualEntry(trade.isManualEntry);
             setVideoUri(trade.videoUrl || '');
-            setImageUris(trade.imageUrls);
+            setImageUris(trade.imageUrls || []);
             setSelectedIndustries(trade.selectedIndustries);
+            setExternalLinkHeading(trade.externalLinkHeading || '');
+            setExternalLinkUrl(trade.externalLinkUrl || '');
             handleDeleteTrade(tradeId);
         }
     };
@@ -258,7 +319,7 @@ const Trading = () => {
         );
     };
 
-    const toggleSaveItem = (itemId: number) => {
+    const toggleSaveItem = (itemId: string) => {
         setSavedItems(prev =>
             prev.includes(itemId)
                 ? prev.filter(id => id !== itemId)
@@ -324,7 +385,15 @@ const Trading = () => {
                                 style={styles.portfolioCardHeader}
                                 onPress={() => {
                                     togglePortfolio(cardKey);
-                                    setExpandedCompany(isExpanded ? null : cardKey);
+                                    if (isExpanded) {
+                                        setExpandedCompany(null);
+                                        setSelectedCompanyName('');
+                                        setSelectedCompanyAge('');
+                                    } else {
+                                        setExpandedCompany(cardKey);
+                                        setSelectedCompanyName(item.companyName);
+                                        setSelectedCompanyAge(yearsText);
+                                    }
                                 }}
                             >
                                 <View style={{ flex: 1 }}>
@@ -452,29 +521,30 @@ const Trading = () => {
                                             {/* Segment Tags */}
                                             <Text style={styles.formLabel}>Segment (max 3)</Text>
                                             <ScrollView
-                                                horizontal
-                                                showsHorizontalScrollIndicator={false}
+                                                showsVerticalScrollIndicator={false}
                                                 style={styles.tagsScroll}
-                                                contentContainerStyle={styles.tagsContent}
+                                                nestedScrollEnabled={true}
                                             >
-                                                {industryTags.map(tag => (
-                                                    <TouchableOpacity
-                                                        key={tag}
-                                                        onPress={() => toggleIndustry(tag)}
-                                                        disabled={!selectedIndustries.includes(tag) && selectedIndustries.length >= 3}
-                                                        style={[
-                                                            styles.tagChip,
-                                                            selectedIndustries.includes(tag) && styles.tagChipActive
-                                                        ]}
-                                                    >
-                                                        <Text style={[
-                                                            styles.tagChipText,
-                                                            selectedIndustries.includes(tag) && styles.tagChipTextActive
-                                                        ]}>
-                                                            {tag}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                ))}
+                                                <View style={styles.tagsContent}>
+                                                    {industryTags.map(tag => (
+                                                        <TouchableOpacity
+                                                            key={tag}
+                                                            onPress={() => toggleIndustry(tag)}
+                                                            disabled={!selectedIndustries.includes(tag) && selectedIndustries.length >= 3}
+                                                            style={[
+                                                                styles.tagChip,
+                                                                selectedIndustries.includes(tag) && styles.tagChipActive
+                                                            ]}
+                                                        >
+                                                            <Text style={[
+                                                                styles.tagChipText,
+                                                                selectedIndustries.includes(tag) && styles.tagChipTextActive
+                                                            ]}>
+                                                                {tag}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                    ))}
+                                                </View>
                                             </ScrollView>
 
                                             {/* Description */}
@@ -558,14 +628,16 @@ const Trading = () => {
                     <View style={{ marginTop: 24 }}>
                         <Text style={styles.portfolioHeader}>Active Trades</Text>
                         {activeTrades.map((trade) => {
-                            const isExpanded = expandedTradeId === trade.id;
-                            const photoIndex = currentPhotoIndex[trade.id] || 0;
+                            const tradeId = trade._id || trade.id;
+                            if (!tradeId) return null;
+                            const isExpanded = expandedTradeId === tradeId;
+                            const photoIndex = currentPhotoIndex[tradeId] || 0;
 
                             return (
-                                <View key={trade.id} style={styles.tradeCard}>
+                                <View key={tradeId} style={styles.tradeCard}>
                                     <TouchableOpacity
                                         style={styles.tradeCardHeader}
-                                        onPress={() => setExpandedTradeId(isExpanded ? null : trade.id)}
+                                        onPress={() => setExpandedTradeId(isExpanded ? null : (tradeId as string | number))}
                                     >
                                         <View style={styles.tradeAvatar}>
                                             <Text style={styles.tradeAvatarText}>
@@ -593,7 +665,7 @@ const Trading = () => {
                                                 style={styles.tradeActionButton}
                                                 onPress={(e) => {
                                                     e.stopPropagation();
-                                                    handleUpdateTrade(trade.id);
+                                                    handleUpdateTrade(tradeId);
                                                 }}
                                             >
                                                 <MaterialCommunityIcons name="pencil" size={16} color="#999" />
@@ -602,7 +674,7 @@ const Trading = () => {
                                                 style={styles.tradeActionButton}
                                                 onPress={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteTrade(trade.id);
+                                                    handleDeleteTrade(tradeId);
                                                 }}
                                             >
                                                 <MaterialCommunityIcons name="delete" size={16} color="#ff4444" />
@@ -692,12 +764,7 @@ const Trading = () => {
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}>
                 {/* Category Filters - Only show when filter is open */}
                 {isFilterOpen && (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={styles.categoriesScroll}
-                        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}
-                    >
+                    <View style={styles.categoriesContainer}>
                         {categories.map(category => (
                             <TouchableOpacity
                                 key={category}
@@ -715,34 +782,170 @@ const Trading = () => {
                                 </Text>
                             </TouchableOpacity>
                         ))}
-                    </ScrollView>
+                    </View>
                 )}
 
-                {/* Market Cards */}
-                {markets.map((item, index) => (
-                    <View key={index} style={styles.card}>
-                        <View style={styles.avatarWrap}>
-                            <View style={styles.avatarCircle} />
-                        </View>
-                        <View style={styles.cardBody}>
-                            <View style={styles.cardHeader}>
-                                <Text style={styles.companyName}>{item.title || item.name}</Text>
-                                <TouchableOpacity
-                                    style={styles.iconBtn}
-                                    onPress={() => toggleSaveItem(item._id || item.id)}
-                                >
-                                    <MaterialCommunityIcons
-                                        name={savedItems.includes(item._id || item.id) ? "bookmark" : "bookmark-outline"}
-                                        size={18}
-                                        color={savedItems.includes(item._id || item.id) ? "#1a73e8" : "#bfbfbf"}
+                {/* Trade Cards */}
+                {allTrades.map((trade) => {
+                    const tradeId = trade._id || trade.id;
+                    if (!tradeId) return null;
+                    const isExpanded = expandedBuyTradeId === tradeId;
+                    const isSaved = savedItems.includes(String(tradeId));
+
+                    return (
+                        <View key={tradeId} style={styles.professionalTradeCard}>
+                            {/* Header with Profile and Actions */}
+                            <View style={styles.professionalCardHeader}>
+                                {/* Profile Picture */}
+                                {trade.imageUrls && trade.imageUrls.length > 0 && trade.imageUrls[0] ? (
+                                    <RNImage
+                                        source={{ uri: trade.imageUrls[0] }}
+                                        style={styles.professionalAvatar}
                                     />
-                                </TouchableOpacity>
+                                ) : (
+                                    <View style={styles.professionalAvatar}>
+                                        <Text style={styles.professionalAvatarText}>
+                                            {trade.companyName[0]}
+                                        </Text>
+                                    </View>
+                                )}
+
+                                {/* Company Info */}
+                                <View style={styles.professionalCompanyInfo}>
+                                    <Text style={styles.professionalCompanyName}>{trade.companyName}</Text>
+                                    {trade.startupUsername && (
+                                        <Text style={styles.professionalUsername}>{trade.startupUsername}</Text>
+                                    )}
+                                </View>
+
+                                {/* Action Buttons */}
+                                <View style={styles.professionalActions}>
+                                    <TouchableOpacity
+                                        style={styles.professionalActionBtn}
+                                        onPress={() => toggleSaveItem(String(tradeId))}
+                                    >
+                                        <MaterialCommunityIcons
+                                            name={isSaved ? "bookmark" : "bookmark-outline"}
+                                            size={22}
+                                            color={isSaved ? "#1a73e8" : "#bfbfbf"}
+                                        />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.professionalActionBtn}
+                                        onPress={() => Alert.alert('Chat', 'Chat functionality coming soon!')}
+                                    >
+                                        <MaterialCommunityIcons
+                                            name="message-outline"
+                                            size={22}
+                                            color="#bfbfbf"
+                                        />
+                                    </TouchableOpacity>
+                                </View>
                             </View>
-                            <Text style={styles.personName}>{item.owner || item.person || ''}</Text>
-                            <Text style={styles.tagline}>{item.description || item.tagline || ''}</Text>
+
+                            {/* Description */}
+                            <Text style={styles.professionalDescription}>
+                                {trade.description || 'No description provided'}
+                            </Text>
+
+                            {/* Image Carousel */}
+                            {trade.imageUrls && trade.imageUrls.length > 0 && (
+                                <View style={styles.professionalImageContainer}>
+                                    <RNImage
+                                        source={{ uri: trade.imageUrls[currentPhotoIndex[tradeId] || 0] }}
+                                        style={styles.professionalImage}
+                                    />
+
+                                    {/* Navigation Arrows */}
+                                    {trade.imageUrls.length > 1 && (
+                                        <>
+                                            {/* Left Arrow */}
+                                            {(currentPhotoIndex[tradeId] || 0) > 0 && (
+                                                <TouchableOpacity
+                                                    style={[styles.professionalArrow, styles.professionalArrowLeft]}
+                                                    onPress={() => {
+                                                        const currentIndex = currentPhotoIndex[tradeId] || 0;
+                                                        setCurrentPhotoIndex({
+                                                            ...currentPhotoIndex,
+                                                            [tradeId]: currentIndex - 1
+                                                        });
+                                                    }}
+                                                >
+                                                    <MaterialCommunityIcons name="chevron-left" size={22} color="#fff" />
+                                                </TouchableOpacity>
+                                            )}
+
+                                            {/* Right Arrow */}
+                                            {(currentPhotoIndex[tradeId] || 0) < trade.imageUrls.length - 1 && (
+                                                <TouchableOpacity
+                                                    style={[styles.professionalArrow, styles.professionalArrowRight]}
+                                                    onPress={() => {
+                                                        const currentIndex = currentPhotoIndex[tradeId] || 0;
+                                                        setCurrentPhotoIndex({
+                                                            ...currentPhotoIndex,
+                                                            [tradeId]: currentIndex + 1
+                                                        });
+                                                    }}
+                                                >
+                                                    <MaterialCommunityIcons name="chevron-right" size={22} color="#fff" />
+                                                </TouchableOpacity>
+                                            )}
+
+                                            {/* Image Indicators (Dots) */}
+                                            <View style={styles.professionalIndicators}>
+                                                {trade.imageUrls.map((_, idx) => (
+                                                    <View
+                                                        key={idx}
+                                                        style={[
+                                                            styles.professionalDot,
+                                                            idx === (currentPhotoIndex[tradeId] || 0) && styles.professionalDotActive
+                                                        ]}
+                                                    />
+                                                ))}
+                                            </View>
+                                        </>
+                                    )}
+                                </View>
+                            )}
+
+                            {/* Info Grid */}
+                            <View style={styles.professionalInfoGrid}>
+                                <View style={styles.professionalInfoItem}>
+                                    <Text style={styles.professionalInfoLabel}>Revenue</Text>
+                                    <Text style={styles.professionalInfoValue}>
+                                        {trade.revenueStatus === 'revenue-generating' ? 'Revenue Generating' : 'Pre Revenue'}
+                                    </Text>
+                                </View>
+                                <View style={styles.professionalInfoItem}>
+                                    <Text style={styles.professionalInfoLabel}>Age</Text>
+                                    <Text style={styles.professionalInfoValue}>{trade.companyAge || 'N/A'}</Text>
+                                </View>
+                                <View style={styles.professionalInfoItem}>
+                                    <Text style={styles.professionalInfoLabel}>Range</Text>
+                                    <Text style={styles.professionalInfoValue}>
+                                        {trade.sellingRangeMin}% - {trade.sellingRangeMax}%
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* Industry Tags */}
+                            {trade.selectedIndustries && trade.selectedIndustries.length > 0 && (
+                                <View style={styles.professionalTags}>
+                                    {trade.selectedIndustries.map((industry, idx) => (
+                                        <View key={idx} style={styles.professionalTag}>
+                                            <Text style={styles.professionalTagText}>{industry}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* Express Interest Button */}
+                            <TouchableOpacity style={styles.expressInterestButton}>
+                                <Text style={styles.expressInterestText}>Express Interest</Text>
+                            </TouchableOpacity>
                         </View>
-                    </View>
-                ))}
+                    );
+                })}
             </ScrollView>
         );
     };
@@ -1046,7 +1249,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     tagsScroll: {
-        maxHeight: 80,
+        maxHeight: 120,
         marginBottom: 12,
     },
     tagsContent: {
@@ -1248,15 +1451,18 @@ const styles = StyleSheet.create({
     },
 
     // Buy tab styles
-    categoriesScroll: {
-        // No height restriction - let it wrap naturally
+    categoriesContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 8,
     },
     categoryChip: {
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
         backgroundColor: '#1a1a1a',
-        marginRight: 8,
     },
     categoryChipActive: {
         backgroundColor: '#1a73e8',
@@ -1279,6 +1485,218 @@ const styles = StyleSheet.create({
     personName: { color: '#bfbfbf', fontSize: 12, marginTop: 4 },
     tagline: { color: '#bfbfbf', fontSize: 12, marginTop: 6 },
     iconBtn: { padding: 6 },
+
+    // BUY tab trade card styles
+    buyTradeCard: {
+        backgroundColor: '#0f0f0f',
+        marginHorizontal: 16,
+        marginVertical: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#333',
+        overflow: 'hidden',
+    },
+    buyTradeCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        padding: 16,
+    },
+    buyTradeAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#1a73e8',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    buyTradeAvatarText: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: '700',
+    },
+    buyTradeInfo: {
+        flex: 1,
+        marginRight: 12,
+    },
+    buyTradeCompanyName: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
+        marginBottom: 2,
+    },
+    buyTradeUsername: {
+        color: '#999',
+        fontSize: 13,
+        marginBottom: 6,
+    },
+    buyTradeDescription: {
+        color: '#bfbfbf',
+        fontSize: 13,
+        lineHeight: 18,
+    },
+    buyTradeActions: {
+        flexDirection: 'column',
+        gap: 8,
+    },
+    buyTradeActionBtn: {
+        padding: 8,
+    },
+    buyTradeExpanded: {
+        paddingHorizontal: 16,
+        paddingBottom: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#222',
+    },
+    buyTradeAvatarImage: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: 12,
+    },
+    investorDetailsSection: {
+        marginBottom: 16,
+    },
+    investorName: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 4,
+    },
+    investorUsername: {
+        color: '#999',
+        fontSize: 14,
+        marginBottom: 2,
+    },
+    investorTime: {
+        color: '#666',
+        fontSize: 12,
+    },
+    expandedDescription: {
+        color: '#bfbfbf',
+        fontSize: 14,
+        lineHeight: 22,
+        marginBottom: 16,
+    },
+    imageCarouselContainer: {
+        position: 'relative',
+        marginBottom: 16,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    carouselImage: {
+        width: '100%',
+        height: 250,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 12,
+    },
+    carouselArrow: {
+        position: 'absolute',
+        top: '50%',
+        transform: [{ translateY: -20 }],
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
+    },
+    carouselArrowLeft: {
+        left: 12,
+    },
+    carouselArrowRight: {
+        right: 12,
+    },
+    imageIndicators: {
+        position: 'absolute',
+        bottom: 12,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 6,
+    },
+    indicator: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    },
+    indicatorActive: {
+        backgroundColor: '#fff',
+        width: 24,
+    },
+    imagesScrollContainer: {
+        marginBottom: 16,
+    },
+    imagesScrollContent: {
+        gap: 12,
+    },
+    tradeImage: {
+        width: 300,
+        height: 200,
+        borderRadius: 12,
+        backgroundColor: '#1a1a1a',
+    },
+    buyTradeSection: {
+        marginBottom: 16,
+    },
+    buyTradeSectionTitle: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    buyTradeSectionText: {
+        color: '#bfbfbf',
+        fontSize: 13,
+        lineHeight: 20,
+    },
+    buyTradeIndustries: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    buyTradeIndustryTag: {
+        backgroundColor: '#1a1a1a',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    buyTradeIndustryText: {
+        color: '#fff',
+        fontSize: 12,
+    },
+    buyTradeDetailsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+        marginBottom: 16,
+    },
+    buyTradeDetailItem: {
+        flex: 1,
+        minWidth: '45%',
+    },
+    buyTradeDetailLabel: {
+        color: '#999',
+        fontSize: 11,
+        marginBottom: 4,
+    },
+    buyTradeDetailValue: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    buyTradeStats: {
+        flexDirection: 'row',
+        gap: 16,
+    },
+    buyTradeStatText: {
+        color: '#999',
+        fontSize: 12,
+    },
+
     emptyContainer: {
         flex: 1,
         alignItems: 'center',
@@ -1295,6 +1713,158 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: 14,
         textAlign: 'center',
+    },
+
+    // Professional Trade Card Styles
+    professionalTradeCard: {
+        backgroundColor: '#0a0a0a',
+        borderRadius: 16,
+        marginBottom: 20,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#1a1a1a',
+    },
+    professionalCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    professionalAvatar: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#1a1a1a',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    professionalAvatarText: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: '700',
+    },
+    professionalCompanyInfo: {
+        flex: 1,
+    },
+    professionalCompanyName: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 2,
+    },
+    professionalUsername: {
+        color: '#999',
+        fontSize: 14,
+    },
+    professionalActions: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    professionalActionBtn: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    professionalDescription: {
+        color: '#bfbfbf',
+        fontSize: 15,
+        lineHeight: 24,
+        marginBottom: 16,
+    },
+    professionalImageContainer: {
+        position: 'relative',
+        marginBottom: 16,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    professionalImage: {
+        width: '100%',
+        height: 300,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 12,
+    },
+    professionalArrow: {
+        position: 'absolute',
+        top: '50%',
+        transform: [{ translateY: -18 }],
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
+    },
+    professionalArrowLeft: {
+        left: 16,
+    },
+    professionalArrowRight: {
+        right: 16,
+    },
+    professionalIndicators: {
+        position: 'absolute',
+        bottom: 12,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 6,
+    },
+    professionalDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    },
+    professionalDotActive: {
+        backgroundColor: '#fff',
+        width: 20,
+    },
+    professionalInfoGrid: {
+        flexDirection: 'row',
+        marginBottom: 16,
+        gap: 12,
+    },
+    professionalInfoItem: {
+        flex: 1,
+    },
+    professionalInfoLabel: {
+        color: '#999',
+        fontSize: 12,
+        marginBottom: 4,
+    },
+    professionalInfoValue: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    professionalTags: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 20,
+    },
+    professionalTag: {
+        backgroundColor: '#1a1a1a',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+    },
+    professionalTagText: {
+        color: '#bfbfbf',
+        fontSize: 12,
+    },
+    expressInterestButton: {
+        backgroundColor: '#4a4a4a',
+        paddingVertical: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    expressInterestText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 
