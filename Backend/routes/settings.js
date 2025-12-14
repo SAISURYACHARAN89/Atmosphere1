@@ -109,4 +109,44 @@ router.put('/password', authMiddleware, async (req, res, next) => {
     }
 });
 
+/**
+ * PUT /api/settings/kyc - Mark KYC as completed
+ */
+router.put('/kyc', authMiddleware, async (req, res, next) => {
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                kycCompleted: true,
+                kycCompletedAt: new Date()
+            },
+            { new: true }
+        ).select('-passwordHash');
+
+        res.json({
+            success: true,
+            message: 'KYC marked as completed',
+            kycCompleted: user.kycCompleted,
+            kycCompletedAt: user.kycCompletedAt
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+/**
+ * GET /api/settings/kyc - Get KYC status
+ */
+router.get('/kyc', authMiddleware, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select('kycCompleted kycCompletedAt');
+        res.json({
+            kycCompleted: user?.kycCompleted || false,
+            kycCompletedAt: user?.kycCompletedAt || null
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;

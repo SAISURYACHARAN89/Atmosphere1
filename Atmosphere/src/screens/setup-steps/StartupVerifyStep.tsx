@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import StartupPortfolioStep from './StartupPortfolioStep';
 import InvestorPortfolioStep from './InvestorPortfolioStep';
+import KycScreen from '../KycScreen';
 import { getProfile } from '../../lib/api';
 
 export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
     const [showPortfolio, setShowPortfolio] = useState(false);
+    const [showKyc, setShowKyc] = useState(false);
+    const [kycCompleted, setKycCompleted] = useState(false);
     /* eslint-disable react-native/no-inline-styles */
     const [userRole, setUserRole] = useState<'startup' | 'investor' | 'personal' | null>(null);
 
@@ -22,6 +25,19 @@ export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => vo
         })();
     }, []);
 
+    // Show KYC screen
+    if (showKyc) {
+        return (
+            <KycScreen
+                onBack={() => setShowKyc(false)}
+                onComplete={() => {
+                    setKycCompleted(true);
+                    setShowKyc(false);
+                }}
+            />
+        );
+    }
+
     if (showPortfolio) {
         console.log(userRole)
         if (userRole === 'investor') {
@@ -31,6 +47,8 @@ export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => vo
             return <StartupPortfolioStep onBack={() => setShowPortfolio(false)} onDone={onDone} />;
         }
     }
+
+    const completedCount = (kycCompleted ? 1 : 0) + (showPortfolio ? 0 : 0);
 
     return (
         <View style={{ flex: 1, padding: 20, backgroundColor: '#000' }}>
@@ -47,26 +65,42 @@ export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => vo
             <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', marginTop: 20 }}>Start with</Text>
 
             <View style={{ marginTop: 16 }}>
-                <TouchableOpacity onPress={() => { }} style={{ borderWidth: 1, borderColor: '#222', padding: 18, borderRadius: 16, marginBottom: 12, backgroundColor: '#070707' }}>
+                <TouchableOpacity
+                    onPress={() => setShowKyc(true)}
+                    style={{
+                        borderWidth: 1,
+                        borderColor: kycCompleted ? '#22c55e' : '#222',
+                        padding: 18,
+                        borderRadius: 16,
+                        marginBottom: 12,
+                        backgroundColor: '#070707'
+                    }}
+                >
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ color: '#fff', fontWeight: '600' }}>KYC</Text>
+                        <View>
+                            <Text style={{ color: '#fff', fontWeight: '600' }}>KYC</Text>
+                            {kycCompleted && <Text style={{ color: '#22c55e', fontSize: 12, marginTop: 4 }}>Completed ✓</Text>}
+                        </View>
                         <Text style={{ color: '#fff' }}>›</Text>
                     </View>
                 </TouchableOpacity>
 
-                {userRole !== 'personel' && <TouchableOpacity onPress={() => setShowPortfolio(true)} style={{ borderWidth: 1, borderColor: '#222', padding: 18, borderRadius: 16, marginBottom: 12, backgroundColor: '#070707' }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ color: '#fff', fontWeight: '600' }}>Portfolio</Text>
-                        <Text style={{ color: '#fff' }}>›</Text>
-                    </View>
-                </TouchableOpacity>}
+                {userRole !== 'personal' && (
+                    <TouchableOpacity onPress={() => setShowPortfolio(true)} style={{ borderWidth: 1, borderColor: '#222', padding: 18, borderRadius: 16, marginBottom: 12, backgroundColor: '#070707' }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Text style={{ color: '#fff', fontWeight: '600' }}>Portfolio</Text>
+                            <Text style={{ color: '#fff' }}>›</Text>
+                        </View>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <View style={{ flex: 1 }} />
 
             <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                <Text style={{ color: '#999' }}>0/2 done</Text>
+                <Text style={{ color: '#999' }}>{completedCount}/2 done</Text>
             </View>
         </View>
     );
 }
+

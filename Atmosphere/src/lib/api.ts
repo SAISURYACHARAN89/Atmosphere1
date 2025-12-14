@@ -543,3 +543,13 @@ export async function getSavedPosts() {
     const data = await request('/api/saved', {}, { method: 'GET' });
     return data || [];
 }
+
+// KYC APIs
+export async function getKycStatus() {
+    const data = await request('/api/settings/kyc', {}, { method: 'GET' });
+    return data || { kycCompleted: false };
+}
+
+export async function markKycComplete() {
+    return request('/api/settings/kyc', {}, { method: 'PUT' });
+}

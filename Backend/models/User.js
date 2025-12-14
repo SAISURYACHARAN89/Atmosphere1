@@ -19,6 +19,8 @@ const UserSchema = new Schema(
         profileSetupComplete: { type: Boolean, default: false },
         onboardingStep: { type: Number, default: 0 },
         deletedAt: { type: Date, default: null },
+        kycCompleted: { type: Boolean, default: false },
+        kycCompletedAt: { type: Date },
         links: {
             website: String,
             linkedin: String,
