@@ -3,7 +3,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { View, Text, ScrollView, Image, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getProfile, getFollowersCount, getFollowingCount, getStartupProfile } from '../lib/api';
+import { getProfile, getFollowersCount, getFollowingCount, getStartupProfile, getUserReels } from '../lib/api';
 import { getImageSource } from '../lib/image';
 import ProfileHeader from './profile/ProfileHeader';
 import ProfilePager from './profile/ProfilePager';
@@ -199,9 +199,12 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
 
     // format helpers removed (not used in mobile layout)
 
-    const src = data || mockData;
+    // Only use mockData as absolute fallback after loading completes with no data
+    const src = data || (loading ? null : mockData);
     const [posts, setPosts] = useState<any[]>([]);
     const [postsLoading, setPostsLoading] = useState(true);
+    const [reels, setReels] = useState<any[]>([]);
+    const [reelsLoading, setReelsLoading] = useState(true);
     const [followersCount, setFollowersCount] = useState<number | null>(null);
     const [followingCount, setFollowingCount] = useState<number | null>(null);
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
@@ -251,6 +254,44 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
         return () => { mounted = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewingUserId, forceUpdate]);
+
+    // 3. Reels Effect
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            const targetId = viewingUserId || ownProfileId || null;
+            if (!targetId && !ownProfileId) {
+                // Try to get own user id
+                try {
+                    const stored = await AsyncStorage.getItem('user');
+                    if (stored) {
+                        const u = JSON.parse(stored);
+                        const derivedId = u && (u._id || u.id);
+                        if (derivedId && mounted) {
+                            setOwnProfileId(String(derivedId));
+                        }
+                    }
+                } catch { /* ignore */ }
+            }
+
+            setReelsLoading(true);
+            try {
+                const userId = targetId || ownProfileId;
+                if (userId) {
+                    const userReels = await getUserReels(String(userId));
+                    if (mounted) {
+                        setReels(userReels || []);
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to fetch reels:', err);
+                if (mounted) setReels([]);
+            } finally {
+                if (mounted) setReelsLoading(false);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [viewingUserId, ownProfileId, forceUpdate]);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -348,7 +389,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                     />
                 }
             >
-                <ProfileHeader name={src.name} onOpenSettings={() => setLeftDrawerOpen(true)} onCreate={onCreatePost} onBack={onClose} theme={theme} />
+                <ProfileHeader name={loading ? '' : (src?.name || '')} onOpenSettings={() => setLeftDrawerOpen(true)} onCreate={onCreatePost} onBack={onClose} theme={theme} />
 
                 {/* Setup is opened via parent navigation (LandingPage route 'setup') */}
 
@@ -360,11 +401,11 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                     <>
                         <View style={styles.profileHeader}>
                             <View style={styles.avatarWrap}>
-                                {src.logo && !src.logo.includes('placeholder.com') ? (
+                                {src?.logo && !src.logo.includes('placeholder.com') ? (
                                     <Image source={getImageSource(src.logo)} style={styles.avatarLarge} onError={(e) => { console.warn('Profile avatar load error', e.nativeEvent, src.logo); }} />
                                 ) : (
                                     <View style={[styles.avatarLarge, { alignItems: 'center', justifyContent: 'center' }]}>
-                                        <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700' }}>{(src.name || 'U').charAt(0).toUpperCase()}</Text>
+                                        <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700' }}>{(src?.name || 'U').charAt(0).toUpperCase()}</Text>
                                     </View>
                                 )}
                             </View>
@@ -374,7 +415,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                     <Text style={[styles.statLabel, { color: theme.placeholder }]}>posts</Text>
                                 </View>
                                 <View style={styles.statCol}>
-                                    <Text style={[styles.statNum, { color: theme.text }]}>{followersCount ?? src.stats?.followers ?? 0}</Text>
+                                    <Text style={[styles.statNum, { color: theme.text }]}>{followersCount ?? src?.stats?.followers ?? 0}</Text>
                                     <Text style={[styles.statLabel, { color: theme.placeholder }]}>followers</Text>
                                 </View>
                                 <View style={styles.statCol}>
@@ -416,7 +457,15 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                             </TouchableOpacity>
                         )}
 
-                        <ProfilePager posts={posts} postsLoading={postsLoading} theme={theme} onPostPress={onPostPress} />
+                        <ProfilePager
+                            posts={posts}
+                            reels={reels}
+                            postsLoading={postsLoading}
+                            reelsLoading={reelsLoading}
+                            theme={theme}
+                            onPostPress={onPostPress}
+                            onReelPress={() => onNavigate?.('reels')}
+                        />
                     </>
                 )}
             </ScrollView>
