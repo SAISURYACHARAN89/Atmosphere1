@@ -1,16 +1,15 @@
-import React, { useState, useContext, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     FlatList,
     Dimensions,
-    TouchableOpacity,
     Image,
     ActivityIndicator,
+    TouchableOpacity,
 } from 'react-native';
-import { ThemeContext } from '../contexts/ThemeContext';
-import { fetchReels, likeReel, unlikeReel, checkReelShared, getProfile } from '../lib/api';
+import { fetchReels, likeReel, unlikeReel, checkReelShared } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
@@ -40,7 +39,7 @@ interface ReelItem {
 }
 
 const Reels = () => {
-    const { theme } = useContext(ThemeContext) as any;
+    // theme not required here
     const [reels, setReels] = useState<ReelItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -163,6 +162,7 @@ const Reels = () => {
 
     const renderReel = ({ item, index }: { item: ReelItem; index: number }) => {
         const isActive = index === currentIndex;
+        const displayName = item.author?.displayName || item.author?.username || 'User';
 
         return (
             <View style={styles.reelContainer}>
@@ -376,4 +376,3 @@ const styles = StyleSheet.create({
 });
 
 export default Reels;
-

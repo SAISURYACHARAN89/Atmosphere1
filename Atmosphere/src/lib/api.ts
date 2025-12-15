@@ -143,6 +143,44 @@ export async function uploadProfilePicture(imageUri: string, fileName: string, m
     return uploadData.url;
 }
 
+/**
+ * Upload document to S3 (for portfolio verification, holdings, etc.)
+ */
+export async function uploadDocument(fileUri: string, fileName: string, mimeType: string): Promise<string> {
+    const baseUrl = await getBaseUrl();
+    const token = await AsyncStorage.getItem('token');
+
+    // Use FormData upload for all file types (more reliable in React Native)
+    const formData = new FormData();
+
+    // Determine the field name and endpoint based on file type
+    const isImage = mimeType && mimeType.startsWith('image/');
+    const fieldName = isImage ? 'image' : 'file';
+    const endpoint = isImage ? '/api/upload' : '/api/upload/document';
+
+    formData.append(fieldName, {
+        uri: fileUri,
+        name: fileName || (isImage ? 'image.jpg' : 'document.pdf'),
+        type: mimeType || (isImage ? 'image/jpeg' : 'application/pdf'),
+    } as any);
+
+    const uploadRes = await fetch(`${baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to upload document');
+    }
+
+    const uploadData = await uploadRes.json();
+    return uploadData.url;
+}
+
 export async function fetchMyPosts() {
     // call the authenticated endpoint that returns only posts authored by current user
     const data = await request('/api/posts/me', {}, { method: 'GET' });
@@ -156,6 +194,10 @@ export async function createPost(payload: { content: string; media?: { url: stri
 export async function verifyEmail(code: string, email?: string) {
     // email optional - if provided backend will accept unauthenticated verify for signup dev flow
     return request('/api/auth/verify-email', { code, email }, { method: 'POST' });
+}
+
+export async function resendOtp(email: string) {
+    return request('/api/auth/resend-otp', { email }, { method: 'POST' });
 }
 
 export async function saveStartupProfile(payload: any) {
