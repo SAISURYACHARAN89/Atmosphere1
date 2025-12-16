@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View,
     Text,
@@ -7,11 +7,14 @@ import {
     Dimensions,
     Image,
     ActivityIndicator,
+    TouchableOpacity,
 } from 'react-native';
-import { fetchReels } from '../lib/api';
+import { fetchReels, likeReel, unlikeReel, checkReelShared } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
+import ReelCommentsOverlay from '../components/ReelCommentsOverlay';
+import ShareModal from '../components/ShareModal';
 
 const { width, height } = Dimensions.get('window');
 const ITEM_HEIGHT = height - BOTTOM_NAV_HEIGHT;
@@ -22,6 +25,7 @@ interface ReelItem {
     thumbnailUrl?: string;
     caption?: string;
     author: {
+        _id?: string;
         username: string;
         displayName?: string;
         avatarUrl?: string;
@@ -29,6 +33,9 @@ interface ReelItem {
     likesCount: number;
     commentsCount: number;
     viewsCount: number;
+    sharesCount: number;
+    isLiked?: boolean;
+    isShared?: boolean;
 }
 
 const Reels = () => {
@@ -37,6 +44,14 @@ const Reels = () => {
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
 
+    // Modal states
+    const [commentsReelId, setCommentsReelId] = useState<string | null>(null);
+    const [shareReelId, setShareReelId] = useState<string | null>(null);
+    const [shareAlreadyShared, setShareAlreadyShared] = useState(false);
+
+    // Like loading states per reel
+    const [likeLoading, setLikeLoading] = useState<Set<string>>(new Set());
+
     useEffect(() => {
         loadReels();
     }, []);
@@ -44,13 +59,106 @@ const Reels = () => {
     const loadReels = async () => {
         try {
             const data = await fetchReels(30, 0);
-            setReels(data);
+            // Initialize with default values
+            const reelsWithDefaults = data.map((reel: any) => ({
+                ...reel,
+                sharesCount: reel.sharesCount || 0,
+                isLiked: reel.isLiked || false,
+                isShared: false,
+            }));
+            setReels(reelsWithDefaults);
         } catch (err) {
             console.warn('Failed to load reels:', err);
         } finally {
             setLoading(false);
         }
     };
+
+    const handleLike = useCallback(async (reelId: string) => {
+        if (likeLoading.has(reelId)) return;
+
+        // Find current reel
+        const reel = reels.find(r => r._id === reelId);
+        if (!reel) return;
+
+        const wasLiked = reel.isLiked;
+
+        // Optimistic update
+        setReels(prev => prev.map(r =>
+            r._id === reelId
+                ? { ...r, isLiked: !wasLiked, likesCount: wasLiked ? Math.max(0, r.likesCount - 1) : r.likesCount + 1 }
+                : r
+        ));
+
+        setLikeLoading(prev => new Set(prev).add(reelId));
+
+        try {
+            if (wasLiked) {
+                await unlikeReel(reelId);
+            } else {
+                await likeReel(reelId);
+            }
+        } catch (err) {
+            // Revert on error
+            setReels(prev => prev.map(r =>
+                r._id === reelId
+                    ? { ...r, isLiked: wasLiked, likesCount: wasLiked ? r.likesCount + 1 : Math.max(0, r.likesCount - 1) }
+                    : r
+            ));
+            console.warn('Like/unlike failed:', err);
+        } finally {
+            setLikeLoading(prev => {
+                const next = new Set(prev);
+                next.delete(reelId);
+                return next;
+            });
+        }
+    }, [reels, likeLoading]);
+
+    const handleOpenComments = useCallback((reelId: string) => {
+        setCommentsReelId(reelId);
+    }, []);
+
+    const handleOpenShare = useCallback(async (reelId: string) => {
+        // Check if already shared
+        try {
+            const result = await checkReelShared(reelId);
+            setShareAlreadyShared(result.shared || false);
+        } catch {
+            setShareAlreadyShared(false);
+        }
+        setShareReelId(reelId);
+    }, []);
+
+    const handleCommentAdded = useCallback((newCount?: number) => {
+        if (commentsReelId) {
+            setReels(prev => prev.map(r =>
+                r._id === commentsReelId
+                    ? { ...r, commentsCount: typeof newCount === 'number' ? newCount : r.commentsCount + 1 }
+                    : r
+            ));
+        }
+    }, [commentsReelId]);
+
+    const handleCommentDeleted = useCallback(() => {
+        if (commentsReelId) {
+            setReels(prev => prev.map(r =>
+                r._id === commentsReelId
+                    ? { ...r, commentsCount: Math.max(0, r.commentsCount - 1) }
+                    : r
+            ));
+        }
+    }, [commentsReelId]);
+
+    const handleShareComplete = useCallback((sharesCount: number) => {
+        if (shareReelId) {
+            setReels(prev => prev.map(r =>
+                r._id === shareReelId
+                    ? { ...r, sharesCount, isShared: true }
+                    : r
+            ));
+        }
+    }, [shareReelId]);
 
     const renderReel = ({ item, index }: { item: ReelItem; index: number }) => {
         const isActive = index === currentIndex;
@@ -67,25 +175,19 @@ const Reels = () => {
                         repeat
                         paused={false}
                         volume={1.0}
-                        onLoadStart={() => console.log('📹 Video loading started:', item.videoUrl)}
-                        onLoad={(data) => console.log('✅ Video loaded:', data)}
-                        onError={(e) => console.error('❌ Video ERROR:', e, 'URL:', item.videoUrl)}
-                        onReadyForDisplay={() => console.log('🎬 Video ready to play')}
                     />
                 ) : (
                     <Image
                         source={{ uri: item.thumbnailUrl || item.videoUrl }}
                         style={styles.video}
                         resizeMode="cover"
-                        onLoad={() => console.log('🖼️ Thumbnail loaded')}
-                        onError={(e) => console.error('❌ Thumbnail error:', e.nativeEvent)}
                     />
                 )}
 
                 {/* Overlay Content */}
                 <View style={styles.overlay}>
                     <View style={styles.info}>
-                        <Text style={styles.username}>@{displayName}</Text>
+                        <Text style={styles.username}>@{item.author.username}</Text>
                         {item.caption && (
                             <Text style={styles.caption} numberOfLines={2}>
                                 {item.caption}
@@ -95,14 +197,43 @@ const Reels = () => {
 
                     {/* Actions */}
                     <View style={styles.actions}>
-                        <View style={styles.actionBtn}>
-                            <Icon name="heart-outline" size={32} color="#fff" />
+                        {/* Like */}
+                        <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={() => handleLike(item._id)}
+                            disabled={likeLoading.has(item._id)}
+                        >
+                            <Icon
+                                name={item.isLiked ? "heart" : "heart-outline"}
+                                size={32}
+                                color={item.isLiked ? "#ec4899" : "#fff"}
+                            />
                             <Text style={styles.actionText}>{item.likesCount}</Text>
-                        </View>
-                        <View style={styles.actionBtn}>
+                        </TouchableOpacity>
+
+                        {/* Comment */}
+                        <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={() => handleOpenComments(item._id)}
+                        >
                             <Icon name="chatbubble-outline" size={28} color="#fff" />
                             <Text style={styles.actionText}>{item.commentsCount}</Text>
-                        </View>
+                        </TouchableOpacity>
+
+                        {/* Share */}
+                        <TouchableOpacity
+                            style={styles.actionBtn}
+                            onPress={() => handleOpenShare(item._id)}
+                        >
+                            <Icon
+                                name={item.isShared ? "paper-plane" : "paper-plane-outline"}
+                                size={28}
+                                color={item.isShared ? "#ec4899" : "#fff"}
+                            />
+                            <Text style={styles.actionText}>{item.sharesCount || 0}</Text>
+                        </TouchableOpacity>
+
+                        {/* Views */}
                         <View style={styles.actionBtn}>
                             <Icon name="eye-outline" size={28} color="#fff" />
                             <Text style={styles.actionText}>{item.viewsCount}</Text>
@@ -153,7 +284,31 @@ const Reels = () => {
                     offset: ITEM_HEIGHT * index,
                     index,
                 })}
+                extraData={[likeLoading]}
             />
+
+            {/* Comments Modal */}
+            {commentsReelId && (
+                <ReelCommentsOverlay
+                    reelId={commentsReelId}
+                    visible={!!commentsReelId}
+                    onClose={() => setCommentsReelId(null)}
+                    onCommentAdded={handleCommentAdded}
+                    onCommentDeleted={handleCommentDeleted}
+                />
+            )}
+
+            {/* Share Modal */}
+            {shareReelId && (
+                <ShareModal
+                    contentId={shareReelId}
+                    type="reel"
+                    visible={!!shareReelId}
+                    onClose={() => setShareReelId(null)}
+                    onShareComplete={handleShareComplete}
+                    alreadyShared={shareAlreadyShared}
+                />
+            )}
         </View>
     );
 };
