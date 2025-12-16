@@ -12,7 +12,7 @@ import Home from './Home';
 import BottomNav from '../components/BottomNav';
 import TopStartups from './TopStartups';
 import TradingSection from './TradingSection';
-import Jobs from './Jobs';
+import Opportunities from './Opportunities';
 import Meetings from './Meetings';
 import SetupProfile from './SetupProfile';
 import CreatePost from './CreatePost';
@@ -89,7 +89,7 @@ const LandingPage = () => {
             case 'trade':
                 return <TradingSection />;
             case 'jobs':
-                return <Jobs />;
+                return <Opportunities />;
             case 'meetings':
                 return <Meetings />;
             case 'chatDetail':
