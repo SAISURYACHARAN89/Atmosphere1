@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BlurView } from "@react-native-community/blur";
 import {
   Home,
   Search,
@@ -109,6 +110,12 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
 
   return (
     <View style={styles.container}>
+      <BlurView
+        style={StyleSheet.absoluteFill}
+        blurType="dark"
+        blurAmount={20}
+        overlayColor="transparent"
+      />
       <View style={styles.row}>
         {tabs.slice(0, 2).map((tab) => {
           const active = isTabActive(tab.route);
@@ -160,11 +167,17 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#0A0A0A",
+    backgroundColor: "rgba(0, 0, 0, 0.91)",
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#111",
+    borderTopColor: "rgba(255,255,255,0.15)",
     height: BOTTOM_NAV_HEIGHT + 50,
     paddingVertical: 0,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    overflow: 'hidden', // Ensure blur stays within bounds if rounded
   },
   row: {
     flexDirection: "row",
