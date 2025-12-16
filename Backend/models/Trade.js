@@ -31,9 +31,11 @@ const TradeSchema = new Schema(
         externalLinkUrl: String,
         views: { type: Number, default: 0 },
         saves: { type: Number, default: 0 },
+        savedByUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         isEdited: { type: Boolean, default: false },
         // Placeholders for future media implementation
         videoUrl: String,
+        videoThumbnailUrl: String,
         imageUrls: [String],
     },
     { timestamps: true }

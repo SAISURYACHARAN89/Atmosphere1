@@ -7,7 +7,7 @@ const Logo = ({ size = 42 }: { size?: number }) => {
 
 const styles = StyleSheet.create({
     logo: {
-        fontFamily: 'Pacifico',
+        fontFamily: 'Pacifico-Regular',
         color: '#f2f2f2',
         // marginTop: '10%',
     },

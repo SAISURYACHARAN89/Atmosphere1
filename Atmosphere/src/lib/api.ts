@@ -144,6 +144,37 @@ export async function uploadProfilePicture(imageUri: string, fileName: string, m
 }
 
 /**
+ * Upload an image to S3 (general purpose - for trades, posts, etc.)
+ */
+export async function uploadImage(imageUri: string, fileName?: string, mimeType?: string): Promise<string> {
+    const baseUrl = await getBaseUrl();
+    const token = await AsyncStorage.getItem('token');
+
+    const formData = new FormData();
+    formData.append('image', {
+        uri: imageUri,
+        name: fileName || 'image.jpg',
+        type: mimeType || 'image/jpeg',
+    } as any);
+
+    const uploadRes = await fetch(`${baseUrl}/api/upload`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to upload image');
+    }
+
+    const uploadData = await uploadRes.json();
+    return uploadData.url;
+}
+
+/**
  * Upload document to S3 (for portfolio verification, holdings, etc.)
  */
 export async function uploadDocument(fileUri: string, fileName: string, mimeType: string): Promise<string> {
@@ -450,6 +481,11 @@ export async function incrementTradeViews(id: string) {
 
 export async function toggleTradeSave(id: string, saved: boolean) {
     return request(`/api/trade/trades/${id}/save`, { saved }, { method: 'POST' });
+}
+
+export async function getSavedTrades(): Promise<{ savedTradeIds: string[]; trades: any[] }> {
+    const data = await request('/api/trade/trades/saved', {}, { method: 'GET' });
+    return { savedTradeIds: data.savedTradeIds || [], trades: data.trades || [] };
 }
 
 // Investor APIs

@@ -17,5 +17,6 @@ router.put('/trades/:id', authMiddleware, tradeService.updateTrade);
 router.delete('/trades/:id', authMiddleware, tradeService.deleteTrade);
 router.post('/trades/:id/view', optionalAuth, tradeService.incrementViews);
 router.post('/trades/:id/save', authMiddleware, tradeService.toggleSave);
+router.get('/trades/saved', authMiddleware, tradeService.getSavedTrades);
 
 module.exports = router;

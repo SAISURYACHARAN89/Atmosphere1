@@ -24,7 +24,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
   }, []);
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ translateY: visible ? 0 : -56 }] }]}> 
+    <Animated.View style={[styles.container, { transform: [{ translateY: visible ? 0 : -56 }] }]}>
       <View style={styles.inner}>
         {/* LEFT SIDE */}
         <View style={styles.left}>
@@ -89,21 +89,19 @@ const styles = StyleSheet.create({
   },
   center: {
     position: 'absolute',
-    left: '50%',
+    left: 0,
+    right: 0,
     top: 0,
-    width: 160,
     height: 56,
-    marginLeft: -80,
     alignItems: 'center',
     justifyContent: 'center',
     pointerEvents: 'none',
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    fontFamily: 'cursive',
+    fontSize: 24,
+    fontFamily: 'Pacifico-Regular',
     color: '#fff',
-    letterSpacing: 1,
+    textAlign: 'center',
   },
   right: {
     flexDirection: 'row',

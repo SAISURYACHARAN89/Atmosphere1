@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Logo from '../components/Logo';
 import { login } from '../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,13 +31,16 @@ const SignIn = ({ onSignUp, onSignedIn }: { onSignUp?: () => void; onSignedIn?: 
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            {/* Top section with Logo */}
-            <View style={styles.topSection}>
-                <Logo size={48} />
-            </View>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+            >
+                {/* Logo */}
+                <View style={styles.logoSection}>
+                    <Logo size={48} />
+                </View>
 
-            {/* Middle section with form */}
-            <View style={styles.formSection}>
+                {/* Form Card */}
                 <View style={styles.formCard}>
                     <TextInput
                         value={email}
@@ -76,10 +80,10 @@ const SignIn = ({ onSignUp, onSignedIn }: { onSignUp?: () => void; onSignedIn?: 
                         <View style={styles.dividerLine} />
                     </View>
 
-                    {/* Facebook Login */}
-                    <TouchableOpacity style={styles.fbButton} onPress={() => Alert.alert('Facebook login coming soon')}>
-                        <Text style={styles.fbIcon}>f</Text>
-                        <Text style={styles.fbText}>Log in with Facebook</Text>
+                    {/* Google Login */}
+                    <TouchableOpacity style={styles.googleButton} onPress={() => Alert.alert('Google login coming soon')}>
+                        <MaterialCommunityIcons name="google" size={18} color="#8e8e8e" />
+                        <Text style={styles.googleText}>Log in with Google</Text>
                     </TouchableOpacity>
 
                     {/* Forgot Password */}
@@ -87,10 +91,8 @@ const SignIn = ({ onSignUp, onSignedIn }: { onSignUp?: () => void; onSignedIn?: 
                         <Text style={styles.forgotText}>Forgot password?</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
 
-            {/* Bottom section with Sign up */}
-            <View style={styles.bottomSection}>
+                {/* Sign up link - directly below form */}
                 <View style={styles.signupCard}>
                     <Text style={styles.signupText}>
                         Don't have an account?{' '}
@@ -99,7 +101,7 @@ const SignIn = ({ onSignUp, onSignedIn }: { onSignUp?: () => void; onSignedIn?: 
                         </Text>
                     </Text>
                 </View>
-            </View>
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 };
@@ -109,40 +111,42 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#000',
     },
-    topSection: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        paddingBottom: 40,
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 40,
     },
-    formSection: {
-        paddingHorizontal: 32,
+    logoSection: {
+        alignItems: 'center',
+        marginBottom: 24,
     },
     formCard: {
-        backgroundColor: '#121212',
-        borderRadius: 8,
-        padding: 30,
-        paddingBottom: 50,
-        paddingTop: 50,
+        backgroundColor: '#0d0d0d',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#262626',
+        paddingHorizontal: 30,
+        paddingVertical: 40,
     },
     input: {
-        height: 48,
-        backgroundColor: '#1c1c1c',
-        borderRadius: 6,
-        paddingHorizontal: 16,
-        marginBottom: 12,
-        fontSize: 15,
+        height: 50,
+        backgroundColor: '#000',
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        marginBottom: 8,
+        fontSize: 14,
         color: '#fff',
         borderWidth: 1,
-        borderColor: '#2a2a2a',
+        borderColor: '#363636',
     },
     loginButton: {
         backgroundColor: '#404040',
-        height: 48,
-        borderRadius: 6,
+        height: 50,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 4,
+        marginTop: 15,
     },
     loginButtonDisabled: {
         backgroundColor: '#333333',
@@ -151,7 +155,7 @@ const styles = StyleSheet.create({
     loginButtonText: {
         color: '#fff',
         fontWeight: '600',
-        fontSize: 15,
+        fontSize: 14,
     },
     dividerRow: {
         flexDirection: 'row',
@@ -166,41 +170,34 @@ const styles = StyleSheet.create({
     dividerText: {
         marginHorizontal: 16,
         color: '#8e8e8e',
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
     },
-    fbButton: {
+    googleButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 8,
     },
-    fbIcon: {
-        color: '#8e8e8e',
-        fontSize: 18,
-        fontWeight: '700',
-        marginRight: 8,
-    },
-    fbText: {
+    googleText: {
         color: '#8e8e8e',
         fontWeight: '600',
         fontSize: 14,
+        marginLeft: 8,
     },
     forgotText: {
         textAlign: 'center',
         color: '#8e8e8e',
-        fontSize: 13,
+        fontSize: 12,
         marginTop: 16,
     },
-    bottomSection: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        paddingBottom: 40,
-    },
     signupCard: {
-        borderTopWidth: 1,
-        borderTopColor: '#262626',
+        borderWidth: 1,
+        borderColor: '#262626',
+        borderRadius: 10,
+        backgroundColor: '#0d0d0d',
         paddingVertical: 20,
+        marginTop: 16,
         alignItems: 'center',
     },
     signupText: {

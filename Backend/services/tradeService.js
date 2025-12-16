@@ -74,7 +74,10 @@ exports.createTrade = async (req, res, next) => {
             selectedIndustries,
             isManualEntry,
             externalLinkHeading,
-            externalLinkUrl
+            externalLinkUrl,
+            videoUrl,
+            videoThumbnailUrl,
+            imageUrls
         } = req.body;
 
         // Validation
@@ -101,8 +104,9 @@ exports.createTrade = async (req, res, next) => {
             isManualEntry: isManualEntry || false,
             externalLinkHeading,
             externalLinkUrl,
-            videoUrl: '', // Placeholder for future
-            imageUrls: [] // Placeholder for future
+            videoUrl: videoUrl || '',
+            videoThumbnailUrl: videoThumbnailUrl || '',
+            imageUrls: imageUrls || []
         });
 
         await trade.save();
@@ -192,7 +196,10 @@ exports.updateTrade = async (req, res, next) => {
             sellingRangeMax,
             selectedIndustries,
             externalLinkHeading,
-            externalLinkUrl
+            externalLinkUrl,
+            videoUrl,
+            videoThumbnailUrl,
+            imageUrls
         } = req.body;
 
         // Update fields
@@ -211,6 +218,9 @@ exports.updateTrade = async (req, res, next) => {
         }
         if (externalLinkHeading !== undefined) trade.externalLinkHeading = externalLinkHeading;
         if (externalLinkUrl !== undefined) trade.externalLinkUrl = externalLinkUrl;
+        if (videoUrl !== undefined) trade.videoUrl = videoUrl;
+        if (videoThumbnailUrl !== undefined) trade.videoThumbnailUrl = videoThumbnailUrl;
+        if (imageUrls !== undefined) trade.imageUrls = imageUrls;
 
         trade.isEdited = true;
 
@@ -268,25 +278,55 @@ exports.incrementViews = async (req, res, next) => {
     }
 };
 
-// Toggle save (increment/decrement save count)
+// Toggle save (track users in savedByUsers array)
 exports.toggleSave = async (req, res, next) => {
     try {
         if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
 
         const { id } = req.params;
         const { saved } = req.body; // true to save, false to unsave
+        const userId = req.user._id;
 
-        const trade = await Trade.findByIdAndUpdate(
-            id,
-            { $inc: { saves: saved ? 1 : -1 } },
-            { new: true }
-        );
+        let updateOperation;
+        if (saved) {
+            // Add user to savedByUsers and increment saves count
+            updateOperation = {
+                $addToSet: { savedByUsers: userId },
+                $inc: { saves: 1 }
+            };
+        } else {
+            // Remove user from savedByUsers and decrement saves count
+            updateOperation = {
+                $pull: { savedByUsers: userId },
+                $inc: { saves: -1 }
+            };
+        }
+
+        const trade = await Trade.findByIdAndUpdate(id, updateOperation, { new: true });
 
         if (!trade) {
             return res.status(404).json({ error: 'Trade not found' });
         }
 
-        res.json({ saves: trade.saves });
+        res.json({ saves: trade.saves, saved: trade.savedByUsers.includes(userId) });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Get all trades saved by the current user
+exports.getSavedTrades = async (req, res, next) => {
+    try {
+        if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+
+        const userId = req.user._id;
+        const trades = await Trade.find({ savedByUsers: userId })
+            .populate('user', 'displayName username avatarUrl')
+            .sort({ createdAt: -1 });
+
+        // Return just the trade IDs for efficiency
+        const savedTradeIds = trades.map(t => t._id.toString());
+        res.json({ savedTradeIds, trades });
     } catch (err) {
         next(err);
     }

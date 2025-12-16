@@ -1,8 +1,14 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image as RNImage, Alert } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Image as RNImage, Alert, Animated, LayoutAnimation, UIManager, Platform } from 'react-native';
+import Video from 'react-native-video';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ActiveTrade } from '../types';
 import { styles } from '../styles';
+
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface TradeCardProps {
     trade: ActiveTrade;
@@ -23,6 +29,33 @@ export const TradeCard: React.FC<TradeCardProps> = ({
     onToggleSave,
     onPhotoIndexChange,
 }) => {
+    // Animation value for opacity (uses native driver for smoothness)
+    const opacityAnim = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+
+    // Animate when isExpanded changes
+    useEffect(() => {
+        // Configure smooth layout animation
+        LayoutAnimation.configureNext({
+            duration: 200,
+            update: { type: LayoutAnimation.Types.easeInEaseOut },
+            create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+            delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+        });
+
+        // Smooth opacity fade
+        Animated.timing(opacityAnim, {
+            toValue: isExpanded ? 1 : 0,
+            duration: 200,
+            useNativeDriver: true, // Native driver for smooth animation
+        }).start();
+    }, [isExpanded, opacityAnim]);
+
+    // Combine images and video into one media array - video is last
+    const imageCount = trade.imageUrls?.length || 0;
+    const hasVideo = !!trade.videoUrl;
+    const totalMediaCount = imageCount + (hasVideo ? 1 : 0);
+    const isCurrentItemVideo = hasVideo && currentPhotoIndex === imageCount;
+
     return (
         <View style={styles.professionalTradeCard}>
             <TouchableOpacity
@@ -54,7 +87,7 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                     )}
                 </View>
 
-                {/* Action Buttons - Bookmark and Chat aligned horizontally */}
+                {/* Action Button - Bookmark only */}
                 <View style={styles.collapsedActions}>
                     <TouchableOpacity
                         style={styles.collapsedActionBtn}
@@ -66,43 +99,43 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                         <MaterialCommunityIcons
                             name={isSaved ? "bookmark" : "bookmark-outline"}
                             size={16}
-                            color={isSaved ? "#1a73e8" : "#999"}
-                        />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.collapsedActionBtn}
-                        onPress={(e) => {
-                            e.stopPropagation();
-                            Alert.alert('Chat', 'Chat functionality coming soon!');
-                        }}
-                    >
-                        <MaterialCommunityIcons
-                            name="message-outline"
-                            size={16}
-                            color="#999"
+                            color={isSaved ? "#fff" : "#999"}
                         />
                     </TouchableOpacity>
                 </View>
             </TouchableOpacity>
 
-            {/* Expanded Content */}
+            {/* Expanded Content - LayoutAnimation handles smooth transition */}
             {isExpanded && (
-                <>
+                <Animated.View style={{ opacity: opacityAnim }}>
                     {/* Description Below Profile Pic (Full Size) */}
                     <Text style={styles.expandedDescription}>
                         {trade.description || 'No description provided'}
                     </Text>
 
-                    {/* Image Carousel */}
-                    {trade.imageUrls && trade.imageUrls.length > 0 && (
+                    {/* Media Carousel (Images + Video at end) */}
+                    {totalMediaCount > 0 && (
                         <View style={styles.professionalImageContainer}>
-                            <RNImage
-                                source={{ uri: trade.imageUrls[currentPhotoIndex] }}
-                                style={styles.professionalImage}
-                            />
+                            {isCurrentItemVideo ? (
+                                // Show Video Player
+                                <Video
+                                    source={{ uri: trade.videoUrl }}
+                                    style={styles.professionalImage}
+                                    controls={true}
+                                    resizeMode="contain"
+                                    repeat={true}
+                                    paused={!isExpanded}
+                                />
+                            ) : (
+                                // Show Image
+                                <RNImage
+                                    source={{ uri: trade.imageUrls?.[currentPhotoIndex] }}
+                                    style={styles.professionalImage}
+                                />
+                            )}
 
                             {/* Navigation Arrows */}
-                            {trade.imageUrls.length > 1 && (
+                            {totalMediaCount > 1 && (
                                 <>
                                     {/* Left Arrow */}
                                     {currentPhotoIndex > 0 && (
@@ -115,7 +148,7 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                                     )}
 
                                     {/* Right Arrow */}
-                                    {currentPhotoIndex < trade.imageUrls.length - 1 && (
+                                    {currentPhotoIndex < totalMediaCount - 1 && (
                                         <TouchableOpacity
                                             style={[styles.professionalArrow, styles.professionalArrowRight]}
                                             onPress={() => onPhotoIndexChange(currentPhotoIndex + 1)}
@@ -124,9 +157,9 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                                         </TouchableOpacity>
                                     )}
 
-                                    {/* Image Indicators (Dots) */}
+                                    {/* Media Indicators (Dots) */}
                                     <View style={styles.professionalIndicators}>
-                                        {trade.imageUrls.map((_, idx) => (
+                                        {Array.from({ length: totalMediaCount }).map((_, idx) => (
                                             <View
                                                 key={idx}
                                                 style={[
@@ -176,7 +209,7 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                     <TouchableOpacity style={styles.expressInterestButton}>
                         <Text style={styles.expressInterestText}>Express Interest</Text>
                     </TouchableOpacity>
-                </>
+                </Animated.View>
             )}
         </View>
     );
