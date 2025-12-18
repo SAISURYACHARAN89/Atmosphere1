@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useMemo, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -14,10 +14,12 @@ import {
     Dimensions,
     RefreshControl,
     ScrollView,
+    Image,
 } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getBaseUrl } from '../lib/config';
+import { getImageSource } from '../lib/image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as DocumentPicker from '@react-native-documents/picker';
 
@@ -565,7 +567,7 @@ function FilterModal({
     );
 }
 
-const Opportunities = () => {
+const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void }) => {
     const { theme } = useContext(ThemeContext) as any;
     const [activeTab, setActiveTab] = useState('Grants');
 
@@ -579,6 +581,7 @@ const Opportunities = () => {
     const [eventsSkip, setEventsSkip] = useState(0);
     const [eventsHasMore, setEventsHasMore] = useState(true);
     const [eventsLoading, setEventsLoading] = useState(false);
+
 
     const [team, setTeam] = useState<any[]>([]);
     const [teamSkip, setTeamSkip] = useState(0);
@@ -927,7 +930,7 @@ const Opportunities = () => {
                                     <TouchableOpacity style={[styles.actionBtn, styles.createBtn]} onPress={() => setModalVisible(true)}>
                                         <Text style={styles.createBtnText}>＋ Create Job Ad</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={[styles.actionBtn, styles.myTeamsBtn]} onPress={() => { /* Navigate to My Teams or filter */ }}>
+                                    <TouchableOpacity style={[styles.actionBtn, styles.myTeamsBtn]} onPress={() => onNavigate && onNavigate('myTeam')}>
                                         <Text style={styles.myTeamsBtnText}>My Teams</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1144,6 +1147,8 @@ const Opportunities = () => {
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
+
+
         </View>
     );
 };
@@ -1815,6 +1820,99 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 12,
         marginTop: 8,
+    },
+    myTeamsModalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    myTeamsList: {
+        minHeight: 80,
+        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    myTeamsEmptyText: {
+        color: '#666',
+        fontStyle: 'italic',
+        marginLeft: 4,
+    },
+    teamMemberItem: {
+        alignItems: 'center',
+        marginRight: 16,
+        position: 'relative',
+        width: 60,
+    },
+    teamMemberAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#333',
+        marginBottom: 4,
+    },
+    teamMemberName: {
+        color: '#fff',
+        fontSize: 10,
+        textAlign: 'center',
+    },
+    removeMemberBtn: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        backgroundColor: '#333',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#000',
+        padding: 2,
+    },
+    myTeamsSearchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1a1a1a',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        borderWidth: 1,
+        borderColor: '#333',
+        marginBottom: 12,
+    },
+    myTeamsSearchInput: {
+        flex: 1,
+        color: '#fff',
+        paddingVertical: 10,
+    },
+    teamSearchResultItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#222',
+    },
+    teamSearchResultAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#333',
+        marginRight: 12,
+    },
+    teamSearchResultInfo: {
+        flex: 1,
+    },
+    teamSearchResultName: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    addTeamMemberBtn: {
+        backgroundColor: '#fff',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 14,
+    },
+    addTeamMemberText: {
+        color: '#000',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
 });
 

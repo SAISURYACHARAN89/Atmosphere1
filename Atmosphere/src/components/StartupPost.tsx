@@ -11,6 +11,7 @@ import { crownStartup, uncrownStartup } from '../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Heart, Crown, MessageCircle, Send, Bookmark } from 'lucide-react-native';
 import VerifiedBadge from './VerifiedBadge';
+import ShareModal from './ShareModal';
 
 type StartupCard = {
     id: string;
@@ -46,6 +47,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
     const [saved, setSaved] = useState(Boolean((companyData as any).isSaved));
     const [savedId, setSavedId] = useState<string | null>((companyData as any).savedId || null);
     const [saveLoading, setSaveLoading] = useState(false);
+    const [shareModalVisible, setShareModalVisible] = useState(false);
 
     useEffect(() => {
         // follow and liked state are provided by the feed as flags (likedByCurrentUser, isFollowing)
@@ -313,7 +315,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                     </TouchableOpacity>
 
                     {/* Share/Send */}
-                    <TouchableOpacity style={styles.statItem}>
+                    <TouchableOpacity style={styles.statItem} onPress={() => setShareModalVisible(true)}>
                         <Send size={24} color="#fff" />
                         <Text style={styles.statCount}>{stats.shares}</Text>
                     </TouchableOpacity>
@@ -358,6 +360,20 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                     </View>
                 </View>
             </View>
+
+            <ShareModal
+                visible={shareModalVisible}
+                onClose={() => setShareModalVisible(false)}
+                contentId={
+                    ((companyData as any).fundingRaised || (companyData as any).fundingNeeded)
+                        ? String((companyData as any).userId || (companyData as any).user || (companyData as any).originalId || (companyData as any).id) // Startup -> UserID
+                        : String((companyData as any).originalId || (companyData as any).id) // Post -> PostID
+                }
+                type={((companyData as any).fundingRaised || (companyData as any).fundingNeeded) ? 'startup' : 'post'}
+                contentTitle={companyData.name}
+                contentImage={companyData.profileImage}
+                contentOwner={companyData.name}
+            />
         </View>
     );
 };
