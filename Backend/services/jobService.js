@@ -54,12 +54,12 @@ exports.getJob = async (req, res, next) => {
         const { id } = req.params;
 
         const job = await Job.findById(id)
-            .populate('postedBy', 'username displayName avatarUrl verified')
+            .populate('poster', 'username displayName avatarUrl verified')
             .populate('applicants.userId', 'username displayName avatarUrl verified');
 
         if (!job) return res.status(404).json({ error: 'Job not found' });
 
-        const isOwner = req.user && job.postedBy._id.toString() === req.user._id.toString();
+        const isOwner = req.user && job.poster._id.toString() === req.user._id.toString();
         const jobData = job.toObject();
         if (!isOwner) jobData.applicants = jobData.applicants.length;
 
@@ -76,13 +76,13 @@ exports.updateJob = async (req, res, next) => {
 
         const job = await Job.findById(id);
         if (!job) return res.status(404).json({ error: 'Job not found' });
-        if (job.postedBy.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Access denied' });
+        if (job.poster.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Access denied' });
 
         const allowedUpdates = ['title', 'company', 'description', 'location', 'type', 'sector', 'experienceLevel', 'salary', 'currency', 'skills', 'status'];
         allowedUpdates.forEach(field => { if (updates[field] !== undefined) job[field] = updates[field]; });
 
         await job.save();
-        await job.populate('postedBy', 'username displayName avatarUrl verified');
+        await job.populate('poster', 'username displayName avatarUrl verified');
 
         res.json({ job });
     } catch (err) {
@@ -96,7 +96,7 @@ exports.deleteJob = async (req, res, next) => {
 
         const job = await Job.findById(id);
         if (!job) return res.status(404).json({ error: 'Job not found' });
-        if (job.postedBy.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Access denied' });
+        if (job.poster.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Access denied' });
 
         await job.deleteOne();
         res.json({ message: 'Job deleted successfully' });
@@ -120,7 +120,7 @@ exports.applyToJob = async (req, res, next) => {
         job.applicants.push({ userId: req.user._id, coverLetter, resumeUrl, appliedAt: new Date() });
         await job.save();
 
-        const notification = new Notification({ user: job.postedBy, actor: req.user._id, type: 'job_application', payload: { jobId: job._id, jobTitle: job.title } });
+        const notification = new Notification({ user: job.poster, actor: req.user._id, type: 'job_application', payload: { jobId: job._id, jobTitle: job.title } });
         await notification.save();
 
         res.json({ message: 'Application submitted successfully' });
@@ -134,7 +134,7 @@ exports.getApplicants = async (req, res, next) => {
         const { id } = req.params;
         const job = await Job.findById(id).populate('applicants.userId', 'username displayName avatarUrl verified');
         if (!job) return res.status(404).json({ error: 'Job not found' });
-        if (job.postedBy.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Access denied' });
+        if (job.poster.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Access denied' });
 
         res.json({ applicants: job.applicants });
     } catch (err) {

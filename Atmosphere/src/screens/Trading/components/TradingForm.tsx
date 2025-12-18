@@ -244,6 +244,16 @@ export const TradingForm: React.FC<TradingFormProps> = ({
                         </Text>
                     </TouchableOpacity>
 
+                    {/* Video Preview */}
+                    {videoUri && (
+                        <View style={styles.imagePreviewContainer}>
+                            <View style={[styles.imagePreview, { backgroundColor: '#1a1a1a', alignItems: 'center', justifyContent: 'center' }]}>
+                                <MaterialCommunityIcons name="video" size={32} color="#1a73e8" />
+                                <Text style={{ color: '#888', fontSize: 10, marginTop: 4 }}>Video Ready</Text>
+                            </View>
+                        </View>
+                    )}
+
                     {/* Image Upload */}
                     <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
                         <MaterialCommunityIcons name="image" size={16} color="#fff" />

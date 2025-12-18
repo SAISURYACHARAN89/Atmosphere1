@@ -550,7 +550,7 @@ function FilterModal({
     );
 }
 
-const Jobs = () => {
+const Opportunities = () => {
     const { theme } = useContext(ThemeContext) as any;
     const [activeTab, setActiveTab] = useState('Grants');
 
@@ -1649,4 +1649,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Jobs;
+export default Opportunities;

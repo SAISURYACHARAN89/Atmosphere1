@@ -1,0 +1,158 @@
+.users-page {
+    min-height: 100vh;
+}
+
+.page-content {
+    padding: 32px;
+}
+
+.card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.search-input,
+.filter-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #1a1a1a;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #666;
+}
+
+.search-input input,
+.filter-select select {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 14px;
+}
+
+.filter-select select {
+    cursor: pointer;
+}
+
+.filter-select select option {
+    background: #1a1a1a;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: #1a1a1a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.role-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.role-startup {
+    background: #10b98120;
+    color: #10b981;
+}
+
+.role-investor {
+    background: #f59e0b20;
+    color: #f59e0b;
+}
+
+.role-personal {
+    background: #6366f120;
+    color: #6366f1;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.verified {
+    background: #10b98120;
+    color: #10b981;
+}
+
+.status-badge.pending {
+    background: #f59e0b20;
+    color: #f59e0b;
+}
+
+.status-badge.blocked {
+    background: #ef444420;
+    color: #ef4444;
+}
+
+.blocked-row {
+    opacity: 0.6;
+    background: #1a1a1a;
+}
+
+.verified-icon {
+    color: #3b82f6;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .search-input,
+    .filter-select {
+        width: 100%;
+    }
+
+    .search-input input {
+        width: 100%;
+    }
+
+    .user-avatar {
+        display: none;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .action-buttons button {
+        width: 100%;
+        justify-content: center;
+    }
+}

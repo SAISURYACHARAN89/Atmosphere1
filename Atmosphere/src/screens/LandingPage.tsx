@@ -12,21 +12,23 @@ import Home from './Home';
 import BottomNav from '../components/BottomNav';
 import TopStartups from './TopStartups';
 import TradingSection from './TradingSection';
-import Jobs from './Jobs';
+import Opportunities from './Opportunities';
 import Meetings from './Meetings';
 import SetupProfile from './SetupProfile';
 import CreatePost from './CreatePost';
 import CreateReel from './CreateReel';
 import SavedPosts from './SavedPosts';
 import CreateMenu from '../components/CreateMenu';
+import VideoCall from './VideoCall';
 
-type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup' | 'chatDetail' | 'createPost' | 'createReel' | 'saved';
+type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup' | 'chatDetail' | 'createPost' | 'createReel' | 'saved' | 'videoCall';
 
 const LandingPage = () => {
     const [route, setRoute] = useState<RouteKey>('home');
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
     const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+    const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
     const [reelContext, setReelContext] = useState<{ userId?: string; initialReelId?: string }>({});
     const [showCreateMenu, setShowCreateMenu] = useState(false);
     const { theme } = useContext(ThemeContext);
@@ -98,9 +100,22 @@ const LandingPage = () => {
             case 'trade':
                 return <TradingSection />;
             case 'jobs':
-                return <Jobs />;
+                return <Opportunities />;
             case 'meetings':
-                return <Meetings />;
+                return <Meetings onJoinMeeting={(meetingId: string) => {
+                    setSelectedMeetingId(meetingId);
+                    setRoute('videoCall');
+                }} />;
+            case 'videoCall':
+                return selectedMeetingId ? (
+                    <VideoCall
+                        meetingId={selectedMeetingId}
+                        onLeave={() => {
+                            setSelectedMeetingId(null);
+                            setRoute('meetings');
+                        }}
+                    />
+                ) : null;
             case 'chatDetail':
                 return selectedChatId ? (
                     <ChatDetail
@@ -156,6 +171,7 @@ const LandingPage = () => {
             createPost: 'Profile',
             createReel: 'Profile',
             saved: 'Profile',
+            videoCall: 'Meetings',
         };
         return rev[r] || 'Home';
     };

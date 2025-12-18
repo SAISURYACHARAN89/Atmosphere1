@@ -42,6 +42,8 @@ export interface ActiveTrade {
     startupUsername?: string;
     description: string;
     imageUrls: string[];
+    videoUrl?: string;
+    videoThumbnailUrl?: string;
     revenueStatus: 'revenue-generating' | 'pre-revenue';
     companyAge?: string;
     sellingRangeMin: number;

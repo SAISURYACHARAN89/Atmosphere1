@@ -26,11 +26,13 @@ export const styles = StyleSheet.create({
     tabIndicator: {
         position: 'absolute',
         bottom: 0,
-        height: 3,
-        backgroundColor: '#fff',
+        height: 2,
+        width: 80,
+        borderRadius: 1,
+        backgroundColor: '#555',
     },
-    searchRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 8 },
-    searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f0f0f', paddingVertical: 12, paddingHorizontal: 12, borderRadius: 24, gap: 8 },
+    searchRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 8, paddingHorizontal: 20 },
+    searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f0f0f', paddingVertical: 12, paddingHorizontal: 12, borderRadius: 15, gap: 8 },
     searchInput: { flex: 1, color: '#fff' },
     bookmarkBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f0f0f' },
     bookmarkBtnActive: { backgroundColor: '#1a73e8' },
@@ -43,6 +45,7 @@ export const styles = StyleSheet.create({
         borderRadius: 8,
         marginTop: 12,
         gap: 8,
+        marginHorizontal: 20,
     },
     filterButtonText: {
         color: '#fff',
@@ -390,14 +393,14 @@ export const styles = StyleSheet.create({
         backgroundColor: '#1a1a1a',
     },
     categoryChipActive: {
-        backgroundColor: '#1a73e8',
+        backgroundColor: '#fff',
     },
     categoryChipText: {
         color: '#999',
         fontSize: 13,
     },
     categoryChipTextActive: {
-        color: '#fff',
+        color: '#000',
         fontWeight: '600',
     },
     cardsList: { flex: 1 },

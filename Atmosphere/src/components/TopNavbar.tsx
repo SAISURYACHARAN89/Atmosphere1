@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { BlurView } from '@react-native-community/blur';
+import { Heart, Send } from 'lucide-react-native';
 
 interface TopNavbarProps {
   title?: string;
@@ -24,12 +25,18 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
   }, []);
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ translateY: visible ? 0 : -56 }] }]}> 
+    <Animated.View style={[styles.container, { transform: [{ translateY: visible ? 0 : -56 }] }]}>
+      <BlurView
+        style={StyleSheet.absoluteFill}
+        blurType="dark"
+        blurAmount={15}
+        overlayColor="rgba(0,0,0,0.7)"
+      />
       <View style={styles.inner}>
         {/* LEFT SIDE */}
         <View style={styles.left}>
           <TouchableOpacity onPress={onNotificationsPress} style={styles.iconButton}>
-            <MaterialCommunityIcons name="heart-outline" size={26} color="#fff" />
+            <Heart size={26} color="#fff" />
             {notificationsCount > 0 && <View style={styles.badge} />}
           </TouchableOpacity>
         </View>
@@ -42,7 +49,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
         {/* RIGHT SIDE */}
         <View style={styles.right}>
           <TouchableOpacity onPress={onChatsPress} style={styles.iconButton}>
-            <MaterialCommunityIcons name="send-outline" size={26} color="#fff" />
+            <Send size={26} color="#fff" />
             {messagesCount > 0 && (
               <View style={styles.msgBadge}>
                 <Text style={styles.msgBadgeText}>{messagesCount}</Text>
@@ -57,6 +64,7 @@ const TopNavbar: React.FC<TopNavbarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    overflow: 'hidden',
     height: 56,
     width: '100%',
     position: 'absolute',
@@ -64,14 +72,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 50,
-    backgroundColor: '#000',
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#00000010',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    borderBottomColor: "rgba(255,255,255,0.08)",
   },
   inner: {
     flex: 1,
@@ -89,21 +92,19 @@ const styles = StyleSheet.create({
   },
   center: {
     position: 'absolute',
-    left: '50%',
+    left: 0,
+    right: 0,
     top: 0,
-    width: 160,
     height: 56,
-    marginLeft: -80,
     alignItems: 'center',
     justifyContent: 'center',
     pointerEvents: 'none',
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    fontFamily: 'cursive',
+    fontSize: 26,
+    fontFamily: 'Pacifico-Regular',
     color: '#fff',
-    letterSpacing: 1,
+    textAlign: 'center',
   },
   right: {
     flexDirection: 'row',

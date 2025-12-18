@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, ScrollView } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Logo from '../components/Logo';
 import { register } from '../lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,8 +27,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
     const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>('idle');
     const [verifyMessage, setVerifyMessage] = useState('');
 
-    // theme not used here
-
     const handleSignUp = async () => {
         if (!email || !username || !password) {
             Alert.alert('Missing fields', 'Please fill all required fields');
@@ -37,10 +36,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
         try {
             const data = await register({ email, username, password, displayName: username || email, accountType });
             if (data && data.token) {
-                // Do NOT store token yet as verified = false
-                // Or store it but don't navigate to home yet.
-                // The backend now returns { token, user: { ..., verified: false } }
-
                 setVerifyMessage('Registration successful! Sending OTP...');
                 setVerifyStatus('sent');
                 setShowOtpInput(true);
@@ -52,7 +47,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
         }
     };
 
-    // This is now "Resend" effectively if they are already on the OTP screen
     const handleRequestVerify = async () => {
         if (!email) {
             setVerifyStatus('error');
@@ -63,10 +57,8 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
         setVerifyMessage('Sending verification code...');
 
         try {
-            // Import resendOtp dynamically or use the one we just added
             const { resendOtp } = require('../lib/api');
             await resendOtp(email);
-
             setShowOtpInput(true);
             setVerifyStatus('sent');
             setVerifyMessage('Code sent! Check your email');
@@ -87,18 +79,9 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
 
         try {
             const api = require('../lib/api');
-            // Backend endpoint needs email if not authenticated.
             await api.verifyEmail(otp, email);
-
             setVerifyStatus('verified');
             setVerifyMessage('Email verified successfully! ✓');
-
-            // Now log the user in / save token
-            // We need to re-login or use the token we got from register if we saved it?
-            // Actually, usually we login after verification or just use the token we got from register.
-            // But register gave us a token. If we use that token with verifyEmail, backend handles it.
-            // If we didn't save the token, we might need to login.
-            // Let's assume we need to auto-login.
 
             const { login } = require('../lib/api');
             const loginData = await login(email, password);
@@ -111,7 +94,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                 setShowOtpInput(false);
                 if (onSignedUp) onSignedUp();
             }, 1000);
-
         } catch (err: any) {
             setVerifyStatus('error');
             setVerifyMessage(err.message || 'Invalid code. Please try again.');
@@ -145,14 +127,11 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                 contentContainerStyle={styles.scrollContent}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* Logo */}
                 <View style={styles.logoSection}>
-                    <Logo size={44} />
+                    <Logo size={48} />
                 </View>
 
-                {/* Form Card */}
                 <View style={styles.formCard}>
-                    {/* Email Input */}
                     <TextInput
                         style={styles.input}
                         placeholder="Email"
@@ -163,7 +142,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         autoCapitalize="none"
                     />
 
-                    {/* Username Input */}
                     <TextInput
                         style={styles.input}
                         placeholder="Username"
@@ -173,7 +151,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         autoCapitalize="none"
                     />
 
-                    {/* Password Input */}
                     <TextInput
                         style={styles.input}
                         placeholder="Password"
@@ -183,7 +160,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         secureTextEntry
                     />
 
-                    {/* Account Type Dropdown */}
                     <TouchableOpacity
                         style={styles.dropdownButton}
                         onPress={() => setShowDropdown(true)}
@@ -195,10 +171,7 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         <Text style={styles.dropdownArrow}>▼</Text>
                     </TouchableOpacity>
 
-                    {/* Verification Section */}
-                    {!showOtpInput ? (
-                        null
-                    ) : (
+                    {showOtpInput && (
                         <View style={styles.otpSection}>
                             <View style={styles.otpRow}>
                                 <TextInput
@@ -231,7 +204,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         </View>
                     )}
 
-                    {/* Status Message */}
                     {verifyMessage ? (
                         <View style={styles.statusContainer}>
                             <Text style={[styles.statusMessage, { color: getStatusColor() }]}>
@@ -240,7 +212,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         </View>
                     ) : null}
 
-                    {/* Sign Up Button - Hide if OTP sent (user already created) */}
                     {!showOtpInput && (
                         <TouchableOpacity
                             style={[styles.signupButton, (!email || !username || !password) && styles.signupButtonDisabled]}
@@ -255,13 +226,26 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         </TouchableOpacity>
                     )}
 
-                    {/* Terms */}
+                    {!showOtpInput && (
+                        <View style={styles.dividerRow}>
+                            <View style={styles.dividerLine} />
+                            <Text style={styles.dividerText}>OR</Text>
+                            <View style={styles.dividerLine} />
+                        </View>
+                    )}
+
+                    {!showOtpInput && (
+                        <TouchableOpacity style={styles.googleButton} onPress={() => Alert.alert('Google signup coming soon')}>
+                            <MaterialCommunityIcons name="google" size={18} color="#8e8e8e" />
+                            <Text style={styles.googleText}>Sign up with Google</Text>
+                        </TouchableOpacity>
+                    )}
+
                     <Text style={styles.termsText}>
                         By signing up, you agree to our Terms, Privacy Policy and Cookies Policy.
                     </Text>
                 </View>
 
-                {/* Sign In Link */}
                 <View style={styles.signinCard}>
                     <Text style={styles.signinText}>
                         Have an account?{' '}
@@ -272,7 +256,6 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                 </View>
             </ScrollView>
 
-            {/* Account Type Modal */}
             <Modal
                 visible={showDropdown}
                 transparent
@@ -333,46 +316,40 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         justifyContent: 'center',
-        paddingHorizontal: 32,
+        paddingHorizontal: 20,
         paddingVertical: 40,
     },
     logoSection: {
         alignItems: 'center',
         marginBottom: 24,
     },
-    subtitle: {
-        color: '#8e8e8e',
-        fontSize: 15,
-        textAlign: 'center',
-        marginTop: 16,
-        lineHeight: 22,
-    },
     formCard: {
-        backgroundColor: '#121212',
-        borderRadius: 8,
-        padding: 30,
-        paddingBottom: 50,
-        paddingTop: 50,
+        backgroundColor: '#0d0d0d',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#262626',
+        paddingHorizontal: 30,
+        paddingVertical: 40,
     },
     input: {
-        height: 48,
-        backgroundColor: '#1c1c1c',
-        borderRadius: 6,
-        paddingHorizontal: 16,
-        marginBottom: 12,
-        fontSize: 15,
+        height: 50,
+        backgroundColor: '#000',
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        marginBottom: 8,
+        fontSize: 14,
         color: '#fff',
         borderWidth: 1,
-        borderColor: '#2a2a2a',
+        borderColor: '#363636',
     },
     dropdownButton: {
         height: 56,
-        backgroundColor: '#1c1c1c',
-        borderRadius: 6,
-        paddingHorizontal: 16,
-        marginBottom: 12,
+        backgroundColor: '#000',
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        marginBottom: 8,
         borderWidth: 1,
-        borderColor: '#2a2a2a',
+        borderColor: '#363636',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -384,25 +361,12 @@ const styles = StyleSheet.create({
     },
     dropdownValue: {
         color: '#fff',
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: '500',
     },
     dropdownArrow: {
         color: '#8e8e8e',
         fontSize: 12,
-    },
-    verifyButton: {
-        height: 44,
-        backgroundColor: '#2a2a2a',
-        borderRadius: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-    },
-    verifyButtonText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 14,
     },
     otpRow: {
         flexDirection: 'row',
@@ -416,7 +380,7 @@ const styles = StyleSheet.create({
     otpVerifyBtn: {
         backgroundColor: '#404040',
         paddingHorizontal: 20,
-        borderRadius: 6,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -429,14 +393,6 @@ const styles = StyleSheet.create({
     otpVerifyText: {
         color: '#fff',
         fontWeight: '600',
-    },
-    verifyButtonActive: {
-        backgroundColor: '#3a3a3a',
-    },
-    verifyLoading: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
     },
     otpSection: {
         marginBottom: 0,
@@ -453,21 +409,49 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     signupButton: {
-        backgroundColor: '#3a3a3a',
-        height: 48,
-        borderRadius: 8,
+        backgroundColor: '#404040',
+        height: 50,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 4,
+        marginTop: 15,
     },
     signupButtonDisabled: {
-        backgroundColor: '#2a2a2a',
-        opacity: 0.7,
+        backgroundColor: '#333333',
+        opacity: 0.6,
     },
     signupButtonText: {
         color: '#fff',
         fontWeight: '600',
-        fontSize: 15,
+        fontSize: 14,
+    },
+    dividerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#363636',
+    },
+    dividerText: {
+        marginHorizontal: 16,
+        color: '#8e8e8e',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    googleButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+    },
+    googleText: {
+        color: '#8e8e8e',
+        fontWeight: '600',
+        fontSize: 14,
+        marginLeft: 8,
     },
     termsText: {
         color: '#8e8e8e',
@@ -477,10 +461,12 @@ const styles = StyleSheet.create({
         lineHeight: 18,
     },
     signinCard: {
-        borderTopWidth: 1,
-        borderTopColor: '#262626',
+        borderWidth: 1,
+        borderColor: '#262626',
+        borderRadius: 10,
+        backgroundColor: '#0d0d0d',
         paddingVertical: 20,
-        marginTop: 24,
+        marginTop: 16,
         alignItems: 'center',
     },
     signinText: {
@@ -491,20 +477,21 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
     },
-    // Modal Styles
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'rgba(0,0,0,0.8)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 32,
+        padding: 20,
     },
     modalContent: {
-        backgroundColor: '#1c1c1c',
-        borderRadius: 12,
+        backgroundColor: '#0d0d0d',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#262626',
         width: '100%',
         maxWidth: 340,
-        padding: 20,
+        padding: 24,
     },
     modalTitle: {
         color: '#fff',
@@ -517,15 +504,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 14,
-        paddingHorizontal: 12,
-        borderRadius: 8,
+        paddingHorizontal: 14,
+        borderRadius: 10,
         marginBottom: 8,
-        backgroundColor: '#2a2a2a',
+        backgroundColor: '#000',
+        borderWidth: 1,
+        borderColor: '#363636',
     },
     modalOptionActive: {
-        backgroundColor: '#0064a8',
-        borderColor: '#0095f6',
-        borderWidth: 1,
+        backgroundColor: '#1a1a1a',
+        borderColor: '#404040',
     },
     modalOptionContent: {
         flex: 1,
@@ -544,7 +532,7 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     checkmark: {
-        color: '#0095f6',
+        color: '#fff',
         fontSize: 18,
         fontWeight: '700',
     },
@@ -552,6 +540,10 @@ const styles = StyleSheet.create({
         marginTop: 12,
         paddingVertical: 12,
         alignItems: 'center',
+        backgroundColor: '#000',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#363636',
     },
     modalCancelText: {
         color: '#8e8e8e',

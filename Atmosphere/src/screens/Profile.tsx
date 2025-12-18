@@ -1,7 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, ScrollView, Image, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
+import ThemedRefreshControl from '../components/ThemedRefreshControl';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getProfile, getFollowersCount, getFollowingCount, getStartupProfile, getUserReels } from '../lib/api';
 import { getImageSource } from '../lib/image';
@@ -10,6 +11,8 @@ import ProfilePager from './profile/ProfilePager';
 import SettingsOverlay from './profile/SettingsOverlay';
 import styles from './profile/Profile.styles';
 import { NavigationRouteContext } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import VerifiedBadge from '../components/VerifiedBadge';
 
 const mockData = (() => {
     const userName = 'Airbound';
@@ -39,8 +42,8 @@ const normalizeProfile = (profileData: any) => {
     const primaryRole = user && Array.isArray(user.roles) && user.roles.length ? user.roles[0] : user?.accountType;
     if (hasStartupDetails && details) {
         return {
-            name: details.companyName || user.displayName || user.username || 'Unknown',
-            username: user.username ? `@${user.username}` : '',
+            name: details.companyName || user.fullName || user.username || 'Unknown',
+            username: user.username ? `${user.username}` : '',
             logo: details.profileImage || user.avatarUrl || 'https://via.placeholder.com/400x240.png?text=Startup',
             tagline: details.about || user.bio || '',
             description: details.about || user.bio || '',
@@ -54,6 +57,7 @@ const normalizeProfile = (profileData: any) => {
                 teamSize: details.teamMembers?.length || 0,
                 fundingRaised: details.fundingRaised || details.financialProfile?.fundingAmount || 0
             },
+            verified: user.verified || details.verified || false,
             profileSetupComplete: user.profileSetupComplete,
             onboardingStep: user.onboardingStep,
         };
@@ -62,8 +66,8 @@ const normalizeProfile = (profileData: any) => {
     // For investors
     if ((primaryRole === 'investor') && details) {
         return {
-            name: user.displayName || user.username || 'Unknown',
-            username: user.username ? `@${user.username}` : '',
+            name: user.fullName || user.username || 'Unknown',
+            username: user.username ? `${user.username}` : '',
             logo: details.profileImage || user.avatarUrl || 'https://via.placeholder.com/400x240.png?text=Investor',
             tagline: details.about || user.bio || '',
             description: details.about || user.bio || '',
@@ -77,6 +81,7 @@ const normalizeProfile = (profileData: any) => {
                 teamSize: 0,
                 fundingRaised: 0
             },
+            verified: user.verified || false,
             profileSetupComplete: user.profileSetupComplete,
             onboardingStep: user.onboardingStep,
         };
@@ -84,7 +89,7 @@ const normalizeProfile = (profileData: any) => {
     // For personal accounts
     return {
         name: user.displayName || user.username || 'Unknown',
-        username: user.username ? `@${user.username}` : '',
+        username: user.username ? `${user.username}` : '',
         logo: user.avatarUrl || 'https://via.placeholder.com/400x240.png?text=User',
         tagline: user.bio || '',
         description: user.bio || '',
@@ -98,6 +103,7 @@ const normalizeProfile = (profileData: any) => {
             teamSize: 0,
             fundingRaised: 0
         },
+        verified: user.verified || false,
         profileSetupComplete: user.profileSetupComplete,
         onboardingStep: user.onboardingStep,
     };
@@ -391,16 +397,14 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                 style={[styles.container, { backgroundColor: theme.background }]}
                 contentContainerStyle={[styles.contentContainer]}
                 refreshControl={
-                    <RefreshControl
+                    <ThemedRefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor={theme.primary}
-                        title="Release to Refresh"
-                        titleColor={theme.text}
+                        progressViewOffset={0}
                     />
                 }
             >
-                <ProfileHeader name={loading ? '' : (src?.name || '')} onOpenSettings={() => setLeftDrawerOpen(true)} onCreate={onCreatePost} onBack={onClose} theme={theme} />
+                <ProfileHeader name={loading ? '' : (src?.username || '')} onOpenSettings={() => setLeftDrawerOpen(true)} onCreate={onCreatePost} onBack={onClose} theme={theme} />
 
                 {/* Setup is opened via parent navigation (LandingPage route 'setup') */}
 
@@ -420,20 +424,40 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                     </View>
                                 )}
                             </View>
-                            <View style={styles.headerStats}>
-                                <View style={styles.statCol}>
-                                    <Text style={[styles.statNum, { color: theme.text }]}>{posts.length}</Text>
-                                    <Text style={[styles.statLabel, { color: theme.placeholder }]}>posts</Text>
+                            <View style={{ flex: 1, justifyContent: 'center', marginLeft: 12 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                    <Text style={{ color: theme.text, fontSize: 18, fontWeight: '700' }}>{src?.name}</Text>
+                                    {src?.verified && <VerifiedBadge size={18} />}
                                 </View>
-                                <View style={styles.statCol}>
-                                    <Text style={[styles.statNum, { color: theme.text }]}>{followersCount ?? src?.stats?.followers ?? 0}</Text>
-                                    <Text style={[styles.statLabel, { color: theme.placeholder }]}>followers</Text>
-                                </View>
-                                <View style={styles.statCol}>
-                                    <Text style={[styles.statNum, { color: theme.text }]}>{followingCount ?? 0}</Text>
-                                    <Text style={[styles.statLabel, { color: theme.placeholder }]}>following</Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingRight: 16 }}>
+                                    <View style={styles.statCol}>
+                                        <Text style={[styles.statNum, { color: theme.text }]}>{posts.length}</Text>
+                                        <Text style={[styles.statLabel, { color: theme.placeholder }]}>posts</Text>
+                                    </View>
+                                    <View style={styles.statCol}>
+                                        <Text style={[styles.statNum, { color: theme.text }]}>{followersCount ?? src?.stats?.followers ?? 0}</Text>
+                                        <Text style={[styles.statLabel, { color: theme.placeholder }]}>followers</Text>
+                                    </View>
+                                    <View style={styles.statCol}>
+                                        <Text style={[styles.statNum, { color: theme.text }]}>{followingCount ?? 0}</Text>
+                                        <Text style={[styles.statLabel, { color: theme.placeholder }]}>following</Text>
+                                    </View>
                                 </View>
                             </View>
+                        </View>
+
+                        <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+                            {src?.location ? (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                    <Ionicons name="location-outline" size={16} color={theme.placeholder} style={{ marginRight: 2 }} />
+                                    <Text style={{ color: theme.placeholder, fontSize: 13 }}>{src.location}</Text>
+                                </View>
+                            ) : null}
+                            <Text style={{ color: theme.text, fontSize: 14, lineHeight: 20, marginLeft: 5 }}>
+                                {src?.tagline && src?.description && src?.tagline !== src?.description
+                                    ? `${src.tagline} | ${src.description}`
+                                    : (src?.tagline || src?.description || '')}
+                            </Text>
                         </View>
 
                         {viewingUserId ? (

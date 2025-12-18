@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator, Dimensions, Animated, ScrollView, Image as RNImage, Alert, FlatList, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator, Dimensions, Animated, ScrollView, Image as RNImage, Alert, FlatList, LayoutAnimation, UIManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createTrade, getMyTrades, getAllTrades, updateTrade, deleteTrade, fetchInvestors } from '../lib/api';
+import { createTrade, getMyTrades, getAllTrades, updateTrade, deleteTrade, fetchInvestors, uploadImage, uploadVideo, getProfile, toggleTradeSave, getSavedTrades } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { launchImageLibrary } from 'react-native-image-picker';
+import Video from 'react-native-video';
+import ThemedRefreshControl from '../components/ThemedRefreshControl';
 
 // Import modular files
 import { categories, Investment, InvestorPortfolio } from './Trading/types';
@@ -48,9 +50,10 @@ const Trading = () => {
     const [refreshing, setRefreshing] = useState(false);
 
     // UI State
-    const [activeTab, setActiveTab] = useState<'Data' | 'Buy' | 'Sell' | 'Leaderboard'>('Data');
+    const [activeTab, setActiveTab] = useState<'Data' | 'Buy' | 'Sell' | 'Leaderboard'>('Buy');
     const [searchValue, setSearchValue] = useState('');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [accountType, setAccountType] = useState<string>('personal'); // Track if user is investor
 
     // Buy/Sell specific states
     const [buyTrades, setBuyTrades] = useState<any[]>([]);
@@ -75,15 +78,23 @@ const Trading = () => {
     const videoPlayerTextStyle = useMemo(() => ({ color: '#fff', textAlign: 'center' }), []);
     const activeTradesTopStyle = useMemo(() => ({ marginTop: 24 }), []);
     const pagerPageWidth = useMemo(() => ({ width: screenW }), []);
+    const headerPadding = 16; // Matches headerContainer paddingHorizontal
+    const tabsRowWidth = screenW - (headerPadding * 2); // Actual width of tabsRow
+    const tabWidth = tabsRowWidth / 2; // Each tab takes half the tabsRow
+    const indicatorWidth = 80; // Indicator width (matches styles.ts)
+    const indicatorCenterInTab = (tabWidth - indicatorWidth) / 2; // Center indicator within each tab
     const animatedIndicatorStyle = useMemo(() => ([
         styles.tabIndicator,
         {
-            width: screenW / 2,
+            left: indicatorCenterInTab, // Start centered in first tab
             transform: [{
-                translateX: scrollX.interpolate({ inputRange: [0, screenW], outputRange: [0, screenW / 2] })
+                translateX: scrollX.interpolate({
+                    inputRange: [0, screenW],
+                    outputRange: [0, tabWidth] // Move by one tab width when scrolling
+                })
             }]
         }
-    ]), [scrollX]);
+    ]), [scrollX, indicatorCenterInTab, tabWidth]);
 
     // SELL tab - Portfolio form state
     const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
@@ -98,6 +109,10 @@ const Trading = () => {
     const [companyType] = useState<string[]>([]);
     const [videoUri, setVideoUri] = useState<string>('');
     const [imageUris, setImageUris] = useState<string[]>([]);
+    const [videoS3Url, setVideoS3Url] = useState<string>('');
+    const [videoThumbnailUrl, setVideoThumbnailUrl] = useState<string>('');
+    const [imageS3Urls, setImageS3Urls] = useState<string[]>([]);
+    const [uploading, setUploading] = useState<boolean>(false);
     const [externalLinkHeading, setExternalLinkHeading] = useState<string>('');
     const [externalLinkUrl, setExternalLinkUrl] = useState<string>('');
     const [selectedCompanyName, setSelectedCompanyName] = useState<string>('');
@@ -113,12 +128,41 @@ const Trading = () => {
     const [showSavedOnly, setShowSavedOnly] = useState(false);
     const [savedItems, setSavedItems] = useState<string[]>([]);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const filterAnimValue = useRef(new Animated.Value(0)).current;
+
+    // Enable LayoutAnimation for Android - must be in useEffect
+    useEffect(() => {
+        if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+            UIManager.setLayoutAnimationEnabledExperimental(true);
+        }
+    }, []);
+
+    // Animated filter toggle with smooth height animation
+    const toggleFilterWithAnimation = () => {
+        const toValue = isFilterOpen ? 0 : 1;
+        setIsFilterOpen(!isFilterOpen);
+        Animated.timing(filterAnimValue, {
+            toValue,
+            duration: 250,
+            useNativeDriver: false, // height animation can't use native driver
+        }).start();
+    };
+
+    // Filter container animated style - full height for all filters
+    const filterContainerStyle = {
+        maxHeight: filterAnimValue.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 500], // full height for all filters
+        }),
+        opacity: filterAnimValue,
+    };
 
     // BUY TAB Pagination State
     const [buySkip, setBuySkip] = useState(0);
     const [buyHasMore, setBuyHasMore] = useState(true);
 
     const [buyInitialLoadDone, setBuyInitialLoadDone] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true); // Track if this is the very first load
     const [expandedBuyTradeId, setExpandedBuyTradeId] = useState<string | number | null>(null);
 
     const BUY_LIMIT = 20;
@@ -143,6 +187,7 @@ const Trading = () => {
 
             if (reset) {
                 setBuyTrades(data);
+                setIsFirstLoad(false); // Mark first load complete so subsequent filter changes don't show full loader
                 // Update Cache only on fresh load 
                 AsyncStorage.setItem('ATMOSPHERE_TRADES_BUY_CACHE', JSON.stringify(data)).catch(() => { });
             } else {
@@ -165,11 +210,28 @@ const Trading = () => {
             if (activeTab === 'Buy') {
                 await fetchBuyTrades(true);
             } else {
-                // Refresh Sell Tab components
-                await Promise.all([
+                // Refresh Sell Tab components - get current user's holdings
+                const [, profileData] = await Promise.all([
                     getMyTrades().then(t => setActiveTrades(t)).catch(console.warn),
-                    fetchInvestors().then(i => setInvestors(i)).catch(console.warn)
+                    getProfile().catch(() => null)
                 ]);
+
+                if (profileData) {
+                    const investorDetails = profileData.investorDetails || profileData.details;
+                    const holdings = investorDetails?.previousInvestments || [];
+                    const userId = profileData.user?._id || profileData._id;
+                    const displayName = profileData.user?.displayName || profileData.displayName || 'You';
+
+                    if (holdings.length > 0) {
+                        setInvestors([{
+                            _id: userId,
+                            user: { _id: userId, displayName, username: profileData.user?.username || '' },
+                            previousInvestments: holdings,
+                        } as InvestorPortfolio]);
+                    } else {
+                        setInvestors([]);
+                    }
+                }
             }
         } catch (e) {
             console.warn('Refresh error', e);
@@ -187,22 +249,49 @@ const Trading = () => {
         setBuyInitialLoadDone(true);
     }, []);
 
-    // Fetch Investors (Sell Tab)
+    // Fetch Current User's Holdings (Sell Tab)
     useEffect(() => {
         let mounted = true;
-        const loadInvestors = async () => {
+        const loadMyHoldings = async () => {
             try {
-                const data = await fetchInvestors();
-                if (mounted) {
-                    setInvestors(data);
+                const profileData = await getProfile();
+                if (mounted && profileData) {
+                    // Set account type - roles[0] is the primary source (User model uses roles array)
+                    const userAccountType = profileData.user?.roles?.[0]
+                        || profileData.user?.accountType
+                        || profileData.accountType
+                        || 'personal';
+                    console.log('[TradingSection] User roles:', profileData.user?.roles);
+                    console.log('[TradingSection] Detected accountType:', userAccountType);
+                    setAccountType(userAccountType);
+
+                    // Only load holdings for investor accounts
+                    if (userAccountType === 'investor') {
+                        // Extract current user's holdings from their investor details
+                        const investorDetails = profileData.investorDetails || profileData.details;
+                        const holdings = investorDetails?.previousInvestments || [];
+                        const userId = profileData.user?._id || profileData._id;
+                        const displayName = profileData.user?.displayName || profileData.displayName || 'You';
+
+                        // Create a single investor entry for the current user
+                        if (holdings.length > 0) {
+                            setInvestors([{
+                                _id: userId,
+                                user: { _id: userId, displayName, username: profileData.user?.username || '' },
+                                previousInvestments: holdings,
+                            } as InvestorPortfolio]);
+                        } else {
+                            setInvestors([]);
+                        }
+                    }
                 }
             } catch (e) {
-                console.warn('Failed to load investors', e);
+                console.warn('Failed to load my holdings', e);
             } finally {
                 if (mounted) setInvestorsLoading(false);
             }
         };
-        loadInvestors();
+        loadMyHoldings();
         return () => { mounted = false; };
     }, []);
 
@@ -223,6 +312,18 @@ const Trading = () => {
         return () => { mounted = false; };
     }, []);
 
+    // Load saved trade IDs on mount
+    useEffect(() => {
+        const loadSavedItems = async () => {
+            try {
+                const { savedTradeIds } = await getSavedTrades();
+                setSavedItems(savedTradeIds);
+            } catch (e) {
+                console.warn('Failed to load saved trades', e);
+            }
+        };
+        loadSavedItems();
+    }, []);
 
 
     // Trigger fetch on initial load or filter change
@@ -250,6 +351,12 @@ const Trading = () => {
     };
 
     const togglePortfolio = (cardKey: string) => {
+        // Spring animation for smooth natural feel like other apps
+        LayoutAnimation.configureNext(LayoutAnimation.create(
+            250,
+            LayoutAnimation.Types.spring,
+            LayoutAnimation.Properties.scaleY
+        ));
         setExpandedPortfolios(prev => {
             const newSet = new Set(prev);
             if (newSet.has(cardKey)) {
@@ -279,10 +386,14 @@ const Trading = () => {
             });
 
             if (!result.didCancel && result.assets && result.assets.length > 0) {
-                setVideoUri(result.assets[0].uri || '');
+                const localUri = result.assets[0].uri || '';
+                setVideoUri(localUri);
+                // Clear any previous S3 URLs since we have a new local file
+                setVideoS3Url('');
+                setVideoThumbnailUrl('');
             }
         } catch (error) {
-            console.warn('Video upload error:', error);
+            console.warn('Video selection error:', error);
         }
     };
 
@@ -291,18 +402,29 @@ const Trading = () => {
             const result = await launchImageLibrary({
                 mediaType: 'photo',
                 quality: 0.8,
+                selectionLimit: 10, // Allow selecting multiple images at once
             });
 
             if (!result.didCancel && result.assets && result.assets.length > 0) {
-                setImageUris([...imageUris, result.assets[0].uri || '']);
+                // Store local URIs and asset metadata for later upload
+                const newAssets = result.assets.map(asset => ({
+                    uri: asset.uri || '',
+                    fileName: asset.fileName || 'image.jpg',
+                    mimeType: asset.type || 'image/jpeg',
+                }));
+                const newLocalUris = newAssets.map(a => a.uri);
+                setImageUris(prev => [...prev, ...newLocalUris]);
+                // Clear S3 URLs - will be populated on submit
+                // Note: We store assets metadata in a ref or recalculate from imageUris on submit
             }
         } catch (error) {
-            console.warn('Image upload error:', error);
+            console.warn('Image selection error:', error);
         }
     };
 
     const removeImage = (index: number) => {
         setImageUris(imageUris.filter((_, i) => i !== index));
+        setImageS3Urls(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleOpenTrade = async () => {
@@ -312,58 +434,108 @@ const Trading = () => {
         const finalCompanyName = selectedCompanyName || 'Company';
         const finalCompanyAge = selectedCompanyAge || companyAge || '';
 
-        const tradeData = {
-            companyId: expandedCompany,
-            companyName: finalCompanyName,
-            companyType,
-            companyAge: finalCompanyAge,
-            revenueStatus,
-            description,
-            startupUsername,
-            sellingRangeMin,
-            sellingRangeMax,
-            selectedIndustries,
-            isManualEntry,
-            externalLinkHeading,
-            externalLinkUrl,
-            // Note: videoUrl and imageUrls are excluded for now (future implementation)
-        };
+        setUploading(true);
 
         try {
-            if (editingTradeId) {
-                const response = await updateTrade(editingTradeId, tradeData);
-                if (response && response.trade) {
-                    setActiveTrades(activeTrades.map(t => t._id === editingTradeId ? response.trade : t));
+            // Upload media to S3 only when submitting
+            let uploadedVideoUrl = '';
+            let uploadedThumbnailUrl = '';
+            let uploadedImageUrls: string[] = [];
+
+            // Upload video if selected
+            if (videoUri) {
+                try {
+                    const s3Result = await uploadVideo(videoUri);
+                    uploadedVideoUrl = s3Result.url;
+                    uploadedThumbnailUrl = s3Result.thumbnailUrl || s3Result.url;
+                } catch (videoError: any) {
+                    console.error('Video upload error:', videoError);
+                    Alert.alert('Upload Error', 'Failed to upload video. Please try again.');
+                    setUploading(false);
+                    return;
                 }
-                Alert.alert('Success', 'Trade updated successfully!');
-            } else {
-                const response = await createTrade(tradeData);
-                if (response && response.trade) {
-                    setActiveTrades([...activeTrades, response.trade]);
-                }
-                Alert.alert('Success', 'Trade opened successfully!');
             }
 
-            // Reset form
-            setEditingTradeId(null);
-            setExpandedCompany(null);
-            setSellingRangeMin(10);
-            setSellingRangeMax(40);
-            setCompanyAge('');
-            setRevenueStatus('pre-revenue');
-            setDescription('');
-            setStartupUsername('');
-            setIsManualEntry(false);
-            setSelectedIndustries([]);
-            setVideoUri('');
-            setImageUris([]);
-            setExternalLinkHeading('');
-            setExternalLinkUrl('');
-            setSelectedCompanyName('');
-            setSelectedCompanyAge('');
-        } catch (error: any) {
-            console.error('Failed to save trade:', error);
-            Alert.alert('Error', error.message || 'Failed to save trade');
+            // Upload images if selected
+            if (imageUris.length > 0) {
+                try {
+                    const uploadPromises = imageUris.map(async (uri) => {
+                        const fileName = uri.split('/').pop() || 'image.jpg';
+                        return uploadImage(uri, fileName, 'image/jpeg');
+                    });
+                    uploadedImageUrls = await Promise.all(uploadPromises);
+                } catch (imageError: any) {
+                    console.error('Image upload error:', imageError);
+                    Alert.alert('Upload Error', 'Failed to upload images. Please try again.');
+                    setUploading(false);
+                    return;
+                }
+            }
+
+            const tradeData = {
+                companyId: expandedCompany,
+                companyName: finalCompanyName,
+                companyType,
+                companyAge: finalCompanyAge,
+                revenueStatus,
+                description,
+                startupUsername,
+                sellingRangeMin,
+                sellingRangeMax,
+                selectedIndustries,
+                isManualEntry,
+                externalLinkHeading,
+                externalLinkUrl,
+                videoUrl: uploadedVideoUrl || undefined,
+                videoThumbnailUrl: uploadedThumbnailUrl || undefined,
+                imageUrls: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
+            };
+
+            try {
+                if (editingTradeId) {
+                    const response = await updateTrade(editingTradeId, tradeData);
+                    if (response && response.trade) {
+                        setActiveTrades(activeTrades.map(t => t._id === editingTradeId ? response.trade : t));
+                    }
+                    Alert.alert('Success', 'Trade updated successfully!');
+                } else {
+                    const response = await createTrade(tradeData);
+                    if (response && response.trade) {
+                        setActiveTrades([...activeTrades, response.trade]);
+                    }
+                    Alert.alert('Success', 'Trade opened successfully!');
+                }
+
+                // Reset form
+                setEditingTradeId(null);
+                setExpandedCompany(null);
+                setSellingRangeMin(10);
+                setSellingRangeMax(40);
+                setCompanyAge('');
+                setRevenueStatus('pre-revenue');
+                setDescription('');
+                setStartupUsername('');
+                setIsManualEntry(false);
+                setSelectedIndustries([]);
+                setVideoUri('');
+                setImageUris([]);
+                setVideoS3Url('');
+                setVideoThumbnailUrl('');
+                setImageS3Urls([]);
+                setExternalLinkHeading('');
+                setExternalLinkUrl('');
+                setSelectedCompanyName('');
+                setSelectedCompanyAge('');
+            } catch (error: any) {
+                console.error('Failed to save trade:', error);
+                Alert.alert('Error', error.message || 'Failed to save trade');
+            } finally {
+                setUploading(false);
+            }
+        } catch (outerError: any) {
+            console.error('Trade submission failed:', outerError);
+            Alert.alert('Error', outerError.message || 'Failed to submit trade');
+            setUploading(false);
         }
     };
 
@@ -410,12 +582,29 @@ const Trading = () => {
         );
     };
 
-    const toggleSaveItem = (itemId: string) => {
+    const toggleSaveItem = async (itemId: string) => {
+        const isCurrentlySaved = savedItems.includes(itemId);
+        const newSavedState = !isCurrentlySaved;
+
+        // Optimistically update UI
         setSavedItems(prev =>
-            prev.includes(itemId)
+            isCurrentlySaved
                 ? prev.filter(id => id !== itemId)
                 : [...prev, itemId]
         );
+
+        // Persist to backend
+        try {
+            await toggleTradeSave(itemId, newSavedState);
+        } catch (error) {
+            console.warn('Failed to save trade:', error);
+            // Revert on failure
+            setSavedItems(prev =>
+                isCurrentlySaved
+                    ? [...prev, itemId]
+                    : prev.filter(id => id !== itemId)
+            );
+        }
     };
 
     const renderInvestorPortfolios = () => {
@@ -467,12 +656,10 @@ const Trading = () => {
                 style={flexOneStyle}
                 contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
                 refreshControl={
-                    <RefreshControl
+                    <ThemedRefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#1a73e8"
-                        title="Release to refresh"
-                        titleColor="#888"
+                        progressViewOffset={0}
                     />
                 }
             >
@@ -560,44 +747,55 @@ const Trading = () => {
                             if (!tradeId) return null;
                             const isExpanded = expandedTradeId === tradeId;
                             const photoIndex = currentPhotoIndex[tradeId] || 0;
+                            const imageCount = trade.imageUrls?.length || 0;
+                            const hasVideo = !!trade.videoUrl;
+                            const totalMediaCount = imageCount + (hasVideo ? 1 : 0);
+                            const isCurrentItemVideo = hasVideo && photoIndex === imageCount;
 
                             return (
-                                <View key={tradeId} style={styles.tradeCard}>
+                                <View key={tradeId} style={styles.professionalTradeCard}>
                                     <TouchableOpacity
-                                        style={styles.tradeCardHeader}
+                                        activeOpacity={0.9}
+                                        style={[styles.collapsedCardRow, isExpanded && styles.expandedCardHeader]}
                                         onPress={() => {
+                                            // Spring animation for smooth natural feel
+                                            LayoutAnimation.configureNext(LayoutAnimation.create(
+                                                250,
+                                                LayoutAnimation.Types.spring,
+                                                LayoutAnimation.Properties.scaleY
+                                            ));
                                             setExpandedTradeId(isExpanded ? null : (tradeId as string | number));
                                             setEditingTradeId(null);
                                         }}
                                     >
-                                        <View style={styles.tradeAvatar}>
-                                            <Text style={styles.tradeAvatarText}>
-                                                {trade.companyName[0]}
-                                            </Text>
-                                        </View>
-
-                                        <View style={flexOneStyle}>
-                                            <View style={rowCenterGap8}>
-                                                <Text style={styles.tradeCompanyName}>{trade.companyName}</Text>
-                                                <View style={styles.tradeBadge}>
-                                                    <Text style={styles.tradeBadgeText}>Trade</Text>
-                                                </View>
+                                        {/* Avatar */}
+                                        {trade.imageUrls && trade.imageUrls.length > 0 && trade.imageUrls[0] ? (
+                                            <RNImage
+                                                source={{ uri: trade.imageUrls[0] }}
+                                                style={styles.collapsedAvatar}
+                                            />
+                                        ) : (
+                                            <View style={styles.collapsedAvatar}>
+                                                <Text style={styles.collapsedAvatarText}>
+                                                    {trade.companyName[0]}
+                                                </Text>
                                             </View>
+                                        )}
+
+                                        {/* Company Info */}
+                                        <View style={styles.collapsedCompanyInfo}>
+                                            <Text style={styles.collapsedCompanyName}>{trade.companyName}</Text>
                                             {!isExpanded && (
-                                                <Text style={styles.tradeUsername} numberOfLines={1}>
-                                                    {trade.description}
-                                                </Text>
-                                            )}
-                                            {!isExpanded && (
-                                                <Text style={styles.tradeMetaText}>
-                                                    {trade.revenueStatus === 'revenue-generating' ? 'Revenue Generating' : 'Pre Revenue'} • {trade.sellingRangeMin}% - {trade.sellingRangeMax}%
+                                                <Text style={styles.collapsedDescription} numberOfLines={1}>
+                                                    {trade.description || 'No description provided'}
                                                 </Text>
                                             )}
                                         </View>
 
-                                        <View style={rightButtonsRow}>
+                                        {/* Edit/Delete Actions */}
+                                        <View style={styles.collapsedActions}>
                                             <TouchableOpacity
-                                                style={styles.tradeActionButton}
+                                                style={styles.collapsedActionBtn}
                                                 onPress={(e) => {
                                                     e.stopPropagation();
                                                     handleUpdateTrade(tradeId);
@@ -606,7 +804,7 @@ const Trading = () => {
                                                 <MaterialCommunityIcons name="pencil" size={16} color="#999" />
                                             </TouchableOpacity>
                                             <TouchableOpacity
-                                                style={styles.tradeActionButton}
+                                                style={styles.collapsedActionBtn}
                                                 onPress={(e) => {
                                                     e.stopPropagation();
                                                     handleDeleteTrade(tradeId);
@@ -648,56 +846,104 @@ const Trading = () => {
                                                 noPadding
                                             />
                                         ) : (
-                                            <View style={styles.tradeExpandedContent}>
-                                                {trade.description && (
-                                                    <Text style={styles.tradeDescription}>"{trade.description}"</Text>
-                                                )}
+                                            <>
+                                                {/* Description */}
+                                                <Text style={styles.expandedDescription}>
+                                                    {trade.description || 'No description provided'}
+                                                </Text>
 
-                                                {/* Media */}
-                                                {(trade.videoUrl || trade.imageUrls.length > 0) && (
-                                                    <View style={styles.tradeMediaContainer}>
-                                                        {trade.videoUrl ? (
-                                                            <View style={styles.tradeMedia}>
-                                                                <Text style={videoPlayerTextStyle}>Video Player</Text>
-                                                            </View>
+                                                {/* Media Carousel */}
+                                                {totalMediaCount > 0 && (
+                                                    <View style={styles.professionalImageContainer}>
+                                                        {isCurrentItemVideo ? (
+                                                            <Video
+                                                                source={{ uri: trade.videoUrl }}
+                                                                style={styles.professionalImage}
+                                                                controls={true}
+                                                                resizeMode="contain"
+                                                                repeat={true}
+                                                            />
                                                         ) : (
-                                                            <View style={styles.tradeMedia}>
-                                                                <RNImage
-                                                                    source={{ uri: trade.imageUrls[photoIndex] }}
-                                                                    style={previewImageFull}
-                                                                    resizeMode="cover"
-                                                                />
-                                                            </View>
+                                                            <RNImage
+                                                                source={{ uri: trade.imageUrls?.[photoIndex] }}
+                                                                style={styles.professionalImage}
+                                                            />
+                                                        )}
+
+                                                        {/* Navigation Arrows */}
+                                                        {totalMediaCount > 1 && (
+                                                            <>
+                                                                {photoIndex > 0 && (
+                                                                    <TouchableOpacity
+                                                                        style={[styles.professionalArrow, styles.professionalArrowLeft]}
+                                                                        onPress={() => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: photoIndex - 1 }))}
+                                                                    >
+                                                                        <MaterialCommunityIcons name="chevron-left" size={22} color="#fff" />
+                                                                    </TouchableOpacity>
+                                                                )}
+                                                                {photoIndex < totalMediaCount - 1 && (
+                                                                    <TouchableOpacity
+                                                                        style={[styles.professionalArrow, styles.professionalArrowRight]}
+                                                                        onPress={() => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: photoIndex + 1 }))}
+                                                                    >
+                                                                        <MaterialCommunityIcons name="chevron-right" size={22} color="#fff" />
+                                                                    </TouchableOpacity>
+                                                                )}
+
+                                                                {/* Media Indicators */}
+                                                                <View style={styles.professionalIndicators}>
+                                                                    {Array.from({ length: totalMediaCount }).map((_, idx) => (
+                                                                        <View
+                                                                            key={idx}
+                                                                            style={[
+                                                                                styles.professionalDot,
+                                                                                idx === photoIndex && styles.professionalDotActive
+                                                                            ]}
+                                                                        />
+                                                                    ))}
+                                                                </View>
+                                                            </>
                                                         )}
                                                     </View>
                                                 )}
 
-                                                {/* Stats Grid */}
-                                                <View style={styles.statsGrid}>
-                                                    <View style={styles.statCard}>
-                                                        <Text style={styles.statLabel}>Revenue Status</Text>
-                                                        <Text style={styles.statValue}>
+                                                {/* Info Grid */}
+                                                <View style={styles.professionalInfoGrid}>
+                                                    <View style={styles.professionalInfoItem}>
+                                                        <Text style={styles.professionalInfoLabel}>Revenue</Text>
+                                                        <Text style={styles.professionalInfoValue}>
                                                             {trade.revenueStatus === 'revenue-generating' ? 'Revenue Generating' : 'Pre Revenue'}
                                                         </Text>
                                                     </View>
-                                                    <View style={styles.statCard}>
-                                                        <Text style={styles.statLabel}>Company Age</Text>
-                                                        <Text style={styles.statValue}>{trade.companyAge || 'N/A'}</Text>
+                                                    <View style={styles.professionalInfoItem}>
+                                                        <Text style={styles.professionalInfoLabel}>Age</Text>
+                                                        <Text style={styles.professionalInfoValue}>{trade.companyAge || 'N/A'}</Text>
                                                     </View>
-                                                    <View style={[styles.statCard, fullWidthCard]}>
-                                                        <Text style={[styles.statLabel, statLabelBlue]}>Selling Range</Text>
-                                                        <Text style={[styles.statValue, statValueBlue]}>
+                                                    <View style={styles.professionalInfoItem}>
+                                                        <Text style={styles.professionalInfoLabel}>Range</Text>
+                                                        <Text style={styles.professionalInfoValue}>
                                                             {trade.sellingRangeMin}% - {trade.sellingRangeMax}%
                                                         </Text>
                                                     </View>
                                                 </View>
+
+                                                {/* Industry Tags */}
+                                                {trade.selectedIndustries && trade.selectedIndustries.length > 0 && (
+                                                    <View style={styles.professionalTags}>
+                                                        {trade.selectedIndustries.map((industry, idx) => (
+                                                            <View key={idx} style={styles.professionalTag}>
+                                                                <Text style={styles.professionalTagText}>{industry}</Text>
+                                                            </View>
+                                                        ))}
+                                                    </View>
+                                                )}
 
                                                 {/* Views & Saves */}
                                                 <View style={styles.tradeStats}>
                                                     <Text style={styles.tradeStatText}>Views: {trade.views}</Text>
                                                     <Text style={styles.tradeStatText}>Saves: {trade.saves}</Text>
                                                 </View>
-                                            </View>
+                                            </>
                                         )
                                     )}
                                 </View>
@@ -710,13 +956,62 @@ const Trading = () => {
     };
 
     const renderMarketsList = () => {
-        // We use buyTrades for data
-        const data = buyTrades;
+        // Filter to show only saved items if showSavedOnly is true
+        let data = buyTrades;
+        if (showSavedOnly) {
+            data = buyTrades.filter(trade => {
+                const tradeId = trade._id || trade.id;
+                return savedItems.includes(String(tradeId));
+            });
+        }
 
         const ListHeader = () => (
             <>
-                {/* Category Filters - Only show when filter is open */}
-                {isFilterOpen && (
+                {/* Search and Filter - now inside scrollable content */}
+                <View style={styles.searchRow}>
+                    <View style={styles.searchBox}>
+                        <MaterialCommunityIcons name="magnify" size={18} color="#bfbfbf" />
+                        <TextInput
+                            placeholder="Search companies..."
+                            placeholderTextColor="#bfbfbf"
+                            style={styles.searchInput}
+                            value={searchValue}
+                            onChangeText={setSearchValue}
+                        />
+                        {searchValue !== '' && (
+                            <TouchableOpacity onPress={() => setSearchValue('')}>
+                                <MaterialCommunityIcons name="close" size={18} color="#bfbfbf" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                    <TouchableOpacity
+                        style={[styles.bookmarkBtn, showSavedOnly && styles.bookmarkBtnActive]}
+                        onPress={() => setShowSavedOnly(!showSavedOnly)}
+                    >
+                        <MaterialCommunityIcons
+                            name={showSavedOnly ? "bookmark" : "bookmark-outline"}
+                            size={20}
+                            color={showSavedOnly ? "#fff" : "#bfbfbf"}
+                        />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Filter Button */}
+                <TouchableOpacity
+                    style={styles.filterButton}
+                    onPress={toggleFilterWithAnimation}
+                >
+                    <MaterialCommunityIcons name="tune" size={18} color="#fff" />
+                    <Text style={styles.filterButtonText}>Filters</Text>
+                    <MaterialCommunityIcons
+                        name={isFilterOpen ? "chevron-up" : "chevron-down"}
+                        size={20}
+                        color="#bfbfbf"
+                    />
+                </TouchableOpacity>
+
+                {/* Filter Categories - Below filter button */}
+                <Animated.View style={[filterContainerStyle, { overflow: 'hidden' }]}>
                     <View style={styles.categoriesContainer}>
                         {categories.map(category => (
                             <TouchableOpacity
@@ -736,13 +1031,21 @@ const Trading = () => {
                             </TouchableOpacity>
                         ))}
                     </View>
-                )}
+                </Animated.View>
+
                 {/* Suggested for you heading */}
                 <Text style={styles.suggestedHeading}>Suggested for you</Text>
+                {/* Inline loading indicator for filter changes (after first load) */}
+                {!isFirstLoad && buyLoading && (
+                    <View style={{ paddingVertical: 16, alignItems: 'center' as const }}>
+                        <ActivityIndicator size="small" color="#1a73e8" />
+                    </View>
+                )}
             </>
         );
 
-        if (buyLoading && data.length === 0) {
+        // Only show full page loader on first load, not on filter changes
+        if (isFirstLoad && buyLoading && data.length === 0) {
             return (
                 <View style={centeredLoaderStyle}>
                     <ActivityIndicator size="large" color="#1a73e8" />
@@ -753,7 +1056,6 @@ const Trading = () => {
         return (
             <FlatList
                 data={data}
-
                 keyExtractor={(item, index) => `${String(item._id || item.id)}_${index}`}
                 contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
                 renderItem={({ item }) => {
@@ -768,7 +1070,9 @@ const Trading = () => {
                             isExpanded={isExpanded}
                             isSaved={isSaved}
                             currentPhotoIndex={currentPhotoIndex[String(tradeId)] || 0}
-                            onToggleExpand={() => setExpandedBuyTradeId(isExpanded ? null : (tradeId as string | number))}
+                            onToggleExpand={() => {
+                                setExpandedBuyTradeId(isExpanded ? null : (tradeId as string | number));
+                            }}
                             onToggleSave={() => toggleSaveItem(String(tradeId))}
                             onPhotoIndexChange={(index) => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: index }))}
                         />
@@ -779,12 +1083,10 @@ const Trading = () => {
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={() => buyLoading && data.length > 0 ? <ActivityIndicator size="small" color="#1a73e8" style={footerLoaderStyle} /> : null}
                 refreshControl={
-                    <RefreshControl
+                    <ThemedRefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor="#1a73e8"
-                        title="Release to refresh"
-                        titleColor="#888"
+                        progressViewOffset={0}
                     />
                 }
             />
@@ -795,80 +1097,35 @@ const Trading = () => {
         <SafeAreaView style={styles.container}>
             {/* Fixed header */}
             <View style={styles.headerContainer}>
-                {/* Swipeable tabs with underline indicator */}
-                <View style={styles.tabsRow}>
-                    <TouchableOpacity
-                        style={styles.tabItem}
-                        onPress={() => {
-                            setActiveTab('Buy');
-                            pagerRef.current?.scrollTo({ x: 0, animated: true });
-                        }}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'Buy' && styles.tabTextActive]}>
-                            BUY
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.tabItem}
-                        onPress={() => {
-                            setActiveTab('Sell');
-                            pagerRef.current?.scrollTo({ x: screenW, animated: true });
-                        }}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'Sell' && styles.tabTextActive]}>
-                            SELL
-                        </Text>
-                    </TouchableOpacity>
-
-                    {/* Animated underline indicator */}
-                    <Animated.View style={animatedIndicatorStyle} />
-                </View>
-
-                {/* Show search/filters only on Buy tab */}
-                {activeTab === 'Buy' && (
-                    <>
-                        <View style={styles.searchRow}>
-                            <View style={styles.searchBox}>
-                                <MaterialCommunityIcons name="magnify" size={18} color="#bfbfbf" />
-                                <TextInput
-                                    placeholder="Search companies..."
-                                    placeholderTextColor="#bfbfbf"
-                                    style={styles.searchInput}
-                                    value={searchValue}
-                                    onChangeText={setSearchValue}
-                                />
-                                {searchValue !== '' && (
-                                    <TouchableOpacity onPress={() => setSearchValue('')}>
-                                        <MaterialCommunityIcons name="close" size={18} color="#bfbfbf" />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                            <TouchableOpacity
-                                style={[styles.bookmarkBtn, showSavedOnly && styles.bookmarkBtnActive]}
-                                onPress={() => setShowSavedOnly(!showSavedOnly)}
-                            >
-                                <MaterialCommunityIcons
-                                    name={showSavedOnly ? "bookmark" : "bookmark-outline"}
-                                    size={20}
-                                    color={showSavedOnly ? "#fff" : "#bfbfbf"}
-                                />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Filter Button */}
+                {/* Swipeable tabs with underline indicator - Only show for investors */}
+                {accountType === 'investor' && (
+                    <View style={styles.tabsRow}>
                         <TouchableOpacity
-                            style={styles.filterButton}
-                            onPress={() => setIsFilterOpen(!isFilterOpen)}
+                            style={styles.tabItem}
+                            onPress={() => {
+                                setActiveTab('Buy');
+                                pagerRef.current?.scrollTo({ x: 0, animated: true });
+                            }}
                         >
-                            <MaterialCommunityIcons name="tune" size={18} color="#fff" />
-                            <Text style={styles.filterButtonText}>Filters</Text>
-                            <MaterialCommunityIcons
-                                name={isFilterOpen ? "chevron-up" : "chevron-down"}
-                                size={20}
-                                color="#bfbfbf"
-                            />
+                            <Text style={[styles.tabText, activeTab === 'Buy' && styles.tabTextActive]}>
+                                BUY
+                            </Text>
                         </TouchableOpacity>
-                    </>
+                        <TouchableOpacity
+                            style={styles.tabItem}
+                            onPress={() => {
+                                setActiveTab('Sell');
+                                pagerRef.current?.scrollTo({ x: screenW, animated: true });
+                            }}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'Sell' && styles.tabTextActive]}>
+                                SELL
+                            </Text>
+                        </TouchableOpacity>
+
+                        {/* Animated underline indicator */}
+                        <Animated.View style={animatedIndicatorStyle} />
+                    </View>
                 )}
             </View>
 

@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { fetchReels, likeReel, unlikeReel, checkReelShared } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
-import Icon from 'react-native-vector-icons/Ionicons';
-import Video from 'react-native-video';
+import { Heart, MessageCircle, Send, Eye, Video } from 'lucide-react-native';
+import VideoPlayer from 'react-native-video';
 import ReelCommentsOverlay from '../components/ReelCommentsOverlay';
 import ShareModal from '../components/ShareModal';
 
@@ -49,6 +49,7 @@ interface ReelItem {
         username: string;
         displayName?: string;
         avatarUrl?: string;
+        verified?: boolean;
     };
     likesCount: number;
     commentsCount: number;
@@ -77,6 +78,25 @@ const Reels = ({ userId, initialReelId }: ReelsProps) => {
 
     // Like loading states per reel
     const [likeLoading, setLikeLoading] = useState<Set<string>>(new Set());
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            const data = await fetchReels(30, 0);
+            const reelsWithDefaults = data.map((reel: any) => ({
+                ...reel,
+                sharesCount: reel.sharesCount || 0,
+                isLiked: reel.isLiked || false,
+                isShared: false,
+            }));
+            setReels(reelsWithDefaults);
+        } catch (err) {
+            console.warn('Failed to refresh reels:', err);
+        } finally {
+            setRefreshing(false);
+        }
+    }, []);
 
     useEffect(() => {
         loadReels();
@@ -312,7 +332,7 @@ const Reels = ({ userId, initialReelId }: ReelsProps) => {
     if (reels.length === 0) {
         return (
             <View style={[styles.container, styles.center]}>
-                <Icon name="videocam-outline" size={64} color="#666" />
+                <Video size={64} color="#666" />
                 <Text style={styles.emptyText}>No reels yet</Text>
             </View>
         );
