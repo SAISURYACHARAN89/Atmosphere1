@@ -238,7 +238,7 @@ const Reels = ({ userId, initialReelId }: ReelsProps) => {
                 <View style={styles.reelContainer}>
                     {/* Video or Thumbnail - using contain to preserve original aspect ratio */}
                     {isActive && item.videoUrl ? (
-                        <Video
+                        <VideoPlayer
                             source={{ uri: item.videoUrl }}
                             style={styles.video}
                             resizeMode="contain"
@@ -273,10 +273,10 @@ const Reels = ({ userId, initialReelId }: ReelsProps) => {
                                 onPress={() => handleLike(item._id)}
                                 disabled={likeLoading.has(item._id)}
                             >
-                                <Icon
-                                    name={item.isLiked ? "heart" : "heart-outline"}
+                                <Heart
                                     size={32}
                                     color={item.isLiked ? COLORS.like : "#fff"}
+                                    fill={item.isLiked ? COLORS.like : "transparent"}
                                 />
                                 <Text style={styles.actionText}>{item.likesCount}</Text>
                             </TouchableOpacity>
@@ -286,7 +286,7 @@ const Reels = ({ userId, initialReelId }: ReelsProps) => {
                                 style={styles.actionBtn}
                                 onPress={() => handleOpenComments(item._id)}
                             >
-                                <Icon name="chatbubble-outline" size={28} color="#fff" />
+                                <MessageCircle size={28} color="#fff" />
                                 <Text style={styles.actionText}>{item.commentsCount}</Text>
                             </TouchableOpacity>
 
@@ -295,8 +295,7 @@ const Reels = ({ userId, initialReelId }: ReelsProps) => {
                                 style={styles.actionBtn}
                                 onPress={() => handleOpenShare(item._id)}
                             >
-                                <Icon
-                                    name={item.isShared ? "paper-plane" : "paper-plane-outline"}
+                                <Send
                                     size={28}
                                     color={item.isShared ? COLORS.success : "#fff"}
                                 />
@@ -305,7 +304,7 @@ const Reels = ({ userId, initialReelId }: ReelsProps) => {
 
                             {/* Views */}
                             <View style={styles.actionBtn}>
-                                <Icon name="eye-outline" size={28} color="#fff" />
+                                <Eye size={28} color="#fff" />
                                 <Text style={styles.actionText}>{item.viewsCount}</Text>
                             </View>
                         </View>

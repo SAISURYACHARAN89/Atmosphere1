@@ -19,6 +19,7 @@ import { ThemeContext } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getBaseUrl } from '../lib/config';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import * as DocumentPicker from '@react-native-documents/picker';
 
 // Tab order matches web: Grants, Events, Team
 const TABS = ['Grants', 'Events', 'Team'];
@@ -41,15 +42,7 @@ const employmentOptions = ['all', 'Full-time', 'Part-time'];
 
 // Helper to get badge variant color
 const getBadgeColor = (type: string) => {
-    switch (type) {
-        case 'grant': return '#3b82f6';
-        case 'incubator': return '#8b5cf6';
-        case 'accelerator': return '#22c55e';
-        case 'physical': return '#3b82f6';
-        case 'virtual': return '#8b5cf6';
-        case 'hybrid': return '#f59e0b';
-        default: return '#6b7280';
-    }
+    return '#333'; // Monochrome for all badges
 };
 
 // Grant/Event Card Component (matches web design)
@@ -93,7 +86,7 @@ function GrantEventCard({ item, type }: { item: any; type: 'Grant' | 'Event' }) 
             <View style={styles.cardHeaderRow}>
                 <View style={styles.companyRow}>
                     <View style={[styles.companyIcon, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-                        <MaterialIcons name={type === 'Grant' ? 'monetization-on' : 'event'} size={24} color="#3b82f6" />
+                        <MaterialIcons name={type === 'Grant' ? 'monetization-on' : 'event'} size={24} color="#fff" />
                     </View>
                     <View style={styles.companyInfo}>
                         <View style={styles.companyNameRow}>
@@ -101,7 +94,7 @@ function GrantEventCard({ item, type }: { item: any; type: 'Grant' | 'Event' }) 
                                 {companyName}
                             </Text>
                             <View style={[styles.myAdBadge, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
-                                <Text style={[styles.myAdText, { color: '#22c55e' }]}>{badgeType}</Text>
+                                <Text style={[styles.myAdText, { color: '#fff' }]}>{badgeType}</Text>
                             </View>
                         </View>
                         <Text style={[styles.companyType, { color: subTextColor }]}>
@@ -209,7 +202,7 @@ function GrantEventCard({ item, type }: { item: any; type: 'Grant' | 'Event' }) 
                     {/* Left side info: Amount or Attendees */}
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         {type === 'Grant' && (
-                            <Text style={[styles.employmentText, { color: '#22c55e', fontWeight: '600' }]}>
+                            <Text style={[styles.employmentText, { color: '#fff', fontWeight: '600' }]}>
                                 {item.amount || 'Varies'}
                             </Text>
                         )}
@@ -226,7 +219,7 @@ function GrantEventCard({ item, type }: { item: any; type: 'Grant' | 'Event' }) 
                     {/* Right side: Expand/Apply Button */}
                     {applied ? (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={{ color: '#22c55e', marginRight: 4 }}>✓ Applied</Text>
+                            <Text style={{ color: '#fff', marginRight: 4 }}>✓ Applied</Text>
                         </View>
                     ) : (
                         <TouchableOpacity onPress={() => setExpanded(true)} style={styles.applicantsBtn}>
@@ -260,12 +253,30 @@ function RoleCard({
     const [questionAnswers, setQuestionAnswers] = useState<string[]>(
         (item.customQuestions || []).map(() => '')
     );
+    const [selectedFile, setSelectedFile] = useState<{ uri: string; name: string } | null>(null);
+
+    const handleFilePick = async () => {
+        try {
+            const res = await DocumentPicker.pick({
+                type: [DocumentPicker.types.pdf, DocumentPicker.types.doc, DocumentPicker.types.docx],
+            });
+            if (res && res[0]) {
+                setSelectedFile({ uri: res[0].uri, name: res[0].name || 'resume.pdf' });
+            }
+        } catch (err) {
+            if ((DocumentPicker as any).isCancel(err)) {
+                // User cancelled
+            } else {
+                Alert.alert('Error', 'Failed to pick file');
+            }
+        }
+    };
 
     const cardBg = '#000000';
     const borderColor = '#333';
-    const textColor = '#f2f2f2';
-    const subTextColor = '#888';
-    const primaryColor = '#3b82f6';
+    const textColor = '#ffffff';
+    const subTextColor = '#ffffff';
+    const accentColor = '#ffffff'; // White for company name and location as requested
 
     const tags = ['AI', 'B2B', 'SaaS', 'Startup'];
     const description = item.description || item.requirements || 'No description provided.';
@@ -293,15 +304,15 @@ function RoleCard({
             <View style={styles.cardHeaderRow}>
                 <View style={styles.companyRow}>
                     <View style={styles.companyIcon}>
-                        <MaterialIcons name="business" size={20} color="#3b82f6" />
+                        <MaterialIcons name="business" size={20} color="#fff" />
                     </View>
                     <View style={styles.companyInfo}>
                         <View style={styles.companyNameRow}>
-                            <Text style={[styles.companyName, { color: textColor }]} numberOfLines={1}>
+                            <Text style={[styles.companyName, { color: accentColor }]} numberOfLines={1}>
                                 {item.startupName || item.poster?.displayName || 'Unknown Startup'}
                             </Text>
                             {isMyAd && (
-                                <View style={[styles.myAdBadge]}>
+                                <View style={styles.myAdBadge}>
                                     <Text style={styles.myAdText}>My Ad</Text>
                                 </View>
                             )}
@@ -320,12 +331,12 @@ function RoleCard({
                 </Text>
                 <View style={styles.locationRow}>
                     <View style={styles.metaItem}>
-                        <MaterialIcons name="place" size={14} color={subTextColor} style={{ marginRight: 4 }} />
-                        <Text style={[styles.metaText, { color: subTextColor }]}>
+                        <MaterialIcons name="place" size={14} color={accentColor} style={{ marginRight: 4 }} />
+                        <Text style={[styles.metaText, { color: accentColor }]}>
                             {item.location || item.locationType || 'Remote'}
                         </Text>
                     </View>
-                    <Text style={[styles.remoteText, { color: item.isRemote ? primaryColor : subTextColor }]}>
+                    <Text style={[styles.remoteText, { color: subTextColor }]}>
                         {item.isRemote ? 'Remote' : 'On-site'}
                     </Text>
                 </View>
@@ -367,17 +378,17 @@ function RoleCard({
 
             {/* Expanded Application Section */}
             {expanded && (
-                <View style={[styles.expandedSection, { backgroundColor: '#111', borderColor }]}>
+                <View style={styles.expandedSectionInline}>
                     {!applied ? (
                         <>
                             {/* Custom Questions */}
                             {(item.customQuestions || []).map((q: string, i: number) => (
-                                <View key={i} style={styles.questionContainer}>
-                                    <Text style={[styles.questionLabel, { color: textColor }]}>{q}</Text>
+                                <View key={i} style={styles.questionContainerInline}>
+                                    <Text style={styles.questionLabelBold}>{q}</Text>
                                     <TextInput
-                                        style={[styles.questionInput, { color: textColor, borderColor }]}
+                                        style={styles.questionInputDark}
                                         placeholder="Your answer..."
-                                        placeholderTextColor={subTextColor}
+                                        placeholderTextColor="#666"
                                         value={questionAnswers[i]}
                                         onChangeText={(text) => {
                                             const updated = [...questionAnswers];
@@ -385,24 +396,28 @@ function RoleCard({
                                             setQuestionAnswers(updated);
                                         }}
                                         multiline
+                                        textAlignVertical="top"
                                     />
                                 </View>
                             ))}
 
-                            {/* File Upload Placeholder */}
-                            <View style={styles.uploadContainer}>
-                                <Text style={[styles.uploadLabel, { color: textColor }]}>
+                            {/* File Upload with inline text */}
+                            <View style={styles.uploadContainerInline}>
+                                <Text style={styles.uploadLabelBold}>
                                     Attach Resume (Optional)
                                 </Text>
-                                <TouchableOpacity style={[styles.uploadBtn, { borderColor }]}>
-                                    <Text style={[styles.uploadBtnText, { color: subTextColor }]}>
-                                        Choose File
+                                <View style={styles.fileChooserRow}>
+                                    <TouchableOpacity style={styles.fileChooserBtn} onPress={handleFilePick}>
+                                        <Text style={styles.fileChooserBtnText}>Choose File</Text>
+                                    </TouchableOpacity>
+                                    <Text style={styles.noFileText}>
+                                        {selectedFile ? selectedFile.name : 'No file chosen'}
                                     </Text>
-                                </TouchableOpacity>
+                                </View>
                             </View>
 
                             {/* Submit Button */}
-                            <TouchableOpacity style={styles.sendBtn} onPress={handleSubmit}>
+                            <TouchableOpacity style={styles.sendBtnDark} onPress={handleSubmit}>
                                 <Text style={styles.sendBtnText}>Send Application</Text>
                             </TouchableOpacity>
                         </>
@@ -1007,7 +1022,14 @@ const Opportunities = () => {
                     style={styles.modalContainer}
                 >
                     <View style={[styles.modalBox, { backgroundColor: '#111' }]}>
-                        <Text style={styles.modalTitle}>Post a new {activeTab === 'Team' ? 'Job' : activeTab.slice(0, -1)}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <Text style={[styles.modalTitle, { marginBottom: 0, flex: 1 }]}>
+                                Post a new {activeTab === 'Team' ? 'Job' : activeTab.slice(0, -1)}
+                            </Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={{ padding: 4 }}>
+                                <MaterialIcons name="close" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
                         <ScrollView style={styles.modalScroll}>
                             {activeTab === 'Grants' && (
                                 <>
@@ -1035,13 +1057,27 @@ const Opportunities = () => {
                             )}
                             {activeTab === 'Team' && (
                                 <>
-                                    <TextInput placeholderTextColor="#888" style={styles.input} placeholder="Startup Name" value={form.startupName} onChangeText={v => handleFormChange('startupName', v)} />
-                                    <TextInput placeholderTextColor="#888" style={styles.input} placeholder="Role Title" value={form.roleTitle} onChangeText={v => handleFormChange('roleTitle', v)} />
-                                    <TextInput placeholderTextColor="#888" style={styles.input} placeholder="Sector" value={form.sector} onChangeText={v => handleFormChange('sector', v)} />
-                                    <TextInput placeholderTextColor="#888" style={styles.input} placeholder="Location" value={form.locationType} onChangeText={v => handleFormChange('locationType', v)} />
-                                    <TextInput placeholderTextColor="#888" style={styles.input} placeholder="Employment Type" value={form.employmentType} onChangeText={v => handleFormChange('employmentType', v)} />
-                                    <TextInput placeholderTextColor="#888" style={styles.input} placeholder="Compensation" value={form.compensation} onChangeText={v => handleFormChange('compensation', v)} />
-                                    <TextInput placeholderTextColor="#888" style={[styles.input, { height: 80 }]} placeholder="Requirements" value={form.requirements} onChangeText={v => handleFormChange('requirements', v)} multiline />
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Startup Name</Text>
+                                        <TextInput placeholderTextColor="#666" style={styles.inputDark} placeholder="Enter your startup name" value={form.startupName} onChangeText={v => handleFormChange('startupName', v)} />
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Role Title</Text>
+                                        <TextInput placeholderTextColor="#666" style={styles.inputDark} placeholder="e.g., Co-Founder & CTO" value={form.roleTitle} onChangeText={v => handleFormChange('roleTitle', v)} />
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Sector</Text>
+                                        <TextInput placeholderTextColor="#666" style={styles.inputDark} placeholder="" value={form.sector} onChangeText={v => handleFormChange('sector', v)} />
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Location</Text>
+                                        <TextInput placeholderTextColor="#666" style={styles.inputDark} placeholder="e.g., San Francisco, USA" value={form.locationType} onChangeText={v => handleFormChange('locationType', v)} />
+                                    </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Employment Type</Text>
+                                        <TextInput placeholderTextColor="#666" style={styles.inputDark} placeholder="Full-time" value={form.employmentType} onChangeText={v => handleFormChange('employmentType', v)} />
+                                    </View>
+
                                     <TouchableOpacity
                                         style={styles.remoteToggle}
                                         onPress={() => handleFormChange('isRemote', !form.isRemote)}
@@ -1049,30 +1085,60 @@ const Opportunities = () => {
                                         <View style={[styles.checkbox, form.isRemote && styles.checkboxActive]} />
                                         <Text style={styles.remoteToggleText}>Remote Position</Text>
                                     </TouchableOpacity>
-                                    <Text style={styles.questionsLabel}>Custom Questions (Optional)</Text>
-                                    {[0, 1, 2].map((i) => (
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Compensation</Text>
+                                        <TextInput placeholderTextColor="#666" style={styles.inputDark} placeholder="e.g., Equity (15-20%) + Competitive Salary" value={form.compensation} onChangeText={v => handleFormChange('compensation', v)} />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Description</Text>
                                         <TextInput
-                                            key={i}
-                                            placeholderTextColor="#888"
-                                            style={styles.input}
-                                            placeholder={`Question ${i + 1}`}
-                                            value={form.customQuestions[i]}
-                                            onChangeText={v => {
-                                                const updated = [...form.customQuestions];
-                                                updated[i] = v;
-                                                handleFormChange('customQuestions', updated);
-                                            }}
+                                            placeholderTextColor="#666"
+                                            style={[styles.inputDark, { height: 100, textAlignVertical: 'top' }]}
+                                            placeholder="Describe the role and your startup"
+                                            value={form.description}
+                                            onChangeText={v => handleFormChange('description', v)}
+                                            multiline
                                         />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Requirements</Text>
+                                        <TextInput
+                                            placeholderTextColor="#666"
+                                            style={[styles.inputDark, { height: 80, textAlignVertical: 'top' }]}
+                                            placeholder="What are you looking for?"
+                                            value={form.requirements}
+                                            onChangeText={v => handleFormChange('requirements', v)}
+                                            multiline
+                                        />
+                                    </View>
+
+                                    <Text style={styles.questionsLabel}>Custom Questions (Optional, max 3)</Text>
+                                    <Text style={styles.questionsSubLabel}>Add up to 3 questions for applicants to answer</Text>
+                                    {[0, 1, 2].map((i) => (
+                                        <View key={i} style={styles.inputGroup}>
+                                            <Text style={styles.label}>Question {i + 1}</Text>
+                                            <TextInput
+                                                placeholderTextColor="#666"
+                                                style={styles.inputDark}
+                                                placeholder={`Enter question ${i + 1} (optional)`}
+                                                value={form.customQuestions[i]}
+                                                onChangeText={v => {
+                                                    const updated = [...form.customQuestions];
+                                                    updated[i] = v;
+                                                    handleFormChange('customQuestions', updated);
+                                                }}
+                                            />
+                                        </View>
                                     ))}
                                 </>
                             )}
                         </ScrollView>
                         <View style={styles.modalActions}>
-                            <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)} disabled={postLoading}>
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={postLoading}>
-                                <Text style={styles.submitText}>{postLoading ? 'Posting...' : 'Submit'}</Text>
+                            <TouchableOpacity style={styles.submitBtnDark} onPress={handleSubmit} disabled={postLoading}>
+                                <Text style={styles.submitText}>{postLoading ? 'Posting...' : 'Create Posting'}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -1238,18 +1304,18 @@ const styles = StyleSheet.create({
     applyBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#3b82f6',
+        backgroundColor: '#fff',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
     },
     applyBtnText: {
-        color: '#fff',
+        color: '#000',
         fontSize: 13,
         fontWeight: '600',
     },
     applyBtnIcon: {
-        color: '#fff',
+        color: '#000',
         fontSize: 12,
         marginLeft: 4,
     },
@@ -1264,7 +1330,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
@@ -1405,13 +1471,13 @@ const styles = StyleSheet.create({
         fontSize: 13,
     },
     sendBtn: {
-        backgroundColor: '#22c55e',
+        backgroundColor: '#fff',
         borderRadius: 8,
         paddingVertical: 14,
         alignItems: 'center',
     },
     sendBtnText: {
-        color: '#fff',
+        color: '#000',
         fontSize: 14,
         fontWeight: '600',
     },
@@ -1429,7 +1495,73 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
 
-    // Filter Modal
+    // Inline Expanded Section (no box, matches screenshot)
+    expandedSectionInline: {
+        marginTop: 20,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#333',
+    },
+    questionContainerInline: {
+        marginBottom: 24,
+    },
+    questionLabelBold: {
+        color: '#ffffff',
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 12,
+    },
+    questionInputDark: {
+        backgroundColor: '#1a1a1a',
+        borderWidth: 1,
+        borderColor: '#333',
+        borderRadius: 8,
+        padding: 14,
+        fontSize: 14,
+        color: '#f2f2f2',
+        minHeight: 80,
+        textAlignVertical: 'top',
+    },
+    uploadContainerInline: {
+        marginBottom: 24,
+    },
+    uploadLabelBold: {
+        color: '#ffffff',
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 12,
+    },
+    fileChooserRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    fileChooserBtn: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#fff',
+        borderRadius: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    fileChooserBtnText: {
+        color: '#000',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    noFileText: {
+        color: '#fff',
+        fontSize: 13,
+        marginLeft: 12,
+    },
+    sendBtnDark: {
+        backgroundColor: '#333',
+        borderRadius: 8,
+        paddingVertical: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#444',
+    },
+
     filterModalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.7)',
@@ -1528,7 +1660,48 @@ const styles = StyleSheet.create({
         borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+
+    // New Form Styles
+    inputGroup: {
+        marginBottom: 16,
+    },
+    label: {
+        color: '#f2f2f2',
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    inputDark: {
+        backgroundColor: '#0a0a0a',
         borderWidth: 1,
+        borderColor: '#333',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 14,
+        color: '#f2f2f2',
+    },
+    submitBtnDark: {
+        flex: 1,
+        backgroundColor: '#222',
+        borderRadius: 8,
+        paddingVertical: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#444',
+        marginLeft: 8,
+    },
+    questionsLabel: {
+        color: '#f2f2f2',
+        fontSize: 14,
+        fontWeight: '600',
+        marginTop: 8,
+        marginBottom: 4,
+    },
+    questionsSubLabel: {
+        color: '#888',
+        fontSize: 12,
+        marginBottom: 16,
     },
     createBtn: {
         backgroundColor: '#333',
@@ -1596,18 +1769,14 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     checkboxActive: {
-        backgroundColor: '#3b82f6',
-        borderColor: '#3b82f6',
+        backgroundColor: '#fff',
+        borderColor: '#fff',
     },
     remoteToggleText: {
         color: '#fff',
         fontSize: 14,
     },
-    questionsLabel: {
-        color: '#888',
-        fontSize: 13,
-        marginBottom: 12,
-    },
+
     modalActions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -1625,7 +1794,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     submitBtn: {
-        backgroundColor: '#3b82f6',
+        backgroundColor: '#fff',
         borderRadius: 10,
         paddingVertical: 12,
         paddingHorizontal: 24,
@@ -1633,7 +1802,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     submitText: {
-        color: '#fff',
+        color: '#000',
         fontSize: 15,
         fontWeight: 'bold',
     },
