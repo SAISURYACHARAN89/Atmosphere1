@@ -8,7 +8,6 @@ import {
     Modal,
 } from 'react-native';
 import { showEditor } from 'react-native-video-trim';
-import Video from 'react-native-video';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 // Color scheme matching Atmosphere web (dark grey theme)
@@ -94,17 +93,11 @@ const VideoTrimmer = ({
                     </TouchableOpacity>
                 </View>
 
-                {/* Video Preview */}
+                {/* Static Preview Placeholder - Video removed to prevent crash */}
                 <View style={styles.previewContainer}>
-                    <View style={styles.videoWrapper}>
-                        <Video
-                            source={{ uri: previewUri }}
-                            style={styles.video}
-                            resizeMode="contain"
-                            repeat
-                            paused={false}
-                            volume={0.5}
-                        />
+                    <View style={[styles.videoWrapper, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a' }]}>
+                        <Icon name="videocam" size={64} color="#444" />
+                        <Text style={{ color: '#666', marginTop: 16, fontSize: 16 }}>Video ready for trimming</Text>
                     </View>
                 </View>
 

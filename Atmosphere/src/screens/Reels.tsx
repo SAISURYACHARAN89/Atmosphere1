@@ -9,41 +9,40 @@ import {
     ActivityIndicator,
     TouchableOpacity,
     StatusBar,
+    TextInput,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
-import { fetchReels, likeReel, unlikeReel, checkReelShared } from '../lib/api';
-import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
-import { Heart, MessageCircle, Send, Eye, Video as VideoIcon, ArrowLeft } from 'lucide-react-native';
+import { fetchReels, likeReel, unlikeReel, checkReelShared, followUser, unfollowUser, getReel, getUserReels } from '../lib/api';
+import { Heart, MessageCircle, Send, Eye, Video as VideoIcon } from 'lucide-react-native';
 import Video from 'react-native-video';
 import ReelCommentsOverlay from '../components/ReelCommentsOverlay';
 import ShareModal from '../components/ShareModal';
+import { getImageSource } from '../lib/image';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 24;
+const COMMENT_INPUT_HEIGHT = 56;
 
-// Color scheme matching Atmosphere web (dark grey theme)
+// Color scheme
 const COLORS = {
     primary: '#3d3d3d',
     success: '#22c55e',
-    like: '#ef4444',      // Red for likes
+    like: '#ef4444',
     text: '#f5f5f5',
     textMuted: '#666666',
 };
 
-// Calculate 9:16 reel container dimensions
-// Content is now properly constrained by parent container in LandingPage
-const REEL_ASPECT_RATIO = 9 / 16;
-const AVAILABLE_HEIGHT = SCREEN_HEIGHT - STATUS_BAR_HEIGHT - 80; // Account for navbar
-// Use full available height, calculate optimal width for 9:16
-const REEL_HEIGHT = AVAILABLE_HEIGHT;
-const REEL_WIDTH = Math.min(SCREEN_WIDTH, REEL_HEIGHT * REEL_ASPECT_RATIO);
-// Item height for FlatList snapping
-const ITEM_HEIGHT = REEL_HEIGHT;
+// Reel height - full screen minus bottom nav
+const BOTTOM_NAV_HEIGHT = 80;
+const ITEM_HEIGHT = SCREEN_HEIGHT - BOTTOM_NAV_HEIGHT;
 
 interface ReelItem {
     _id: string;
     videoUrl: string;
     thumbnailUrl?: string;
     caption?: string;
+    hashtags?: string[];
     author: {
         _id?: string;
         username: string;
@@ -57,6 +56,7 @@ interface ReelItem {
     sharesCount: number;
     isLiked?: boolean;
     isShared?: boolean;
+    isFollowing?: boolean;
 }
 
 interface ReelsProps {
@@ -65,12 +65,8 @@ interface ReelsProps {
     onBack?: () => void;
 }
 
-
-
 const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
-    // theme not required here
     const [reels, setReels] = useState<ReelItem[]>([]);
-
     const flatListRef = useRef<FlatList>(null);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,30 +76,17 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
     const [shareReelId, setShareReelId] = useState<string | null>(null);
     const [shareAlreadyShared, setShareAlreadyShared] = useState(false);
 
-    // Like loading states per reel
+    // Like and follow loading states
     const [likeLoading, setLikeLoading] = useState<Set<string>>(new Set());
-    const [refreshing, setRefreshing] = useState(false);
+    const [followLoading, setFollowLoading] = useState<Set<string>>(new Set());
 
-    const onRefresh = useCallback(async () => {
-        setRefreshing(true);
-        try {
-            const data = await fetchReels(30, 0);
-            const reelsWithDefaults = data.map((reel: any) => ({
-                ...reel,
-                sharesCount: reel.sharesCount || 0,
-                isLiked: reel.isLiked || false,
-                isShared: false,
-            }));
-            setReels(reelsWithDefaults);
-        } catch (err) {
-            console.warn('Failed to refresh reels:', err);
-        } finally {
-            setRefreshing(false);
-        }
-    }, []);
+    // Expanded caption states - track which reels have expanded captions
+    const [expandedCaptions, setExpandedCaptions] = useState<Set<string>>(new Set());
+
+    // Comment input
+    const [commentText, setCommentText] = useState('');
 
     useEffect(() => {
-        console.log('Reels mounted/updated with userId:', userId, 'initialReelId:', initialReelId);
         loadReels();
     }, [userId, initialReelId]);
 
@@ -111,9 +94,7 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
     useEffect(() => {
         if (initialReelId && reels.length > 0 && flatListRef.current) {
             const index = reels.findIndex(r => r._id === initialReelId);
-            console.log('Scrolling to initial reel index:', index, 'id:', initialReelId);
             if (index >= 0) {
-                // Wait a tick for layout
                 setTimeout(() => {
                     flatListRef.current?.scrollToIndex({ index, animated: false });
                     setCurrentIndex(index);
@@ -124,46 +105,36 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
 
     const loadReels = async () => {
         try {
-            console.log('Loading reels...');
             let data: any[] = [];
-            const api = await import('../lib/api');
 
             if (userId) {
-                // Fetch user specific reels
-                data = await api.getUserReels(userId, 30, 0);
+                data = await getUserReels(userId, 30, 0);
             } else {
-                data = await api.fetchReels(30, 0);
+                data = await fetchReels(30, 0);
             }
 
-            // Check if we need to fetch the initial reel specifically
             if (initialReelId) {
-                console.log('Checking for initial reel:', initialReelId);
                 const alreadyExists = data.find((r: any) => r._id === initialReelId);
                 if (!alreadyExists) {
                     try {
-                        console.log('Fetching missing initial reel...');
-                        const targetReel = await api.getReel(initialReelId);
+                        const targetReel = await getReel(initialReelId);
                         if (targetReel) {
-                            console.log('Found target reel, prepending...');
-                            // Prepend the target reel
                             data = [targetReel, ...data];
-                        } else {
-                            console.warn('Target reel not found on server');
                         }
                     } catch (e) {
                         console.warn('Failed to load initial reel:', e);
                     }
-                } else {
-                    console.log('Initial reel already in batch');
                 }
             }
 
-            // Initialize with default values
+            // Set defaults directly - don't make individual API calls for follow status
+            // The backend should include isFollowing in the reel data
             const reelsWithDefaults = data.map((reel: any) => ({
                 ...reel,
                 sharesCount: reel.sharesCount || 0,
                 isLiked: reel.isLiked || false,
                 isShared: false,
+                isFollowing: reel.author?.isFollowing || reel.isFollowing || false,
             }));
             setReels(reelsWithDefaults);
         } catch (err) {
@@ -176,13 +147,11 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
     const handleLike = useCallback(async (reelId: string) => {
         if (likeLoading.has(reelId)) return;
 
-        // Find current reel
         const reel = reels.find(r => r._id === reelId);
         if (!reel) return;
 
         const wasLiked = reel.isLiked;
 
-        // Optimistic update
         setReels(prev => prev.map(r =>
             r._id === reelId
                 ? { ...r, isLiked: !wasLiked, likesCount: wasLiked ? Math.max(0, r.likesCount - 1) : r.likesCount + 1 }
@@ -198,13 +167,11 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                 await likeReel(reelId);
             }
         } catch (err) {
-            // Revert on error
             setReels(prev => prev.map(r =>
                 r._id === reelId
                     ? { ...r, isLiked: wasLiked, likesCount: wasLiked ? r.likesCount + 1 : Math.max(0, r.likesCount - 1) }
                     : r
             ));
-            console.warn('Like/unlike failed:', err);
         } finally {
             setLikeLoading(prev => {
                 const next = new Set(prev);
@@ -214,12 +181,48 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
         }
     }, [reels, likeLoading]);
 
+    const handleFollow = useCallback(async (authorId: string, reelId: string) => {
+        if (!authorId || followLoading.has(authorId)) return;
+
+        const reel = reels.find(r => r._id === reelId);
+        if (!reel) return;
+
+        const wasFollowing = reel.isFollowing;
+
+        setReels(prev => prev.map(r =>
+            r.author?._id === authorId
+                ? { ...r, isFollowing: !wasFollowing }
+                : r
+        ));
+
+        setFollowLoading(prev => new Set(prev).add(authorId));
+
+        try {
+            if (wasFollowing) {
+                await unfollowUser(authorId);
+            } else {
+                await followUser(authorId);
+            }
+        } catch (err) {
+            setReels(prev => prev.map(r =>
+                r.author?._id === authorId
+                    ? { ...r, isFollowing: wasFollowing }
+                    : r
+            ));
+        } finally {
+            setFollowLoading(prev => {
+                const next = new Set(prev);
+                next.delete(authorId);
+                return next;
+            });
+        }
+    }, [reels, followLoading]);
+
     const handleOpenComments = useCallback((reelId: string) => {
         setCommentsReelId(reelId);
     }, []);
 
     const handleOpenShare = useCallback(async (reelId: string) => {
-        // Check if already shared
         try {
             const result = await checkReelShared(reelId);
             setShareAlreadyShared(result.shared || false);
@@ -259,19 +262,47 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
         }
     }, [shareReelId]);
 
+    const handleCommentInputPress = () => {
+        const currentReel = reels[currentIndex];
+        if (currentReel) {
+            setCommentsReelId(currentReel._id);
+        }
+    };
+
+    const toggleCaptionExpand = (reelId: string) => {
+        setExpandedCaptions(prev => {
+            const next = new Set(prev);
+            if (next.has(reelId)) {
+                next.delete(reelId);
+            } else {
+                next.add(reelId);
+            }
+            return next;
+        });
+    };
+
     const renderReel = ({ item, index }: { item: ReelItem; index: number }) => {
         const isActive = index === currentIndex;
-        // author display name resolved inline where needed
+        const authorName = item.author.displayName || item.author.username || 'User';
+        const authorAvatar = item.author.avatarUrl;
+        const isExpanded = expandedCaptions.has(item._id);
+
+        // Extract hashtags from caption or use provided hashtags
+        const captionText = item.caption || '';
+        const hashtagRegex = /#\w+/g;
+        const extractedHashtags = captionText.match(hashtagRegex) || [];
+        const hashtags = item.hashtags || extractedHashtags;
+        const captionWithoutHashtags = captionText.replace(hashtagRegex, '').trim();
 
         return (
             <View style={styles.reelWrapper}>
                 <View style={styles.reelContainer}>
-                    {/* Video or Thumbnail - using contain to preserve original aspect ratio */}
+                    {/* Video or Thumbnail */}
                     {isActive && item.videoUrl ? (
                         <Video
                             source={{ uri: item.videoUrl }}
                             style={styles.video}
-                            resizeMode="contain"
+                            resizeMode="cover"
                             repeat
                             paused={false}
                             volume={1.0}
@@ -280,22 +311,65 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                         <Image
                             source={{ uri: item.thumbnailUrl || item.videoUrl }}
                             style={styles.video}
-                            resizeMode="contain"
+                            resizeMode="cover"
                         />
                     )}
 
                     {/* Overlay Content */}
                     <View style={styles.overlay}>
-                        <View style={styles.info}>
-                            <Text style={styles.username}>@{item.author.username}</Text>
-                            {item.caption && (
-                                <Text style={styles.caption} numberOfLines={2}>
-                                    {item.caption}
-                                </Text>
+                        {/* Left side - User info and caption */}
+                        <View style={styles.leftContent}>
+                            {/* User row */}
+                            <View style={styles.userRow}>
+                                <TouchableOpacity style={styles.avatarContainer}>
+                                    {authorAvatar ? (
+                                        <Image source={getImageSource(authorAvatar)} style={styles.avatar} />
+                                    ) : (
+                                        <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                                            <Text style={styles.avatarText}>{authorName.charAt(0).toUpperCase()}</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                                <Text style={styles.username}>{item.author.username}</Text>
+                                {!item.isFollowing && item.author._id && (
+                                    <TouchableOpacity
+                                        style={styles.followBtn}
+                                        onPress={() => handleFollow(item.author._id!, item._id)}
+                                        disabled={followLoading.has(item.author._id!)}
+                                    >
+                                        <Text style={styles.followBtnText}>Follow</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
+                            {/* Caption - expandable */}
+                            {captionText && (
+                                <TouchableOpacity
+                                    onPress={() => toggleCaptionExpand(item._id)}
+                                    activeOpacity={0.8}
+                                >
+                                    {isExpanded ? (
+                                        <View>
+                                            <Text style={styles.caption}>{captionWithoutHashtags}</Text>
+                                            {hashtags.length > 0 && (
+                                                <Text style={styles.hashtags}>{hashtags.join(' ')}</Text>
+                                            )}
+                                        </View>
+                                    ) : (
+                                        <Text style={styles.caption} numberOfLines={1}>
+                                            {captionWithoutHashtags.length > 40
+                                                ? `${captionWithoutHashtags.substring(0, 40)}...`
+                                                : captionWithoutHashtags}
+                                            {captionWithoutHashtags.length > 40 && (
+                                                <Text style={styles.moreText}> more</Text>
+                                            )}
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
                             )}
                         </View>
 
-                        {/* Actions */}
+                        {/* Right side - Actions */}
                         <View style={styles.actions}>
                             {/* Like */}
                             <TouchableOpacity
@@ -304,7 +378,7 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                                 disabled={likeLoading.has(item._id)}
                             >
                                 <Heart
-                                    size={32}
+                                    size={28}
                                     color={item.isLiked ? COLORS.like : "#fff"}
                                     fill={item.isLiked ? COLORS.like : "transparent"}
                                 />
@@ -316,7 +390,7 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                                 style={styles.actionBtn}
                                 onPress={() => handleOpenComments(item._id)}
                             >
-                                <MessageCircle size={28} color="#fff" />
+                                <MessageCircle size={26} color="#fff" />
                                 <Text style={styles.actionText}>{item.commentsCount}</Text>
                             </TouchableOpacity>
 
@@ -326,16 +400,15 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                                 onPress={() => handleOpenShare(item._id)}
                             >
                                 <Send
-                                    size={28}
+                                    size={26}
                                     color={item.isShared ? COLORS.success : "#fff"}
-                                    fill={item.isShared ? COLORS.success : "transparent"}
                                 />
                                 <Text style={styles.actionText}>{item.sharesCount || 0}</Text>
                             </TouchableOpacity>
 
                             {/* Views */}
                             <View style={styles.actionBtn}>
-                                <Eye size={28} color="#fff" />
+                                <Eye size={26} color="#fff" />
                                 <Text style={styles.actionText}>{item.viewsCount}</Text>
                             </View>
                         </View>
@@ -351,23 +424,22 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
         }
     }).current;
 
-    const renderBackButton = () => {
-        if (!onBack) return null;
-        return (
-            <TouchableOpacity
-                style={styles.backButton}
-                onPress={onBack}
-                activeOpacity={0.7}
-            >
-                <ArrowLeft size={28} color="#fff" />
-            </TouchableOpacity>
-        );
-    };
+    const renderCommentInput = () => (
+        <View style={styles.commentInputContainer}>
+            <TextInput
+                style={styles.commentInput}
+                placeholder="Add comment..."
+                placeholderTextColor="#888"
+                value={commentText}
+                onChangeText={setCommentText}
+                onFocus={handleCommentInputPress}
+            />
+        </View>
+    );
 
     if (loading) {
         return (
             <View style={[styles.container, styles.center]}>
-                {renderBackButton()}
                 <ActivityIndicator size="large" color={COLORS.primary} />
             </View>
         );
@@ -376,7 +448,6 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
     if (reels.length === 0) {
         return (
             <View style={[styles.container, styles.center]}>
-                {renderBackButton()}
                 <VideoIcon size={64} color="#666" />
                 <Text style={styles.emptyText}>No reels yet</Text>
             </View>
@@ -384,17 +455,24 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
     }
 
     return (
-        <View style={styles.container}>
-            {renderBackButton()}
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
             <FlatList
                 ref={flatListRef}
-                data={reels} // Use local reels state
+                data={reels}
                 renderItem={renderReel}
                 keyExtractor={(item) => item._id}
-                pagingEnabled
                 showsVerticalScrollIndicator={false}
                 snapToInterval={ITEM_HEIGHT}
+                snapToAlignment="start"
                 decelerationRate="fast"
+                bounces={false}
+                removeClippedSubviews={true}
+                maxToRenderPerBatch={3}
+                windowSize={5}
+                initialNumToRender={2}
                 onViewableItemsChanged={onViewableItemsChanged}
                 viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
                 getItemLayout={(_, index) => ({
@@ -402,13 +480,14 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                     offset: ITEM_HEIGHT * index,
                     index,
                 })}
-                extraData={[likeLoading]}
+                extraData={[likeLoading, followLoading, expandedCaptions]}
                 onScrollToIndexFailed={(info) => {
                     setTimeout(() => {
                         flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
                     }, 500);
                 }}
             />
+            {renderCommentInput()}
 
             {/* Comments Modal */}
             {commentsReelId && (
@@ -435,7 +514,7 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                     contentOwner={reels.find(r => r._id === shareReelId)?.author.displayName || reels.find(r => r._id === shareReelId)?.author.username}
                 />
             )}
-        </View>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -452,14 +531,11 @@ const styles = StyleSheet.create({
         width: SCREEN_WIDTH,
         height: ITEM_HEIGHT,
         backgroundColor: '#000',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     reelContainer: {
-        width: REEL_WIDTH,
-        height: REEL_HEIGHT,
+        width: SCREEN_WIDTH,
+        height: ITEM_HEIGHT,
         backgroundColor: '#000',
-        borderRadius: 12,
         overflow: 'hidden',
     },
     video: {
@@ -468,31 +544,81 @@ const styles = StyleSheet.create({
     },
     overlay: {
         position: 'absolute',
-        bottom: 0,
+        bottom: 16,
         left: 0,
         right: 0,
-        padding: 16,
+        paddingHorizontal: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-end',
-        // Removed solid background - use transparent to show full video
     },
-    info: {
+    leftContent: {
         flex: 1,
         marginRight: 16,
     },
-    username: {
+    userRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    avatarContainer: {
+        marginRight: 10,
+    },
+    avatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    avatarPlaceholder: {
+        backgroundColor: '#555',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '700',
-        marginBottom: 8,
+    },
+    username: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+        marginRight: 12,
         textShadowColor: 'rgba(0, 0, 0, 0.8)',
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 3,
     },
+    followBtn: {
+        borderWidth: 1,
+        borderColor: '#fff',
+        borderRadius: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+    },
+    followBtnText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
+    },
     caption: {
         color: '#fff',
         fontSize: 14,
+        lineHeight: 20,
+        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+    },
+    moreText: {
+        color: '#aaa',
+        fontWeight: '500',
+    },
+    hashtags: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+        marginTop: 6,
         textShadowColor: 'rgba(0, 0, 0, 0.8)',
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 3,
@@ -502,7 +628,7 @@ const styles = StyleSheet.create({
     },
     actionBtn: {
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 20,
     },
     actionText: {
         color: '#fff',
@@ -512,19 +638,29 @@ const styles = StyleSheet.create({
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 3,
     },
+    commentInputContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#000',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#222',
+    },
+    commentInput: {
+        backgroundColor: '#1a1a1a',
+        borderRadius: 24,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        color: '#fff',
+        fontSize: 15,
+    },
     emptyText: {
         color: '#666',
         fontSize: 16,
         marginTop: 16,
-    },
-    backButton: {
-        position: 'absolute',
-        top: STATUS_BAR_HEIGHT + 10,
-        left: 16,
-        zIndex: 50,
-        padding: 8,
-        borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.5)',
     },
 });
 

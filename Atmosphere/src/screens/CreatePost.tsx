@@ -12,9 +12,10 @@ import {
     Alert,
 } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
-import { launchImageLibrary } from 'react-native-image-picker';
+import ImagePicker from 'react-native-image-crop-picker';
 import { createPost } from '../lib/api';
 import { uploadImage } from '../lib/uploadImage';
+import { Image as ImageIcon } from 'lucide-react-native';
 
 type Props = {
     onClose: () => void;
@@ -31,22 +32,29 @@ const CreatePost = ({ onClose, onSuccess }: Props) => {
 
     const handlePickImage = async () => {
         try {
-            const result = await launchImageLibrary({
+            const image = await ImagePicker.openPicker({
                 mediaType: 'photo',
-                quality: 0.8,
-                selectionLimit: 1,
+                cropping: true,
+                cropperCircleOverlay: false,
+                freeStyleCropEnabled: false,
+                width: 1080,
+                height: 1080,
+                includeBase64: false,
+                compressImageQuality: 0.8,
+                cropperToolbarTitle: 'Crop Image',
             });
 
-            if (result.assets && result.assets.length > 0) {
-                const asset = result.assets[0];
+            if (image && image.path) {
                 setSelectedImage({
-                    uri: asset.uri || '',
-                    type: asset.type || 'image/jpeg',
+                    uri: image.path,
+                    type: image.mime || 'image/jpeg',
                 });
             }
-        } catch (error) {
-            console.error('Image picker error:', error);
-            Alert.alert('Error', 'Failed to pick image');
+        } catch (error: any) {
+            if (error.code !== 'E_PICKER_CANCELLED') {
+                console.error('Image picker error:', error);
+                Alert.alert('Error', 'Failed to pick image');
+            }
         }
     };
 
@@ -131,8 +139,8 @@ const CreatePost = ({ onClose, onSuccess }: Props) => {
                         <Image source={{ uri: selectedImage.uri }} style={styles.selectedImage} />
                     ) : (
                         <View style={[styles.imagePlaceholder, { borderColor: theme.border }]}>
-                            <Text style={[styles.placeholderIcon, { color: theme.placeholder }]}>📷</Text>
-                            <Text style={[styles.placeholderText, { color: theme.placeholder }]}>
+                            <ImageIcon size={48} color={theme.placeholder || '#666'} />
+                            <Text style={[styles.placeholderText, { color: theme.placeholder, marginTop: 12 }]}>
                                 Tap to add photo
                             </Text>
                         </View>

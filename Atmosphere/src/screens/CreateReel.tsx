@@ -66,6 +66,8 @@ const CreateReel = ({ onClose, onSuccess }: Props) => {
     const [loading, setLoading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState<string>('');
     const [thumbnails, setThumbnails] = useState<string[]>([]);
+    const [videoReady, setVideoReady] = useState(false);
+    const [videoError, setVideoError] = useState<string | null>(null);
 
     // Trimmer states
     const [showTrimmer, setShowTrimmer] = useState(false);
@@ -100,6 +102,8 @@ const CreateReel = ({ onClose, onSuccess }: Props) => {
         }
     }, []);
 
+    const MAX_VIDEO_DURATION = 60; // 1 minute max for reels
+
     const handlePickVideo = async () => {
         try {
             const result = await launchImageLibrary({
@@ -114,7 +118,21 @@ const CreateReel = ({ onClose, onSuccess }: Props) => {
                     Alert.alert('Error', 'Selected video has no URI');
                     return;
                 }
+
+                // Check video duration - max 1 minute
+                if (asset.duration && asset.duration > MAX_VIDEO_DURATION) {
+                    Alert.alert(
+                        'Video Too Long',
+                        `Reels can be a maximum of ${MAX_VIDEO_DURATION} seconds (1 minute). Please select a shorter video or use the trim feature.`,
+                        [{ text: 'OK' }]
+                    );
+                    // Still allow selection but user should trim
+                }
+
                 const uri = asset.uri;
+                // Reset states before setting new video
+                setVideoReady(false);
+                setVideoError(null);
                 // Auto-set as selected for Step 1
                 setSelectedVideo({
                     uri: uri,
@@ -123,14 +141,19 @@ const CreateReel = ({ onClose, onSuccess }: Props) => {
                     duration: asset.duration,
                 });
                 setStep('trim');
-                setIsPlaying(true);
+                setIsPlaying(false);
+                // Longer delay to allow component to mount properly
+                setTimeout(() => {
+                    setVideoReady(true);
+                    setIsPlaying(true);
+                }, 1000);
             } else if (!selectedVideo) {
-                // If cancelled and no video, close? Or just stay
+                // If cancelled and no video, close
                 onClose();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Video picker error:', error);
-            Alert.alert('Error', 'Failed to pick video');
+            Alert.alert('Error', error?.message || 'Failed to pick video');
         }
     };
 
@@ -277,53 +300,78 @@ const CreateReel = ({ onClose, onSuccess }: Props) => {
     };
 
     // Render Step 1: Trim / Full Screen Preview
-    const renderStep1 = () => (
-        <View style={styles.fullScreenContainer}>
-            {selectedVideo && (
-                <Video
-                    ref={videoRef}
-                    source={{ uri: getCleanUri(selectedVideo.uri) }}
-                    style={styles.fullScreenVideo}
-                    resizeMode="contain"
-                    repeat={true}
-                    muted={false}
-                    paused={!isPlaying}
-                    onLoad={(data) => {
-                        console.log('Step 1 Video Loaded:', data.duration);
-                        setSelectedVideo(prev => prev ? ({ ...prev, duration: data.duration }) : null);
-                    }}
-                    onError={() => Alert.alert('Error', 'Failed to load video')}
-                />
-            )}
+    const renderStep1 = () => {
+        // Only render Video if videoReady is true
+        const safeUri = selectedVideo ? getCleanUri(selectedVideo.uri) : null;
 
-            <View style={styles.step1Header}>
-                <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
-                    <Icon name="close" size={28} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
-                    <Text style={styles.nextBtnText}>Next</Text>
-                    <Icon name="chevron-forward" size={16} color="#000" />
-                </TouchableOpacity>
+        return (
+            <View style={styles.fullScreenContainer}>
+                {selectedVideo && videoReady && safeUri ? (
+                    <Video
+                        ref={videoRef}
+                        source={{ uri: safeUri }}
+                        style={styles.fullScreenVideo}
+                        resizeMode="contain"
+                        repeat={false}
+                        muted={true}
+                        paused={!isPlaying}
+                        disableFocus={true}
+                        playInBackground={false}
+                        playWhenInactive={false}
+                        onLoad={(data) => {
+                            console.log('Step 1 Video Loaded:', data.duration);
+                            setSelectedVideo(prev => prev ? ({ ...prev, duration: data.duration }) : null);
+                            setVideoError(null);
+                        }}
+                        onEnd={() => {
+                            // Manual loop - seek back to start
+                            if (videoRef.current) {
+                                videoRef.current.seek(0);
+                            }
+                        }}
+                        onError={(e) => {
+                            console.error('Video load error:', e);
+                            setVideoError('Failed to load video');
+                            setVideoReady(false);
+                        }}
+                    />
+                ) : selectedVideo ? (
+                    <View style={[styles.fullScreenVideo, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#111' }]}>
+                        <ActivityIndicator size="large" color="#fff" />
+                        <Text style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Preparing video...</Text>
+                        <Text style={{ color: '#888', marginTop: 8, fontSize: 12 }}>This may take a moment</Text>
+                    </View>
+                ) : null}
+
+                <View style={styles.step1Header}>
+                    <TouchableOpacity style={styles.iconBtn} onPress={onClose}>
+                        <Icon name="close" size={28} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
+                        <Text style={styles.nextBtnText}>Next</Text>
+                        <Icon name="chevron-forward" size={16} color="#000" />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.step1Footer}>
+                    <TouchableOpacity style={styles.trimBtn} onPress={() => setShowTrimmer(true)}>
+                        <Icon name="cut-outline" size={24} color="#fff" />
+                        <Text style={styles.trimBtnText}>Trim Video</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Trimmer Modal (reused) */}
+                {showTrimmer && selectedVideo && (
+                    <VideoTrimmer
+                        videoUri={selectedVideo.uri}
+                        onTrimComplete={handleTrimComplete}
+                        onCancel={() => setShowTrimmer(false)}
+                        theme={theme}
+                    />
+                )}
             </View>
-
-            <View style={styles.step1Footer}>
-                <TouchableOpacity style={styles.trimBtn} onPress={() => setShowTrimmer(true)}>
-                    <Icon name="cut-outline" size={24} color="#fff" />
-                    <Text style={styles.trimBtnText}>Trim Video</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Trimmer Modal (reused) */}
-            {showTrimmer && selectedVideo && (
-                <VideoTrimmer
-                    videoUri={selectedVideo.uri}
-                    onTrimComplete={handleTrimComplete}
-                    onCancel={() => setShowTrimmer(false)}
-                    theme={theme}
-                />
-            )}
-        </View>
-    );
+        );
+    };
 
     // Render Step 2: Details
     const renderStep2 = () => (
@@ -768,7 +816,7 @@ const styles = StyleSheet.create({
     },
     step1Footer: {
         position: 'absolute',
-        bottom: 40,
+        bottom: 100,
         left: 0,
         right: 0,
         alignItems: 'center',
