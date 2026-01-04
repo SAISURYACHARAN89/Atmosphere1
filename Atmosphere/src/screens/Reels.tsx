@@ -18,8 +18,9 @@ import ReelCommentsOverlay from '../components/ReelCommentsOverlay';
 import ShareModal from '../components/ShareModal';
 import { getImageSource } from '../lib/image';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 24;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('screen');
+const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 0;
 const COMMENT_INPUT_HEIGHT = 56;
 
 // Color scheme
@@ -31,9 +32,8 @@ const COLORS = {
     textMuted: '#666666',
 };
 
-// Reel height - full screen minus bottom nav
-const BOTTOM_NAV_HEIGHT = 100;
-const ITEM_HEIGHT = SCREEN_HEIGHT - BOTTOM_NAV_HEIGHT;
+// Reel height - use window dimensions for consistent snapping
+const ITEM_HEIGHT = Dimensions.get('window').height;
 
 interface ReelItem {
     _id: string;
@@ -471,6 +471,7 @@ const Reels = ({ userId, initialReelId, onBack }: ReelsProps) => {
                 snapToAlignment="start"
                 decelerationRate={0.9}
                 disableIntervalMomentum={true}
+                extraData={currentIndex}
                 onViewableItemsChanged={onViewableItemsChanged}
                 viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
                 getItemLayout={(_, index) => ({

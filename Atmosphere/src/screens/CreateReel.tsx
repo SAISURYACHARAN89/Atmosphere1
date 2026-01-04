@@ -108,8 +108,8 @@ const CreateReel = ({ onClose, onSuccess }: Props) => {
         try {
             const result = await launchImageLibrary({
                 mediaType: 'video',
-                quality: 0.8,
-                videoQuality: 'medium',
+                quality: 0.5,
+                videoQuality: 'low',
             });
 
             if (result.assets && result.assets.length > 0) {
