@@ -37,10 +37,12 @@ function App() {
     })();
   }, []);
 
+  const isAuthRoute = ['signin', 'signup', 'forgotpw'].includes(route);
+
   const viewStyle = {
     flex: 1,
-    paddingTop: TOP_PANEL_HEIGHT,
-    paddingBottom: BOTTOM_NAV_HEIGHT,
+    paddingTop: isAuthRoute ? 0 : TOP_PANEL_HEIGHT,
+    paddingBottom: isAuthRoute ? 0 : BOTTOM_NAV_HEIGHT,
     backgroundColor: isDarkMode ? '#000' : '#fff',
   };
 

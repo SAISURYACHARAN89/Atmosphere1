@@ -226,7 +226,7 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                         </TouchableOpacity>
                     )}
 
-                    {!showOtpInput && (
+                    {/* {!showOtpInput && (
                         <View style={styles.dividerRow}>
                             <View style={styles.dividerLine} />
                             <Text style={styles.dividerText}>OR</Text>
@@ -239,7 +239,7 @@ const SignUp = ({ onSignedUp, onSignIn }: { onSignedUp?: () => void; onSignIn?: 
                             <MaterialCommunityIcons name="google" size={18} color="#8e8e8e" />
                             <Text style={styles.googleText}>Sign up with Google</Text>
                         </TouchableOpacity>
-                    )}
+                    )} */}
 
                     <Text style={styles.termsText}>
                         By signing up, you agree to our Terms, Privacy Policy and Cookies Policy.

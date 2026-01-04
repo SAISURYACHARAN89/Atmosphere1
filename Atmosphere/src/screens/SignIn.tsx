@@ -74,17 +74,17 @@ const SignIn = ({ onSignUp, onSignedIn, onForgotPassword }: { onSignUp?: () => v
                     </TouchableOpacity>
 
                     {/* OR Divider */}
-                    <View style={styles.dividerRow}>
+                    {/* <View style={styles.dividerRow}>
                         <View style={styles.dividerLine} />
                         <Text style={styles.dividerText}>OR</Text>
                         <View style={styles.dividerLine} />
-                    </View>
+                    </View> */}
 
                     {/* Google Login */}
-                    <TouchableOpacity style={styles.googleButton} onPress={() => Alert.alert('Google login coming soon')}>
+                    {/* <TouchableOpacity style={styles.googleButton} onPress={() => Alert.alert('Google login coming soon')}>
                         <MaterialCommunityIcons name="google" size={18} color="#8e8e8e" />
                         <Text style={styles.googleText}>Log in with Google</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     {/* Forgot Password */}
                     <TouchableOpacity onPress={() => { if (onForgotPassword) onForgotPassword(); }}>
