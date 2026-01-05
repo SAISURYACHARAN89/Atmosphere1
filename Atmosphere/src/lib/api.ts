@@ -324,14 +324,14 @@ export async function getFollowStatus(targetId: string) {
     }
 }
 
-export async function getFollowersList(userId: string) {
-    let data = await request(`/api/follows/${encodeURIComponent(userId)}/followers`, {}, { method: 'GET' });
-    return data?.followers || [];
+export async function getFollowersList(userId: string, limit = 20, skip = 0) {
+    let data = await request(`/api/follows/${encodeURIComponent(userId)}/followers`, { limit, skip }, { method: 'GET' });
+    return { followers: data?.followers || [], count: data?.count || 0 };
 }
 
-export async function getFollowingList(userId: string) {
-    let data = await request(`/api/follows/${encodeURIComponent(userId)}/following`, {}, { method: 'GET' });
-    return data?.following || [];
+export async function getFollowingList(userId: string, limit = 20, skip = 0) {
+    let data = await request(`/api/follows/${encodeURIComponent(userId)}/following`, { limit, skip }, { method: 'GET' });
+    return { following: data?.following || [], count: data?.count || 0 };
 }
 
 export async function getChatDetails(chatId: string) {

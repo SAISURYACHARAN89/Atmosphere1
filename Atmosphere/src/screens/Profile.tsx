@@ -13,6 +13,7 @@ import styles from './profile/Profile.styles';
 import { NavigationRouteContext } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import VerifiedBadge from '../components/VerifiedBadge';
+import FollowersFollowingModal from '../components/FollowersFollowingModal';
 
 const mockData = (() => {
     const userName = 'Airbound';
@@ -226,6 +227,8 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
     const [followingCount, setFollowingCount] = useState<number | null>(null);
     const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
     const [followLoading, setFollowLoading] = useState(false);
+    const [followersModalVisible, setFollowersModalVisible] = useState(false);
+    const [followersModalInitialTab, setFollowersModalInitialTab] = useState<'followers' | 'following'>('followers');
 
     // 2. Posts Effect
     useEffect(() => {
@@ -434,14 +437,14 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                         <Text style={[styles.statNum, { color: theme.text }]}>{posts.length}</Text>
                                         <Text style={[styles.statLabel, { color: theme.placeholder }]}>posts</Text>
                                     </View>
-                                    <View style={styles.statCol}>
+                                    <TouchableOpacity style={styles.statCol} onPress={() => { setFollowersModalInitialTab('followers'); setFollowersModalVisible(true); }}>
                                         <Text style={[styles.statNum, { color: theme.text }]}>{followersCount ?? src?.stats?.followers ?? 0}</Text>
                                         <Text style={[styles.statLabel, { color: theme.placeholder }]}>followers</Text>
-                                    </View>
-                                    <View style={styles.statCol}>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.statCol} onPress={() => { setFollowersModalInitialTab('following'); setFollowersModalVisible(true); }}>
                                         <Text style={[styles.statNum, { color: theme.text }]}>{followingCount ?? 0}</Text>
                                         <Text style={[styles.statLabel, { color: theme.placeholder }]}>following</Text>
-                                    </View>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         </View>
@@ -513,6 +516,20 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                 )}
             </ScrollView>
             {leftDrawerOpen && <SettingsOverlay src={src} theme={theme} accountType={accountType} onClose={() => setLeftDrawerOpen(false)} />}
+            <FollowersFollowingModal
+                visible={followersModalVisible}
+                onClose={() => setFollowersModalVisible(false)}
+                userId={viewingUserId || ownProfileId || ''}
+                username={src?.username || src?.name || ''}
+                initialTab={followersModalInitialTab}
+                followersCount={followersCount ?? src?.stats?.followers ?? 0}
+                followingCount={followingCount ?? 0}
+                onUserPress={(clickedUserId) => {
+                    setFollowersModalVisible(false);
+                    // Navigate to clicked user's profile by updating routing params or using navigation
+                    // For now, just close the modal - profile navigation would need to be handled at parent level
+                }}
+            />
         </View>
     );
 };
