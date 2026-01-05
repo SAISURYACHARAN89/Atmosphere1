@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, DeviceEventEmitter } from 'react-native';
+import React, { useEffect, useState, useContext, useCallback, useRef } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, DeviceEventEmitter, Animated, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import TopNavbar from '../components/TopNavbar';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import { ThemeContext } from '../contexts/ThemeContext';
@@ -32,6 +32,7 @@ interface HomeProps {
 }
 
 const PAGE_SIZE = 10;
+const NAVBAR_HEIGHT = 56;
 
 const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, onOpenProfile }) => {
     const { theme } = useContext(ThemeContext);
@@ -46,6 +47,65 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
     const [backendSkip, setBackendSkip] = useState(0);
     const [initialLoadDone, setInitialLoadDone] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+
+    // Navbar scroll animation
+    const navbarTranslateY = useRef(new Animated.Value(0)).current;
+    const navbarOpacity = useRef(new Animated.Value(1)).current;
+    const lastScrollY = useRef(0);
+
+    const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        const diff = currentY - lastScrollY.current;
+
+        if (currentY <= 0) {
+            // At top, always show with full opacity
+            Animated.parallel([
+                Animated.spring(navbarTranslateY, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                    tension: 80,
+                    friction: 12,
+                }),
+                Animated.timing(navbarOpacity, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        } else if (diff > 5 && currentY > 30) {
+            // Scrolling down, completely hide navbar with opacity 0
+            Animated.parallel([
+                Animated.spring(navbarTranslateY, {
+                    toValue: -80,
+                    useNativeDriver: true,
+                    tension: 80,
+                    friction: 12,
+                }),
+                Animated.timing(navbarOpacity, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        } else if (diff < -5) {
+            // Scrolling up, show with full opacity
+            Animated.parallel([
+                Animated.spring(navbarTranslateY, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                    tension: 80,
+                    friction: 12,
+                }),
+                Animated.timing(navbarOpacity, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        }
+
+        lastScrollY.current = currentY;
+    }, [navbarTranslateY, navbarOpacity]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -105,15 +165,29 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
         }
     }, [currentUserId, fetchUnreadCount]);
 
-    const flatListRef = React.useRef<FlatList>(null);
+    const flatListRef = useRef<FlatList>(null);
 
     useEffect(() => {
         const scrollToTopSub = DeviceEventEmitter.addListener('scrollToTop_Home', () => {
             flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+            // Show navbar when scrolling to top with full opacity
+            Animated.parallel([
+                Animated.spring(navbarTranslateY, {
+                    toValue: 0,
+                    useNativeDriver: true,
+                    tension: 80,
+                    friction: 12,
+                }),
+                Animated.timing(navbarOpacity, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]).start();
             onRefresh();
         });
         return () => scrollToTopSub.remove();
-    }, [onRefresh]);
+    }, [onRefresh, navbarTranslateY]);
 
     const normalizeData = (data: any[]) => {
         return (data || []).map((p: any) => ({
@@ -259,11 +333,19 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
                 data={posts}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={[styles.listContent]}
-                renderItem={({ item }) => <StartupPost post={item} currentUserId={currentUserId} onOpenProfile={onOpenProfile} />}
+                renderItem={({ item, index }) => (
+                    <View>
+                        <StartupPost post={item} currentUserId={currentUserId} onOpenProfile={onOpenProfile} />
+                        {/* Separator line between cards */}
+                        {index < posts.length - 1 && <View style={styles.separator} />}
+                    </View>
+                )}
                 onEndReached={() => loadPosts(false)}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={renderFooter}
                 showsVerticalScrollIndicator={false}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
                 refreshControl={
                     <ThemedRefreshControl
                         refreshing={refreshing}
@@ -276,12 +358,14 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <TopNavbar
-                title="Atmosphere"
-                messagesCount={unreadCount}
-                onNotificationsPress={() => onNavigate?.('notifications')}
-                onChatsPress={() => onNavigate?.('chats')}
-            />
+            <Animated.View style={[styles.navbarWrapper, { transform: [{ translateY: navbarTranslateY }], opacity: navbarOpacity }]}>
+                <TopNavbar
+                    title="Atmosphere"
+                    messagesCount={unreadCount}
+                    onNotificationsPress={() => onNavigate?.('notifications')}
+                    onChatsPress={() => onNavigate?.('chats')}
+                />
+            </Animated.View>
             {renderContent()}
         </View>
     );
@@ -289,11 +373,24 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
+    navbarWrapper: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+    },
     listContent: { padding: 0, paddingBottom: 80, paddingTop: 65 },
     centerLoader: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 20 },
     loadingText: { marginTop: 12, fontSize: 14 },
     errorText: { fontSize: 14 },
     errorColor: { color: '#e74c3c' },
+    separator: {
+        height: 1,
+        backgroundColor: '#313131',
+        marginHorizontal: 16,
+        marginVertical: 8,
+    },
 });
 
 export default Home;

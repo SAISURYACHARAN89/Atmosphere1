@@ -3,11 +3,13 @@ import {
     View,
     Text,
     Modal,
-    TouchableOpacity,
     StyleSheet,
     Dimensions,
+    Animated,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
 } from 'react-native';
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react-native';
+import { AlertTriangle, Info, X, CheckCircle, XCircle } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -24,6 +26,7 @@ interface CustomAlertProps {
     message?: string;
     onClose: () => void;
     actions?: AlertAction[];
+    compact?: boolean;
 }
 
 const CustomAlert: React.FC<CustomAlertProps> = ({
@@ -33,39 +36,132 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
     message,
     onClose,
     actions,
+    compact = true,
 }) => {
+    const [fadeAnim] = React.useState(new Animated.Value(0));
+    const [slideAnim] = React.useState(new Animated.Value(-50));
+
+    React.useEffect(() => {
+        if (visible) {
+            Animated.parallel([
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+                Animated.spring(slideAnim, {
+                    toValue: 0,
+                    tension: 100,
+                    friction: 10,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+
+            // Auto-dismiss compact alerts after 2.5 seconds
+            if (compact && !actions?.length) {
+                const timer = setTimeout(() => {
+                    handleClose();
+                }, 2500);
+                return () => clearTimeout(timer);
+            }
+        } else {
+            fadeAnim.setValue(0);
+            slideAnim.setValue(-50);
+        }
+    }, [visible]);
+
+    const handleClose = () => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: -50,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+        ]).start(() => {
+            onClose();
+        });
+    };
+
     const getIcon = () => {
-        const iconProps = { size: 32 };
+        const iconSize = compact ? 20 : 28;
         switch (type) {
             case 'success':
-                return <CheckCircle {...iconProps} color="#22c55e" />;
-            case 'error':
-                return <XCircle {...iconProps} color="#ef4444" />;
+                return <CheckCircle size={iconSize} color="#22c55e" />;
             case 'warning':
-                return <AlertTriangle {...iconProps} color="#f59e0b" />;
+                return <AlertTriangle size={iconSize} color="#f59e0b" />;
+            case 'error':
+                return <XCircle size={iconSize} color="#ef4444" />;
             default:
-                return <Info {...iconProps} color="#3b82f6" />;
+                return <Info size={iconSize} color="#3b82f6" />;
         }
     };
 
-    const getIconBgColor = () => {
+    const getBorderColor = () => {
         switch (type) {
             case 'success':
-                return 'rgba(34, 197, 94, 0.15)';
+                return '#22c55e';
             case 'error':
-                return 'rgba(239, 68, 68, 0.15)';
+                return '#ef4444';
             case 'warning':
-                return 'rgba(245, 158, 11, 0.15)';
+                return '#f59e0b';
             default:
-                return 'rgba(59, 130, 246, 0.15)';
+                return '#3b82f6';
         }
     };
 
+    if (!visible) return null;
+
+    // Compact toast-style alert using Modal
+    if (compact) {
+        return (
+            <Modal
+                visible={visible}
+                transparent
+                animationType="none"
+                onRequestClose={handleClose}
+            >
+                <TouchableWithoutFeedback onPress={handleClose}>
+                    <View style={styles.compactOverlay}>
+                        <TouchableWithoutFeedback>
+                            <Animated.View
+                                style={[
+                                    styles.compactContainer,
+                                    {
+                                        opacity: fadeAnim,
+                                        transform: [{ translateY: slideAnim }],
+                                        borderLeftColor: getBorderColor(),
+                                    },
+                                ]}
+                            >
+                                <View style={styles.compactContent}>
+                                    <View style={styles.compactIconWrap}>{getIcon()}</View>
+                                    <View style={styles.compactTextWrap}>
+                                        {title && <Text style={styles.compactTitle}>{title}</Text>}
+                                        {message && <Text style={styles.compactMessage}>{message}</Text>}
+                                    </View>
+                                    <TouchableOpacity onPress={handleClose} style={styles.compactClose}>
+                                        <X size={16} color="#666" />
+                                    </TouchableOpacity>
+                                </View>
+                            </Animated.View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+        );
+    }
+
+    // Full modal alert (legacy)
     const handleAction = (action: AlertAction) => {
         if (action.onPress) {
             action.onPress();
         }
-        onClose();
+        handleClose();
     };
 
     return (
@@ -73,27 +169,21 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
             visible={visible}
             transparent
             animationType="fade"
-            onRequestClose={onClose}
+            onRequestClose={handleClose}
         >
             <View style={styles.overlay}>
-                <View style={styles.alertContainer}>
-                    {/* Close button */}
-                    <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+                <Animated.View style={[styles.alertContainer, { opacity: fadeAnim }]}>
+                    <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
                         <X size={18} color="#666" />
                     </TouchableOpacity>
 
-                    {/* Icon */}
-                    <View style={[styles.iconContainer, { backgroundColor: getIconBgColor() }]}>
+                    <View style={[styles.iconContainer, { borderColor: getBorderColor() }]}>
                         {getIcon()}
                     </View>
 
-                    {/* Title */}
                     {title && <Text style={styles.title}>{title}</Text>}
-
-                    {/* Message */}
                     {message && <Text style={styles.message}>{message}</Text>}
 
-                    {/* Actions */}
                     {actions && actions.length > 0 ? (
                         <View style={styles.actionsRow}>
                             {actions.map((action, index) => (
@@ -123,18 +213,63 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
                     ) : (
                         <TouchableOpacity
                             style={[styles.actionBtn, styles.actionBtnPrimary, styles.singleBtn]}
-                            onPress={onClose}
+                            onPress={handleClose}
                         >
                             <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>OK</Text>
                         </TouchableOpacity>
                     )}
-                </View>
+                </Animated.View>
             </View>
         </Modal>
     );
 };
 
 const styles = StyleSheet.create({
+    // Compact toast styles
+    compactOverlay: {
+        flex: 1,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        paddingTop: 80,
+    },
+    compactContainer: {
+        width: SCREEN_WIDTH - 32,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 12,
+        borderLeftWidth: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 10,
+    },
+    compactContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+    },
+    compactIconWrap: {
+        marginRight: 12,
+    },
+    compactTextWrap: {
+        flex: 1,
+    },
+    compactTitle: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    compactMessage: {
+        color: '#999',
+        fontSize: 13,
+        marginTop: 2,
+    },
+    compactClose: {
+        padding: 6,
+        marginLeft: 8,
+    },
+    // Full modal styles
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -158,12 +293,14 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     iconContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
+        borderWidth: 2,
+        backgroundColor: 'rgba(255,255,255,0.05)',
     },
     title: {
         color: '#fff',

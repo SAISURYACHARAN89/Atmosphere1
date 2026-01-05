@@ -59,13 +59,25 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
             try {
                 const role = await AsyncStorage.getItem('role');
                 if (role === 'investor') { setIsInvestor(true); return; }
-                // fallback: check stored user object for roles array
+                // fallback: check stored user object for roles array and accountType
                 const userJson = await AsyncStorage.getItem('user');
                 if (userJson) {
                     try {
                         const userObj = JSON.parse(userJson);
-                        if (Array.isArray(userObj.roles) && userObj.roles.includes('investor')) {
+                        // Check roles array - first item is the current role
+                        if (Array.isArray(userObj.roles) && userObj.roles[0] === 'investor') {
                             setIsInvestor(true);
+                            return;
+                        }
+                        // Check accountType field
+                        if (userObj.accountType === 'investor') {
+                            setIsInvestor(true);
+                            return;
+                        }
+                        // Check role field directly on user object
+                        if (userObj.role === 'investor') {
+                            setIsInvestor(true);
+                            return;
                         }
                     } catch { /* ignore parse errors */ }
                 }
@@ -129,9 +141,12 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
     };
 
     const toggleCrown = async () => {
+        console.log('[StartupPost] toggleCrown called, isInvestor:', isInvestor);
         if (!isInvestor) {
-            setAlertConfig({ type: 'warning', title: 'Not Allowed', message: 'Only investors can crown profiles' });
+            console.log('[StartupPost] Not an investor, showing alert');
+            setAlertConfig({ type: 'warning', title: 'Investors Only', message: 'Only investors can crown startups' });
             setAlertVisible(true);
+            console.log('[StartupPost] alertVisible set to true');
             return;
         }
         if (crownLoading) return;
@@ -193,182 +208,187 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
     };
 
     return (
-        <View style={[styles.card, styles.cardBackground]}>
-            <View style={styles.headerTop}>
-                <TouchableOpacity style={styles.headerLeftRow} activeOpacity={0.8} onPress={() => {
-                    try {
-                        const targetId = (companyData as any).userId || (companyData as any).user || null;
-                        const startupDetailsId = (companyData as any).startupDetailsId || (companyData as any).originalId || (companyData as any).id || null;
-                        const resolvedUserId = targetId ? String(targetId) : null;
-                        const resolvedStartupId = startupDetailsId ? String(startupDetailsId) : null;
-                        if (onOpenProfile && targetId) {
-                            const chosen = resolvedUserId || resolvedStartupId || '';
-                            console.debug('StartupPost: onOpenProfile chosen id', chosen, { resolvedUserId, resolvedStartupId, companyData });
-                            onOpenProfile(chosen);
-                            return;
-                        }
-                        if (navigation) {
-                            const params: any = { backToHome: true };
-                            if (resolvedUserId) params.userId = resolvedUserId;
-                            else if (resolvedStartupId) params.startupDetailsId = resolvedStartupId;
-                            if (typeof navigation.push === 'function') {
-                                navigation.push('Profile', params);
-                            } else if (typeof navigation.navigate === 'function') {
-                                navigation.navigate('Profile', params);
+        <>
+            <View style={[styles.card, styles.cardBackground]}>
+                <View style={styles.headerTop}>
+                    <TouchableOpacity style={styles.headerLeftRow} activeOpacity={0.8} onPress={() => {
+                        try {
+                            const targetId = (companyData as any).userId || (companyData as any).user || null;
+                            const startupDetailsId = (companyData as any).startupDetailsId || (companyData as any).originalId || (companyData as any).id || null;
+                            const resolvedUserId = targetId ? String(targetId) : null;
+                            const resolvedStartupId = startupDetailsId ? String(startupDetailsId) : null;
+                            if (onOpenProfile && targetId) {
+                                const chosen = resolvedUserId || resolvedStartupId || '';
+                                console.debug('StartupPost: onOpenProfile chosen id', chosen, { resolvedUserId, resolvedStartupId, companyData });
+                                onOpenProfile(chosen);
+                                return;
                             }
-                            return;
+                            if (navigation) {
+                                const params: any = { backToHome: true };
+                                if (resolvedUserId) params.userId = resolvedUserId;
+                                else if (resolvedStartupId) params.startupDetailsId = resolvedStartupId;
+                                if (typeof navigation.push === 'function') {
+                                    navigation.push('Profile', params);
+                                } else if (typeof navigation.navigate === 'function') {
+                                    navigation.navigate('Profile', params);
+                                }
+                                return;
+                            }
+                            console.warn('StartupPost: no navigation available to open profile for', targetId);
+                        } catch (err) {
+                            console.warn('StartupPost: navigation error', err);
                         }
-                        console.warn('StartupPost: no navigation available to open profile for', targetId);
-                    } catch (err) {
-                        console.warn('StartupPost: navigation error', err);
-                    }
-                }}>
-                    <Image source={getImageSource(companyData.profileImage)} style={styles.avatar} onError={(e) => { console.warn('StartupPost avatar error', e.nativeEvent, companyData.profileImage); }} />
-                    <View style={styles.headerLeft}>
-                        <View style={styles.rowCenter}>
-                            <Text style={[styles.companyName, styles.whiteText]}>{companyData.name}</Text>
-                            {companyData.verified && <VerifiedBadge size={14} />}
+                    }}>
+                        <Image source={getImageSource(companyData.profileImage)} style={styles.avatar} onError={(e) => { console.warn('StartupPost avatar error', e.nativeEvent, companyData.profileImage); }} />
+                        <View style={styles.headerLeft}>
+                            <View style={styles.rowCenter}>
+                                <Text style={[styles.companyName, styles.whiteText]}>{companyData.name}</Text>
+                                {/* {companyData.verified && <VerifiedBadge size={14} />} */}
+                            </View>
+                            {companyData.verified && (
+                                <Text style={styles.verifiedSubtext}>Verified startup</Text>
+                            )}
+                        </View>
+                    </TouchableOpacity>
+                    {((companyData as any).userId || (companyData as any).user || companyData.id) !== String(currentUserId) && (
+                        <TouchableOpacity
+                            onPress={async () => {
+                                if (followLoading) return;
+                                const newState = !followed;
+                                setFollowed(newState); // optimistic
+                                setFollowLoading(true);
+                                try {
+                                    const targetId = (companyData as any).userId || (companyData as any).user || (companyData as any).originalId || companyData.id;
+                                    if (!targetId) throw new Error('Missing target user id');
+                                    if (newState) {
+                                        await followUser(String(targetId));
+                                    } else {
+                                        await unfollowUser(String(targetId));
+                                    }
+                                } catch (err: any) {
+                                    // If server says already following, reconcile UI to true
+                                    if (err && err.message && err.message.toLowerCase().includes('already following')) {
+                                        setFollowed(true);
+                                    } else {
+                                        // revert optimistic
+                                        setFollowed(!newState);
+                                        Alert.alert('Error', err?.message || 'Could not update follow status');
+                                    }
+                                } finally {
+                                    setFollowLoading(false);
+                                }
+                            }}
+                            style={[styles.followBtn, followed && styles.followBtnActive]}
+                            disabled={followLoading}
+                        >
+                            <Text style={[styles.followBtnText, followed && styles.followBtnTextActive]}>{followed ? 'Following' : 'Follow'}</Text>
+                        </TouchableOpacity>
+                    )}
+                    {/* 3 dots menu */}
+                    {/* <TouchableOpacity style={styles.menuButton}>
+                        <MoreHorizontal size={24} color="#9aa0a6" />
+                    </TouchableOpacity> */}
+                </View>
+
+                {/* Comments overlay is used instead of inline input */}
+                <CommentsOverlay
+                    startupId={String((companyData as any).originalId || (companyData as any).id || (companyData as any).userId || (companyData as any).user)}
+                    visible={commentsOverlayVisible}
+                    onClose={() => setCommentsOverlayVisible(false)}
+                    onCommentAdded={(newCount?: number) => {
+                        if (typeof newCount === 'number') setCommentsCount(newCount);
+                        else setCommentsCount(c => c + 1);
+                    }}
+                    onCommentDeleted={(newCount?: number) => {
+                        if (typeof newCount === 'number') setCommentsCount(newCount);
+                        else setCommentsCount(c => Math.max(0, c - 1));
+                    }}
+                />
+
+                <View style={styles.imageWrap}>
+                    <Image source={getImageSource(companyData.profileImage)} style={styles.mainImage} resizeMode="cover" onError={(e) => { console.warn('StartupPost main image error', e.nativeEvent, companyData.profileImage); }} />
+                </View>
+
+                <View style={styles.actionsRow}>
+                    <View style={styles.statItemRow}>
+                        {/* Like */}
+                        <TouchableOpacity style={styles.statItem} onPress={toggleLike}>
+                            <Heart
+                                size={24}
+                                color={liked ? '#ef4444' : '#fff'}
+                                fill={liked ? '#ef4444' : 'none'}
+                            />
+                            <Text style={styles.statCount}>{likes}</Text>
+                        </TouchableOpacity>
+
+                        {/* Crown */}
+                        <TouchableOpacity
+                            style={styles.statItem}
+                            onPress={toggleCrown}
+                        >
+                            <Crown
+                                size={24}
+                                color={crowned ? '#eab308' : '#fff'}
+                                fill={crowned ? '#eab308' : 'none'}
+                            />
+                            <Text style={styles.statCount}>{crownsCount}</Text>
+                        </TouchableOpacity>
+
+                        {/* Comments */}
+                        <TouchableOpacity style={styles.statItem} onPress={() => setCommentsOverlayVisible(true)}>
+                            <MessageCircle size={24} color="#fff" />
+                            <Text style={styles.statCount}>{commentsCount}</Text>
+                        </TouchableOpacity>
+
+                        {/* Share/Send */}
+                        <TouchableOpacity style={styles.statItem} onPress={() => setShareModalVisible(true)}>
+                            <Send size={24} color="#fff" />
+                            <Text style={styles.statCount}>{stats.shares}</Text>
+                        </TouchableOpacity>
+
+                        {/* Spacer */}
+                        <View style={styles.flex1} />
+
+                        {/* Bookmark */}
+                        <TouchableOpacity onPress={toggleSave}>
+                            <Bookmark
+                                size={24}
+                                color="#fff"
+                                fill={saved ? '#fff' : 'none'}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <View style={styles.body}>
+                    <Text style={styles.whatsLabel}>WHAT'S {companyData.name.toUpperCase()}</Text>
+                    <Text style={styles.descriptionFull}>{companyData.description}</Text>
+
+                    <View style={styles.stageRow}>
+                        <Text style={styles.stageText}>STAGE : <Text style={styles.stageValue}>{String(companyData.stage || 'MVP LAUNCHED')}</Text></Text>
+                    </View>
+
+                    <View style={styles.pillsRow}>
+                        <View style={styles.pill}><Text style={styles.pillText}>Rvnu generating</Text></View>
+                        <View style={styles.pill}><Text style={styles.pillText}>Rounds : {companyData.rounds ?? 0}</Text></View>
+                        <View style={styles.pill}><Text style={styles.pillText}>Age : {companyData.age ?? 0} yr</Text></View>
+                    </View>
+
+                    <Text style={styles.currentRound}>Current round : <Text style={styles.currentRoundValue}>Series A</Text></Text>
+
+                    <View style={styles.fundingBarWrap}>
+                        <View style={styles.fundingBarTrack}>
+                            <View style={[styles.fundingFilled, { width: `${fundingPercent}%` }]} />
+                        </View>
+                        <View style={styles.fundingLabelsRow}>
+                            <Text style={styles.filledLabel}>{formatCurrency(companyData.fundingRaised ?? 0)} Filled</Text>
+                            <Text style={styles.totalLabel}>{formatCurrency(companyData.fundingNeeded ?? 0)}</Text>
                         </View>
                     </View>
-                </TouchableOpacity>
-                {((companyData as any).userId || (companyData as any).user || companyData.id) !== String(currentUserId) && (
-                    <TouchableOpacity
-                        onPress={async () => {
-                            if (followLoading) return;
-                            const newState = !followed;
-                            setFollowed(newState); // optimistic
-                            setFollowLoading(true);
-                            try {
-                                const targetId = (companyData as any).userId || (companyData as any).user || (companyData as any).originalId || companyData.id;
-                                if (!targetId) throw new Error('Missing target user id');
-                                if (newState) {
-                                    await followUser(String(targetId));
-                                } else {
-                                    await unfollowUser(String(targetId));
-                                }
-                            } catch (err: any) {
-                                // If server says already following, reconcile UI to true
-                                if (err && err.message && err.message.toLowerCase().includes('already following')) {
-                                    setFollowed(true);
-                                } else {
-                                    // revert optimistic
-                                    setFollowed(!newState);
-                                    Alert.alert('Error', err?.message || 'Could not update follow status');
-                                }
-                            } finally {
-                                setFollowLoading(false);
-                            }
-                        }}
-                        style={[styles.followBtn, followed && styles.followBtnActive]}
-                        disabled={followLoading}
-                    >
-                        <Text style={[styles.followBtnText, followed && styles.followBtnTextActive]}>{followed ? 'Following' : 'Follow'}</Text>
-                    </TouchableOpacity>
-                )}
-                {/* 3 dots menu */}
-                {/* <TouchableOpacity style={styles.menuButton}>
-                    <MoreHorizontal size={24} color="#9aa0a6" />
-                </TouchableOpacity> */}
-            </View>
-
-            {/* Comments overlay is used instead of inline input */}
-            <CommentsOverlay
-                startupId={String((companyData as any).originalId || (companyData as any).id || (companyData as any).userId || (companyData as any).user)}
-                visible={commentsOverlayVisible}
-                onClose={() => setCommentsOverlayVisible(false)}
-                onCommentAdded={(newCount?: number) => {
-                    if (typeof newCount === 'number') setCommentsCount(newCount);
-                    else setCommentsCount(c => c + 1);
-                }}
-                onCommentDeleted={(newCount?: number) => {
-                    if (typeof newCount === 'number') setCommentsCount(newCount);
-                    else setCommentsCount(c => Math.max(0, c - 1));
-                }}
-            />
-
-            <View style={styles.imageWrap}>
-                <Image source={getImageSource(companyData.profileImage)} style={styles.mainImage} resizeMode="cover" onError={(e) => { console.warn('StartupPost main image error', e.nativeEvent, companyData.profileImage); }} />
-            </View>
-
-            <View style={styles.actionsRow}>
-                <View style={styles.statItemRow}>
-                    {/* Like */}
-                    <TouchableOpacity style={styles.statItem} onPress={toggleLike}>
-                        <Heart
-                            size={24}
-                            color={liked ? '#ef4444' : '#fff'}
-                            fill={liked ? '#ef4444' : 'none'}
-                        />
-                        <Text style={styles.statCount}>{likes}</Text>
-                    </TouchableOpacity>
-
-                    {/* Crown */}
-                    <TouchableOpacity
-                        style={styles.statItem}
-                        onPress={toggleCrown}
-                    >
-                        <Crown
-                            size={24}
-                            color={crowned ? '#eab308' : '#fff'}
-                            fill={crowned ? '#eab308' : 'none'}
-                        />
-                        <Text style={styles.statCount}>{crownsCount}</Text>
-                    </TouchableOpacity>
-
-                    {/* Comments */}
-                    <TouchableOpacity style={styles.statItem} onPress={() => setCommentsOverlayVisible(true)}>
-                        <MessageCircle size={24} color="#fff" />
-                        <Text style={styles.statCount}>{commentsCount}</Text>
-                    </TouchableOpacity>
-
-                    {/* Share/Send */}
-                    <TouchableOpacity style={styles.statItem} onPress={() => setShareModalVisible(true)}>
-                        <Send size={24} color="#fff" />
-                        <Text style={styles.statCount}>{stats.shares}</Text>
-                    </TouchableOpacity>
-
-                    {/* Spacer */}
-                    <View style={styles.flex1} />
-
-                    {/* Bookmark */}
-                    <TouchableOpacity onPress={toggleSave}>
-                        <Bookmark
-                            size={24}
-                            color="#fff"
-                            fill={saved ? '#fff' : 'none'}
-                        />
-                    </TouchableOpacity>
                 </View>
             </View>
 
-            <View style={styles.body}>
-                <Text style={styles.whatsLabel}>WHAT'S {companyData.name.toUpperCase()}</Text>
-                <Text style={styles.descriptionFull}>{companyData.description}</Text>
-
-                <View style={styles.stageRow}>
-                    <Text style={styles.stageText}>STAGE : <Text style={styles.stageValue}>{String(companyData.stage || 'MVP LAUNCHED')}</Text></Text>
-                </View>
-
-                <View style={styles.pillsRow}>
-                    <View style={styles.pill}><Text style={styles.pillText}>Rvnu generating</Text></View>
-                    <View style={styles.pill}><Text style={styles.pillText}>Rounds : {companyData.rounds ?? 0}</Text></View>
-                    <View style={styles.pill}><Text style={styles.pillText}>Age : {companyData.age ?? 0} yr</Text></View>
-                </View>
-
-                <Text style={styles.currentRound}>Current round : <Text style={styles.currentRoundValue}>Series A</Text></Text>
-
-                <View style={styles.fundingBarWrap}>
-                    <View style={styles.fundingBarTrack}>
-                        <View style={[styles.fundingFilled, { width: `${fundingPercent}%` }]} />
-                    </View>
-                    <View style={styles.fundingLabelsRow}>
-                        <Text style={styles.filledLabel}>{formatCurrency(companyData.fundingRaised ?? 0)} Filled</Text>
-                        <Text style={styles.totalLabel}>{formatCurrency(companyData.fundingNeeded ?? 0)}</Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Custom Alert */}
+            {/* Custom Alert - Outside of card View to avoid overflow issues */}
             <CustomAlert
                 visible={alertVisible}
                 type={alertConfig.type}
@@ -387,7 +407,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: { post?: S
                 contentImage={companyData.profileImage}
                 contentOwner={companyData.displayName || companyData.name}
             />
-        </View>
+        </>
     );
 };
 
@@ -518,6 +538,11 @@ const styles = StyleSheet.create({
     },
     flex1: {
         flex: 1,
+    },
+    verifiedSubtext: {
+        color: '#888',
+        fontSize: 12,
+        marginTop: 2,
     },
 });
 
