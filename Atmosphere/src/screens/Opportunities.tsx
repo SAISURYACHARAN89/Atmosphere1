@@ -1172,16 +1172,16 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000000',
+        // backgroundColor: '#171819',
         paddingTop: 16,
     },
     tabBar: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 12,
-        backgroundColor: '#111',
-        borderRadius: 25,
-        padding: 4,
+        marginBottom: 20,
+        backgroundColor: '#171819',
+        borderRadius: 15,
+        padding: 8,
         marginHorizontal: 12,
     },
     tabBtn: {
@@ -1192,7 +1192,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     tabBtnActive: {
-        backgroundColor: '#333',
+        backgroundColor: '#000305',
     },
     tabText: {
         fontSize: 14,
@@ -1215,7 +1215,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 20,
         paddingHorizontal: 4,
     },
     resultCount: {
@@ -1734,7 +1734,9 @@ const styles = StyleSheet.create({
     },
     myTeamsBtn: {
         backgroundColor: 'transparent',
-        borderColor: '#444',
+        borderColor: '#373737',
+        borderWidth: 1,
+        padding: 8,
     },
     myTeamsBtnText: {
         color: '#fff',
