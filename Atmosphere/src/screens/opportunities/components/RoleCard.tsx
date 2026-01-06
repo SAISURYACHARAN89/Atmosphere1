@@ -3,11 +3,10 @@ import {
     View,
     Text,
     TouchableOpacity,
-    TextInput,
     Alert,
+    Linking,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import * as DocumentPicker from '@react-native-documents/picker';
 import styles from '../Opportunities.styles';
 
 interface RoleCardProps {
@@ -19,29 +18,7 @@ interface RoleCardProps {
 
 function RoleCard({ item, isMyAd = false, expanded = false, onExpand }: RoleCardProps) {
     const [showFullDesc, setShowFullDesc] = useState(false);
-    const [applied, setApplied] = useState(false);
-    const [applicantsCount, setApplicantsCount] = useState(item.applicantsCount || 0);
-    const [questionAnswers, setQuestionAnswers] = useState<string[]>(
-        (item.customQuestions || []).map(() => '')
-    );
-    const [selectedFile, setSelectedFile] = useState<{ uri: string; name: string } | null>(null);
-
-    const handleFilePick = async () => {
-        try {
-            const res = await DocumentPicker.pick({
-                type: [DocumentPicker.types.pdf, DocumentPicker.types.doc, DocumentPicker.types.docx],
-            });
-            if (res && res[0]) {
-                setSelectedFile({ uri: res[0].uri, name: res[0].name || 'resume.pdf' });
-            }
-        } catch (err) {
-            if ((DocumentPicker as any).isCancel(err)) {
-                // User cancelled
-            } else {
-                Alert.alert('Error', 'Failed to pick file');
-            }
-        }
-    };
+    const [applicantsCount] = useState(item.applicantsCount || 0);
 
     const cardBg = '#000000';
     const borderColor = '#333';
@@ -52,21 +29,15 @@ function RoleCard({ item, isMyAd = false, expanded = false, onExpand }: RoleCard
     const tags = ['AI', 'B2B', 'SaaS', 'Startup'];
     const description = item.description || item.requirements || 'No description provided.';
 
-    const handleSubmit = () => {
-        const customQuestions = item.customQuestions || [];
-        const hasQuestions = customQuestions.some((q: string) => q?.trim() !== '');
-        const answered = questionAnswers.every((ans, i) =>
-            customQuestions[i] ? ans.trim() !== '' : true
-        );
-
-        if (hasQuestions && !answered) {
-            Alert.alert('Error', 'Please answer all questions before submitting.');
-            return;
+    const handleApply = () => {
+        const url = item.applicationUrl || item.url;
+        if (url) {
+            Linking.openURL(url).catch(() => {
+                Alert.alert('Error', 'Could not open the application link');
+            });
+        } else {
+            Alert.alert('Info', 'No application link available for this position');
         }
-
-        setApplied(true);
-        setApplicantsCount((prev: number) => prev + 1);
-        Alert.alert('Success', 'Application sent successfully!');
     };
 
     return (
@@ -147,59 +118,18 @@ function RoleCard({ item, isMyAd = false, expanded = false, onExpand }: RoleCard
                 </Text>
             </View>
 
-            {/* Expanded Application Section */}
+            {/* Expanded Section - Direct Apply Button */}
             {expanded && (
                 <View style={styles.expandedSectionInline}>
-                    {!applied ? (
-                        <>
-                            {/* Custom Questions */}
-                            {(item.customQuestions || []).map((q: string, i: number) => (
-                                <View key={i} style={styles.questionContainerInline}>
-                                    <Text style={styles.questionLabelBold}>{q}</Text>
-                                    <TextInput
-                                        style={styles.questionInputDark}
-                                        placeholder="Your answer..."
-                                        placeholderTextColor="#666"
-                                        value={questionAnswers[i]}
-                                        onChangeText={(text) => {
-                                            const updated = [...questionAnswers];
-                                            updated[i] = text;
-                                            setQuestionAnswers(updated);
-                                        }}
-                                        multiline
-                                        textAlignVertical="top"
-                                    />
-                                </View>
-                            ))}
-
-                            {/* File Upload */}
-                            <View style={styles.uploadContainerInline}>
-                                <Text style={styles.uploadLabelBold}>
-                                    Attach Resume (Optional)
-                                </Text>
-                                <View style={styles.fileChooserRow}>
-                                    <TouchableOpacity style={styles.fileChooserBtn} onPress={handleFilePick}>
-                                        <Text style={styles.fileChooserBtnText}>Choose File</Text>
-                                    </TouchableOpacity>
-                                    <Text style={styles.noFileText}>
-                                        {selectedFile ? selectedFile.name : 'No file chosen'}
-                                    </Text>
-                                </View>
-                            </View>
-
-                            {/* Submit Button */}
-                            <TouchableOpacity style={styles.sendBtnDark} onPress={handleSubmit}>
-                                <Text style={styles.sendBtnText}>Send Application</Text>
-                            </TouchableOpacity>
-                        </>
-                    ) : (
-                        <View style={styles.appliedContainer}>
-                            <Text style={styles.appliedText}>✓ Application Sent Successfully</Text>
-                            <Text style={[styles.appliedSubtext, { color: subTextColor }]}>
-                                You can track your application in My Jobs
-                            </Text>
+                    <TouchableOpacity
+                        style={[styles.sendBtnDark, { backgroundColor: '#fff' }]}
+                        onPress={handleApply}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={[styles.sendBtnText, { color: '#000' }]}>Send Application</Text>
+                            <MaterialIcons name="open-in-new" size={16} color="#000" style={{ marginLeft: 8 }} />
                         </View>
-                    )}
+                    </TouchableOpacity>
                 </View>
             )}
         </View>

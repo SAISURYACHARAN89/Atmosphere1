@@ -2,7 +2,7 @@ const { Job, Notification } = require('../models');
 
 exports.createJob = async (req, res, next) => {
     try {
-        const { title, sector, locationType, employmentType, compensation, requirements, customQuestions } = req.body;
+        const { title, sector, locationType, employmentType, compensation, requirements, applicationUrl } = req.body;
         if (!title || !requirements) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
@@ -14,7 +14,8 @@ exports.createJob = async (req, res, next) => {
             employmentType,
             compensation,
             requirements,
-            customQuestions: customQuestions || [],
+            customQuestions: [], // Deprecated
+            applicationUrl: applicationUrl || '',
         });
         await job.save();
         await job.populate('poster', 'username displayName avatarUrl verified');

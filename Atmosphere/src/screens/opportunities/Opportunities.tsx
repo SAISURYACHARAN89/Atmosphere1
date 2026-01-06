@@ -53,7 +53,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         name: '', organization: '', sector: '', location: '', amount: '', deadline: '', type: '', description: '', url: '',
         organizer: '', date: '', time: '',
         startupName: '', roleTitle: '', locationType: '', employmentType: 'Full-time', compensation: '', requirements: '',
-        isRemote: false, customQuestions: ['', '', ''],
+        isRemote: false, applicationUrl: '',
     });
     const [postLoading, setPostLoading] = useState(false);
     const [initialLoadDone, setInitialLoadDone] = useState(false);
@@ -261,7 +261,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                     title: form.roleTitle, startupName: form.startupName, sector: form.sector,
                     locationType: form.locationType, employmentType: form.employmentType,
                     compensation: form.compensation, requirements: form.requirements,
-                    isRemote: form.isRemote, customQuestions: form.customQuestions.filter(q => q.trim() !== ''),
+                    isRemote: form.isRemote, applicationUrl: form.applicationUrl,
                 };
             }
 
@@ -277,7 +277,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                 name: '', organization: '', sector: '', location: '', amount: '', deadline: '', type: '',
                 description: '', url: '', organizer: '', date: '', time: '',
                 startupName: '', roleTitle: '', locationType: '', employmentType: 'Full-time',
-                compensation: '', requirements: '', isRemote: false, customQuestions: ['', '', ''],
+                compensation: '', requirements: '', isRemote: false, applicationUrl: '',
             });
             Alert.alert('Success', 'Posted successfully!');
 
@@ -556,24 +556,18 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                                             multiline
                                         />
                                     </View>
-                                    <Text style={styles.questionsLabel}>Custom Questions (Optional, max 3)</Text>
-                                    <Text style={styles.questionsSubLabel}>Add up to 3 questions for applicants to answer</Text>
-                                    {[0, 1, 2].map((i) => (
-                                        <View key={i} style={styles.inputGroup}>
-                                            <Text style={styles.label}>Question {i + 1}</Text>
-                                            <TextInput
-                                                placeholderTextColor="#666"
-                                                style={styles.inputDark}
-                                                placeholder={`Enter question ${i + 1} (optional)`}
-                                                value={form.customQuestions[i]}
-                                                onChangeText={v => {
-                                                    const updated = [...form.customQuestions];
-                                                    updated[i] = v;
-                                                    handleFormChange('customQuestions', updated);
-                                                }}
-                                            />
-                                        </View>
-                                    ))}
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Application Link</Text>
+                                        <TextInput
+                                            placeholderTextColor="#666"
+                                            style={styles.inputDark}
+                                            placeholder="Website or Google Form link for applications"
+                                            value={form.applicationUrl}
+                                            onChangeText={v => handleFormChange('applicationUrl', v)}
+                                            autoCapitalize="none"
+                                            keyboardType="url"
+                                        />
+                                    </View>
                                 </>
                             )}
                         </ScrollView>

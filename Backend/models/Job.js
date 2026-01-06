@@ -11,7 +11,8 @@ const JobSchema = new Schema(
         employmentType: { type: String },
         compensation: { type: String },
         requirements: { type: String },
-        customQuestions: { type: [String] },
+        customQuestions: { type: [String] }, // Deprecated, kept for backwards compatibility
+        applicationUrl: { type: String },
         applicants: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         isVerifiedByAdmin: { type: Boolean, default: false },
         meta: { type: Schema.Types.Mixed },
