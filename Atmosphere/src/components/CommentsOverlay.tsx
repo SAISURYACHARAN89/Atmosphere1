@@ -1,22 +1,25 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Animated, Easing, Dimensions } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { getStartupComments, addStartupComment, deleteComment, deleteStartupComment, getComments, addComment, getProfile, getStartupCommentReplies, getCommentReplies } from '../lib/api';
 import Icon from 'react-native-vector-icons/Feather';
-import { Send } from 'lucide-react-native';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SHEET_HEIGHT = Math.round(SCREEN_HEIGHT * 0.6);
+// Import shared components and utilities
+import { Comment, ReplyingTo, commentStyles as styles, SHEET_HEIGHT, timeAgo, getAvatarLetter, getDisplayName } from './comments';
+import CommentInput from './comments/CommentInput';
 
-type Comment = any;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-interface ReplyingTo {
-    id: string;
-    username: string;
-    parentCommentId: string; // Always the top-level comment ID
+interface CommentsOverlayProps {
+    startupId: string;
+    visible: boolean;
+    onClose: () => void;
+    onCommentAdded?: (newCount?: number) => void;
+    onCommentDeleted?: (newCount?: number) => void;
+    type?: 'startup' | 'post';
 }
 
-const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommentDeleted, type = 'startup' }: { startupId: string; visible: boolean; onClose: () => void; onCommentAdded?: (newCount?: number) => void; onCommentDeleted?: (newCount?: number) => void; type?: 'startup' | 'post' }) => {
+const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommentDeleted, type = 'startup' }: CommentsOverlayProps) => {
     const { theme } = useContext(ThemeContext);
     const anim = useRef(new Animated.Value(0)).current;
     const inputRef = useRef<TextInput>(null);
@@ -108,8 +111,7 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
     };
 
     const handleReply = (comment: Comment, parentCommentId?: string) => {
-        const username = comment.author?.displayName || comment.author?.username || 'User';
-        // If replying to a reply, use the parentCommentId; otherwise use the comment's own ID
+        const username = getDisplayName(comment.author);
         const topLevelParentId = parentCommentId || String(comment._id || comment.id);
         setReplyingTo({
             id: String(comment._id || comment.id),
@@ -128,7 +130,6 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
         setSubmitting(true);
         try {
             let newComment;
-            // Always use parentCommentId (the top-level comment) for API
             const parentId = replyingTo?.parentCommentId || undefined;
             if (type === 'post') {
                 newComment = await addComment(String(startupId), text.trim(), parentId);
@@ -137,21 +138,17 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
             }
 
             const commentObj = newComment?.comment || newComment || { text: text.trim(), createdAt: new Date().toISOString() };
-            // Add replyToUsername to the comment object for display
             if (replyingTo?.username) {
                 commentObj.replyToUsername = replyingTo.username;
             }
 
             if (parentId) {
-                // Add reply to the replies data
                 setRepliesData(prev => ({
                     ...prev,
                     [parentId]: [...(prev[parentId] || []), commentObj]
                 }));
-                // Expand the parent if not already expanded
                 setExpandedReplies(prev => new Set(prev).add(parentId));
             } else {
-                // Add as top-level comment
                 setComments(prev => [commentObj, ...prev]);
             }
 
@@ -166,25 +163,6 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
             console.warn('CommentsOverlay: failed to submit comment');
         } finally {
             setSubmitting(false);
-        }
-    };
-
-    const timeAgo = (dateLike: any) => {
-        try {
-            const d = new Date(dateLike);
-            if (Number.isNaN(d.getTime())) return '';
-            const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-            if (sec < 10) return 'just now';
-            if (sec < 60) return `${sec}s`;
-            const min = Math.floor(sec / 60);
-            if (min < 60) return `${min}m`;
-            const hr = Math.floor(min / 60);
-            if (hr < 24) return `${hr}h`;
-            const day = Math.floor(hr / 24);
-            if (day < 7) return `${day}d`;
-            return d.toLocaleDateString();
-        } catch {
-            return '';
         }
     };
 
@@ -218,6 +196,10 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
         }
     };
 
+    const closeModal = () => {
+        Animated.timing(anim, { toValue: 0, duration: 240, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => onClose && onClose());
+    };
+
     const renderComment = (item: Comment, isReply = false, parentAuthor?: string, parentCommentId?: string) => {
         const commentId = String(item._id || item.id || item.createdAt);
         const authorId = item.author?._id || item.author?.id || item.author;
@@ -226,8 +208,7 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
         const hasReplies = replies.length > 0 || (item.repliesCount && item.repliesCount > 0);
         const isExpanded = expandedReplies.has(commentId);
         const isLoadingReplies = repliesLoading.has(commentId);
-        const authorUsername = item.author?.displayName || item.author?.username || 'User';
-        // For @tag display: use replyToUsername from item (for newly added) or parentAuthor (for fetched)
+        const authorUsername = getDisplayName(item.author);
         const displayReplyTag = item.replyToUsername || parentAuthor;
 
         return (
@@ -242,14 +223,12 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
                 >
                     <View style={styles.commentAvatar}>
                         <Text style={styles.avatarLetter}>
-                            {(item.author && (item.author.displayName || item.author.username) ? (item.author.displayName || item.author.username).charAt(0).toUpperCase() : 'U')}
+                            {getAvatarLetter(item.author)}
                         </Text>
                     </View>
                     <View style={styles.commentBody}>
                         <View style={styles.commentHeaderRow}>
-                            <Text style={styles.commentAuthor}>
-                                {item.author?.displayName || item.author?.username || 'User'}
-                            </Text>
+                            <Text style={styles.commentAuthor}>{authorUsername}</Text>
                             <Text style={styles.commentTimestamp}>{timeAgo(item.createdAt)}</Text>
                         </View>
                         <Text style={styles.commentText}>
@@ -299,10 +278,8 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
     };
 
     return (
-        <Modal visible={visible} transparent onRequestClose={onClose}>
-            <TouchableWithoutFeedback onPress={() => {
-                Animated.timing(anim, { toValue: 0, duration: 240, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => onClose && onClose());
-            }}>
+        <Modal visible={visible} transparent onRequestClose={closeModal}>
+            <TouchableWithoutFeedback onPress={closeModal}>
                 <Animated.View style={[styles.backdrop, { opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.6] }) }]} />
             </TouchableWithoutFeedback>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
@@ -316,9 +293,7 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
                 >
                     <View style={styles.handleRow}>
                         <View style={styles.handle} />
-                        <TouchableOpacity onPress={() => {
-                            Animated.timing(anim, { toValue: 0, duration: 240, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => onClose && onClose());
-                        }} style={styles.closeBtn}>
+                        <TouchableOpacity onPress={closeModal} style={styles.closeBtn}>
                             <Icon name="x" size={20} color="#666" />
                         </TouchableOpacity>
                     </View>
@@ -345,247 +320,19 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
                         )}
                     </View>
 
-                    {/* Reply indicator */}
-                    {replyingTo && (
-                        <View style={styles.replyIndicator}>
-                            <Text style={styles.replyIndicatorText}>
-                                Replying to <Text style={styles.replyIndicatorUsername}>@{replyingTo.username}</Text>
-                            </Text>
-                            <TouchableOpacity onPress={cancelReply}>
-                                <Icon name="x" size={16} color="#888" />
-                            </TouchableOpacity>
-                        </View>
-                    )}
-
-                    {/* Input area - matching reference design */}
-                    <View style={styles.inputContainer}>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                ref={inputRef}
-                                value={text}
-                                onChangeText={setText}
-                                placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Add a comment..."}
-                                placeholderTextColor="#666"
-                                style={styles.input}
-                                editable={!submitting}
-                                multiline
-                            />
-                            <TouchableOpacity
-                                onPress={submit}
-                                disabled={submitting || !text.trim()}
-                                style={styles.sendBtn}
-                            >
-                                {submitting ? (
-                                    <ActivityIndicator size="small" color="#666" />
-                                ) : (
-                                    <Send size={20} color={text.trim() ? '#888' : '#444'} />
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    <CommentInput
+                        ref={inputRef}
+                        text={text}
+                        setText={setText}
+                        submitting={submitting}
+                        replyingTo={replyingTo}
+                        onSubmit={submit}
+                        onCancelReply={cancelReply}
+                    />
                 </Animated.View>
             </KeyboardAvoidingView>
         </Modal>
     );
 };
-
-const styles = StyleSheet.create({
-    backdrop: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        backgroundColor: '#000'
-    },
-    container: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        alignItems: 'center'
-    },
-    sheet: {
-        backgroundColor: '#0a0a0a',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingTop: 12,
-        paddingHorizontal: 16,
-        borderTopWidth: 1,
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
-        borderColor: '#222',
-    },
-    handleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    handle: {
-        width: 40,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: '#333'
-    },
-    closeBtn: {
-        position: 'absolute',
-        right: 0,
-        top: -4,
-        padding: 8
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: '700',
-        textAlign: 'center',
-        marginTop: 12,
-        marginBottom: 16,
-        color: '#fff'
-    },
-    contentWrap: {
-        flex: 1
-    },
-    emptyWrap: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 40
-    },
-    emptyText: {
-        color: '#666',
-        fontSize: 14
-    },
-    commentRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginBottom: 16
-    },
-    replyRow: {
-        marginLeft: 0,
-        marginBottom: 12,
-    },
-    commentAvatar: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: '#333',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12
-    },
-    avatarLetter: {
-        color: '#fff',
-        fontWeight: '700',
-        fontSize: 14
-    },
-    commentBody: {
-        flex: 1
-    },
-    commentHeaderRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8
-    },
-    commentAuthor: {
-        fontWeight: '600',
-        color: '#fff',
-        fontSize: 14
-    },
-    commentText: {
-        marginTop: 4,
-        color: '#e0e0e0',
-        fontSize: 14,
-        lineHeight: 20
-    },
-    commentTimestamp: {
-        fontSize: 12,
-        color: '#666'
-    },
-    commentActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 8,
-        gap: 12,
-    },
-    replyBtn: {
-        paddingVertical: 2,
-    },
-    replyBtnText: {
-        color: '#888',
-        fontSize: 13,
-        fontWeight: '500',
-    },
-    smallDeleteBtn: {
-        backgroundColor: '#ef4444',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 6
-    },
-    smallDeleteText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '600'
-    },
-    viewRepliesBtn: {
-        marginLeft: 48,
-        marginBottom: 12,
-    },
-    hideRepliesBtn: {
-        marginTop: 4,
-    },
-    viewRepliesText: {
-        color: '#666',
-        fontSize: 13,
-    },
-    repliesContainer: {
-        marginLeft: 48,
-        borderLeftWidth: 1,
-        borderLeftColor: '#222',
-        paddingLeft: 12,
-        marginBottom: 8,
-    },
-    replyTag: {
-        color: '#3b82f6',
-        fontWeight: '600',
-    },
-    replyIndicator: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#1a1a1a',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
-        marginBottom: 8,
-    },
-    replyIndicatorText: {
-        color: '#888',
-        fontSize: 13,
-    },
-    replyIndicatorUsername: {
-        color: '#fff',
-        fontWeight: '600',
-    },
-    inputContainer: {
-        paddingVertical: 12,
-    },
-    inputWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#111',
-        borderRadius: 24,
-        borderWidth: 1,
-        borderColor: '#333',
-        paddingHorizontal: 16,
-        paddingVertical: 4,
-    },
-    input: {
-        flex: 1,
-        color: '#fff',
-        fontSize: 15,
-        paddingVertical: 10,
-        maxHeight: 100,
-    },
-    sendBtn: {
-        padding: 8,
-        marginLeft: 8,
-    },
-});
 
 export default CommentsOverlay;

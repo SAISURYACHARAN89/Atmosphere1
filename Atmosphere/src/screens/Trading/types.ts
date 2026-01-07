@@ -39,6 +39,7 @@ export interface ActiveTrade {
     id?: number;
     companyId: string;
     companyName: string;
+    companyType?: string[];
     startupUsername?: string;
     description: string;
     imageUrls: string[];
@@ -52,5 +53,10 @@ export interface ActiveTrade {
     externalLinkHeading?: string;
     externalLinkUrl?: string;
     views?: number;
+    saves?: number;
     savedBy?: string[];
+    isEdited?: boolean;
+    isManualEntry?: boolean;
+    user?: any;
 }
+
