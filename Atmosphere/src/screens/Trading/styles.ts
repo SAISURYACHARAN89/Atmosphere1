@@ -381,14 +381,13 @@ export const styles = StyleSheet.create({
     // Buy tab styles
     categoriesContainer: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 8,
         gap: 8,
     },
     categoryChip: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         borderRadius: 20,
         backgroundColor: '#1a1a1a',
     },

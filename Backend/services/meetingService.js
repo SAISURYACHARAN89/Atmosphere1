@@ -3,7 +3,10 @@ const { generateChannelName } = require('./agoraService');
 
 exports.createMeeting = async (req, res, next) => {
     try {
-        const { title, description, scheduledAt, duration, meetingLink, location, participants, type } = req.body;
+        const {
+            title, description, scheduledAt, duration, meetingLink, location, participants, type,
+            meetingType, category, pitchDuration, participantType, verifiedOnly, industries, maxParticipants
+        } = req.body;
         if (!title || !scheduledAt) return res.status(400).json({ error: 'Title and scheduledAt are required' });
 
         // Normalize participants to ensure they match Schema { userId: ObjectId, status: String }
@@ -25,7 +28,15 @@ exports.createMeeting = async (req, res, next) => {
             meetingLink: meetingLink || '', // Will be set after save if empty
             location,
             participants: normalizedParticipants,
-            type: type || 'one-on-one'
+            type: type || 'one-on-one',
+            // New fields from web version
+            meetingType: meetingType || 'public',
+            category: category,
+            pitchDuration: pitchDuration || 10,
+            participantType: participantType || 'all',
+            verifiedOnly: verifiedOnly || false,
+            industries: industries || [],
+            maxParticipants: maxParticipants || 50
         });
         await meeting.save();
 
@@ -55,27 +66,43 @@ exports.listMeetings = async (req, res, next) => {
         const { limit = 20, skip = 0, filter = 'all', type } = req.query;
         const now = new Date();
 
-        // Default: show public meetings (not cancelled). 'upcoming' and 'past' are global filters.
-        // Only when filter === 'my-meetings' return meetings where the user is organizer or a participant.
-        // Default: Only show meetings where user is organizer or participant OR public global meetings if that concept exists.
-        // The user requested: "based the meetings will be only shown to the participant who were in the list"
-        // So we default to showing only relevant meetings.
+        // Base query: not cancelled, and not past (endTime > now or if no endTime, scheduledAt > now)
         let query = {
             status: { $ne: 'cancelled' },
-            $or: [{ organizer: req.user._id }, { 'participants.userId': req.user._id }]
+            $or: [
+                { endTime: { $gte: now } },
+                { endTime: { $exists: false }, scheduledAt: { $gte: now } }
+            ]
         };
 
         if (type) query.type = type;
-        if (filter === 'upcoming') query.scheduledAt = { $gte: now };
-        else if (filter === 'past') query.scheduledAt = { $lt: now };
-        else if (filter === 'my-meetings') {
-            // Redundant now but kept logic
-            query.$or = [{ organizer: req.user._id }, { 'participants.userId': req.user._id }];
-        }
 
-        // Use a flag 'all' if admin or needing to debug, otherwise STRICT privacy as requested.
-        if (filter === 'all_public') {
-            query = { status: { $ne: 'cancelled' } };
+        if (filter === 'all') {
+            // Show all active (non-past) meetings - public meetings visible to everyone
+            // Keep the base query which filters out past meetings
+        } else if (filter === 'my-meetings') {
+            // Show only meetings where user is organizer or participant
+            query = {
+                status: { $ne: 'cancelled' },
+                $or: [
+                    { endTime: { $gte: now } },
+                    { endTime: { $exists: false }, scheduledAt: { $gte: now } }
+                ],
+                $and: [
+                    { $or: [{ organizer: req.user._id }, { 'participants.userId': req.user._id }] }
+                ]
+            };
+        } else if (filter === 'upcoming') {
+            query.scheduledAt = { $gte: now };
+        } else if (filter === 'past') {
+            // Only for past filter, show past meetings
+            query = {
+                status: { $ne: 'cancelled' },
+                $or: [
+                    { endTime: { $lt: now } },
+                    { endTime: { $exists: false }, scheduledAt: { $lt: now } }
+                ]
+            };
         }
 
         const meetings = await Meeting.find(query)

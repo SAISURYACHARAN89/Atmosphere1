@@ -16,6 +16,20 @@ const MeetingSchema = new Schema(
         endTime: { type: Date },
         // duration in minutes
         duration: { type: Number, default: 60 },
+        // Meeting type: public or private
+        meetingType: { type: String, enum: ['public', 'private'], default: 'public' },
+        // Category: pitch or networking (for public meetings)
+        category: { type: String, enum: ['pitch', 'networking'] },
+        // Time per pitch in minutes (for pitch meetings)
+        pitchDuration: { type: Number, default: 10 },
+        // Participant type filter: all, startups, investors
+        participantType: { type: String, enum: ['all', 'startups', 'investors'], default: 'all' },
+        // Verified only flag
+        verifiedOnly: { type: Boolean, default: false },
+        // Industries (max 3)
+        industries: { type: [String], default: [] },
+        // Max participants
+        maxParticipants: { type: Number, default: 50 },
         // participants as subdocuments to hold status and joinedAt
         participants: [
             {

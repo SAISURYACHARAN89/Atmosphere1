@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { categories } from '../types';
 import { styles } from '../styles';
 
@@ -15,7 +15,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     return (
         <>
             {/* Category Filters */}
-            <View style={styles.categoriesContainer}>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesContainer}
+            >
                 {categories.map((category) => (
                     <TouchableOpacity
                         key={category}
@@ -33,7 +37,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         </Text>
                     </TouchableOpacity>
                 ))}
-            </View>
+            </ScrollView>
 
             {/* Suggested for you heading */}
             <Text style={styles.suggestedHeading}>Suggested for you</Text>

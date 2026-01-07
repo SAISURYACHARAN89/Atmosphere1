@@ -190,7 +190,20 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
         scheduledAt: new Date(),
         endScheduledAt: new Date(new Date().getTime() + 60 * 60000),
         location: '',
+        meetingType: 'public' as 'public' | 'private',
+        category: '' as '' | 'pitch' | 'networking',
+        pitchDuration: 10,
+        participantType: 'all' as 'all' | 'startups' | 'investors',
+        verifiedOnly: false,
+        industries: [] as string[],
+        maxParticipants: 50,
     });
+
+    const industryTags = [
+        'AI', 'ML', 'Fintech', 'HealthTech', 'EV', 'SaaS', 'E-commerce', 'EdTech', 'AgriTech',
+        'Blockchain', 'IoT', 'CleanTech', 'FoodTech', 'PropTech', 'InsurTech', 'LegalTech',
+        'MarTech', 'RetailTech', 'TravelTech', 'Logistics', 'Cybersecurity', 'Gaming', 'Media', 'SpaceTech'
+    ];
 
     const DateTimePicker = require('@react-native-community/datetimepicker').default;
 
@@ -238,7 +251,9 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
 
             const headers: any = { 'Content-Type': 'application/json' };
             if (token) headers.Authorization = `Bearer ${token}`;
-            let url = `${baseUrl}/api/meetings?filter=all`;
+            // Use different filter based on active tab
+            const filterParam = activeTab === 'my' ? 'my-meetings' : 'all';
+            let url = `${baseUrl}/api/meetings?filter=${filterParam}`;
             if (force) url = `${url}&_ts=${Date.now()}`;
 
             const res = await fetch(url, { headers });
@@ -264,9 +279,9 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
             setLoading(false);
             setRefreshing(false);
         }
-    }, [refreshing]);
+    }, [refreshing, activeTab]);
 
-    useEffect(() => { fetchMeetings(); }, []);
+    useEffect(() => { fetchMeetings(); }, [activeTab]);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
@@ -278,7 +293,7 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
         return m.title.toLowerCase().includes(q) || (m.host?.displayName || '').toLowerCase().includes(q);
     });
 
-    const myMeetingsList = filtered.filter(m => myMeetings.includes(String(m._id || m.id)));
+    // Display list is now directly the filtered results since server does the tab filtering
 
     const handleJoin = async (meeting: Meeting) => {
         try {
@@ -315,7 +330,7 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
 
     const handleCreateMeeting = async () => {
         try {
-            const { title, description, scheduledAt, endScheduledAt, location } = createForm;
+            const { title, description, scheduledAt, endScheduledAt, location, meetingType, category, pitchDuration, participantType, verifiedOnly, industries, maxParticipants } = createForm;
             if (!title) {
                 Alert.alert('Error', 'Title is required');
                 return;
@@ -347,6 +362,14 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
                     duration,
                     location,
                     participants: selectedParticipants.map(p => ({ userId: p._id, status: 'invited' })),
+                    // New fields from web version
+                    meetingType,
+                    category: category || undefined,
+                    pitchDuration,
+                    participantType,
+                    verifiedOnly,
+                    industries,
+                    maxParticipants,
                 }),
             });
 
@@ -363,7 +386,14 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
                 description: '',
                 scheduledAt: new Date(),
                 endScheduledAt: new Date(new Date().getTime() + 3600000),
-                location: ''
+                location: '',
+                meetingType: 'public',
+                category: '',
+                pitchDuration: 10,
+                participantType: 'all',
+                verifiedOnly: false,
+                industries: [],
+                maxParticipants: 50,
             });
             setSelectedParticipants([]);
             fetchMeetings(true);
@@ -407,7 +437,8 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
         setSelectedParticipants(prev => prev.filter(u => u._id !== userId));
     };
 
-    const displayList = activeTab === 'all' ? filtered : myMeetingsList;
+    // Server filters by tab now, so displayList is just the filtered results
+    const displayList = filtered;
 
     return (
         <View style={styles.container}>
@@ -540,6 +571,127 @@ const Meetings = ({ onJoinMeeting }: { onJoinMeeting?: (meetingId: string) => vo
                                 multiline
                                 numberOfLines={3}
                             />
+
+                            {/* Meeting Type */}
+                            <Text style={styles.label}>Type</Text>
+                            <View style={styles.typeRow}>
+                                <TouchableOpacity
+                                    style={[styles.typeBtn, createForm.meetingType === 'public' && styles.typeBtnActive]}
+                                    onPress={() => setCreateForm(prev => ({ ...prev, meetingType: 'public' }))}
+                                >
+                                    <Text style={[styles.typeBtnText, createForm.meetingType === 'public' && styles.typeBtnTextActive]}>Public</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.typeBtn, createForm.meetingType === 'private' && styles.typeBtnActive]}
+                                    onPress={() => setCreateForm(prev => ({ ...prev, meetingType: 'private' }))}
+                                >
+                                    <Text style={[styles.typeBtnText, createForm.meetingType === 'private' && styles.typeBtnTextActive]}>Private</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Category (for public meetings) */}
+                            {createForm.meetingType === 'public' && (
+                                <>
+                                    <Text style={styles.label}>Category</Text>
+                                    <View style={styles.typeRow}>
+                                        <TouchableOpacity
+                                            style={[styles.typeBtn, createForm.category === 'pitch' && styles.typeBtnActive]}
+                                            onPress={() => setCreateForm(prev => ({ ...prev, category: 'pitch' }))}
+                                        >
+                                            <Text style={[styles.typeBtnText, createForm.category === 'pitch' && styles.typeBtnTextActive]}>Pitch Meeting</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[styles.typeBtn, createForm.category === 'networking' && styles.typeBtnActive]}
+                                            onPress={() => setCreateForm(prev => ({ ...prev, category: 'networking' }))}
+                                        >
+                                            <Text style={[styles.typeBtnText, createForm.category === 'networking' && styles.typeBtnTextActive]}>Networking</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </>
+                            )}
+
+                            {/* Pitch Settings (for pitch meetings only) */}
+                            {createForm.meetingType === 'public' && createForm.category === 'pitch' && (
+                                <>
+                                    <Text style={styles.label}>Time per pitch: {createForm.pitchDuration} min</Text>
+                                    <View style={styles.sliderRow}>
+                                        <Text style={styles.sliderLabel}>1</Text>
+                                        <View style={styles.sliderContainer}>
+                                            <View style={[styles.sliderTrack, { width: `${(createForm.pitchDuration / 60) * 100}%` }]} />
+                                        </View>
+                                        <Text style={styles.sliderLabel}>60</Text>
+                                    </View>
+                                    <View style={styles.sliderBtns}>
+                                        <TouchableOpacity onPress={() => setCreateForm(prev => ({ ...prev, pitchDuration: Math.max(1, prev.pitchDuration - 5) }))} style={styles.sliderBtn}>
+                                            <MaterialIcons name="remove" size={16} color="#fff" />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={() => setCreateForm(prev => ({ ...prev, pitchDuration: Math.min(60, prev.pitchDuration + 5) }))} style={styles.sliderBtn}>
+                                            <MaterialIcons name="add" size={16} color="#fff" />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <Text style={styles.label}>Participants</Text>
+                                    <View style={styles.typeRow}>
+                                        {(['all', 'startups', 'investors'] as const).map(type => (
+                                            <TouchableOpacity
+                                                key={type}
+                                                style={[styles.typeBtn, styles.typeBtnSmall, createForm.participantType === type && styles.typeBtnActive]}
+                                                onPress={() => setCreateForm(prev => ({ ...prev, participantType: type }))}
+                                            >
+                                                <Text style={[styles.typeBtnText, createForm.participantType === type && styles.typeBtnTextActive]}>
+                                                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+
+                                    <View style={styles.checkRow}>
+                                        <Text style={styles.label}>Verified Only</Text>
+                                        <TouchableOpacity
+                                            style={[styles.checkbox, createForm.verifiedOnly && styles.checkboxActive]}
+                                            onPress={() => setCreateForm(prev => ({ ...prev, verifiedOnly: !prev.verifiedOnly }))}
+                                        >
+                                            {createForm.verifiedOnly && <MaterialIcons name="check" size={16} color="#000" />}
+                                        </TouchableOpacity>
+                                    </View>
+                                </>
+                            )}
+
+                            {/* Industries */}
+                            <Text style={styles.label}>Industries (max 3)</Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.industriesScroll}>
+                                {industryTags.map(tag => (
+                                    <TouchableOpacity
+                                        key={tag}
+                                        style={[styles.formIndustryTag, createForm.industries.includes(tag) && styles.formIndustryTagActive]}
+                                        onPress={() => {
+                                            setCreateForm(prev => {
+                                                if (prev.industries.includes(tag)) {
+                                                    return { ...prev, industries: prev.industries.filter(t => t !== tag) };
+                                                } else if (prev.industries.length < 3) {
+                                                    return { ...prev, industries: [...prev.industries, tag] };
+                                                }
+                                                return prev;
+                                            });
+                                        }}
+                                        disabled={!createForm.industries.includes(tag) && createForm.industries.length >= 3}
+                                    >
+                                        <Text style={[styles.formIndustryTagText, createForm.industries.includes(tag) && styles.formIndustryTagTextActive]}>{tag}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+
+                            {/* Max Participants */}
+                            <Text style={styles.label}>Max participants: {createForm.maxParticipants}</Text>
+                            <View style={styles.sliderBtns}>
+                                <TouchableOpacity onPress={() => setCreateForm(prev => ({ ...prev, maxParticipants: Math.max(5, prev.maxParticipants - 5) }))} style={styles.sliderBtn}>
+                                    <MaterialIcons name="remove" size={16} color="#fff" />
+                                </TouchableOpacity>
+                                <Text style={styles.sliderValue}>{createForm.maxParticipants}</Text>
+                                <TouchableOpacity onPress={() => setCreateForm(prev => ({ ...prev, maxParticipants: Math.min(100, prev.maxParticipants + 5) }))} style={styles.sliderBtn}>
+                                    <MaterialIcons name="add" size={16} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
 
                             <Text style={styles.label}>Start Time *</Text>
                             <View style={styles.dateRow}>
@@ -1003,6 +1155,120 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: 16,
         fontWeight: '700',
+    },
+    // New form styles for web parity
+    typeRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 12,
+    },
+    typeBtn: {
+        flex: 1,
+        backgroundColor: '#1a1a1a',
+        paddingVertical: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    typeBtnActive: {
+        backgroundColor: '#fff',
+        borderColor: '#fff',
+    },
+    typeBtnSmall: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    typeBtnText: {
+        color: '#888',
+        fontWeight: '500',
+    },
+    typeBtnTextActive: {
+        color: '#000',
+        fontWeight: '600',
+    },
+    sliderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    sliderLabel: {
+        color: '#666',
+        fontSize: 12,
+        width: 24,
+        textAlign: 'center',
+    },
+    sliderContainer: {
+        flex: 1,
+        height: 6,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 3,
+        marginHorizontal: 8,
+    },
+    sliderTrack: {
+        height: '100%',
+        backgroundColor: '#22c55e',
+        borderRadius: 3,
+    },
+    sliderBtns: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 16,
+        marginBottom: 12,
+    },
+    sliderBtn: {
+        backgroundColor: '#1a1a1a',
+        padding: 8,
+        borderRadius: 6,
+    },
+    sliderValue: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        minWidth: 40,
+        textAlign: 'center',
+    },
+    checkRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#333',
+        backgroundColor: '#1a1a1a',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkboxActive: {
+        backgroundColor: '#fff',
+        borderColor: '#fff',
+    },
+    industriesScroll: {
+        maxHeight: 80,
+        marginBottom: 12,
+    },
+    formIndustryTag: {
+        backgroundColor: '#1a1a1a',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        marginRight: 8,
+    },
+    formIndustryTagActive: {
+        backgroundColor: '#22c55e',
+    },
+    formIndustryTagText: {
+        color: '#888',
+        fontSize: 12,
+    },
+    formIndustryTagTextActive: {
+        color: '#fff',
     },
 });
 
