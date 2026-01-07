@@ -14,6 +14,8 @@
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">onrender.com</domain>
         <domain includeSubdomains="true">atmosphere-backend.onrender.com</domain>
+        <domain includeSubdomains="true">vercel.app</domain>
+        <domain includeSubdomains="true">atmosphere-backend.vercel.app</domain>
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

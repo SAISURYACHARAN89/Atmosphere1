@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
+import { View, StyleSheet, BackHandler } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import Search from './Search';
 import PostDetail from './PostDetail';
@@ -37,6 +37,106 @@ const LandingPage = () => {
     const [reelContext, setReelContext] = useState<{ userId?: string; initialReelId?: string }>({});
     const [showCreateMenu, setShowCreateMenu] = useState(false);
     const { theme } = useContext(ThemeContext);
+
+    // Navigation history stack for back button support
+    const [routeHistory, setRouteHistory] = useState<RouteKey[]>([]);
+
+    // Navigate to a new route while tracking history
+    const navigateTo = useCallback((newRoute: RouteKey, clearOverlays = true) => {
+        if (clearOverlays) {
+            setSelectedPostId(null);
+            setSelectedChatId(null);
+            setSelectedProfileId(null);
+            setSelectedReelId(null);
+            setSelectedStartupId(null);
+            setSelectedTradeId(null);
+        }
+        if (newRoute !== route) {
+            setRouteHistory(prev => [...prev, route]);
+            setRoute(newRoute);
+        }
+    }, [route]);
+
+    // Handle hardware back button
+    const goBack = useCallback((): boolean => {
+        // Priority 1: Close create menu
+        if (showCreateMenu) {
+            setShowCreateMenu(false);
+            return true;
+        }
+        // Priority 2: Close profile overlay
+        if (selectedProfileId) {
+            setSelectedProfileId(null);
+            return true;
+        }
+        // Priority 3: Close reel overlay
+        if (selectedReelId) {
+            setSelectedReelId(null);
+            return true;
+        }
+        // Priority 4: Close post overlay
+        if (selectedPostId) {
+            setSelectedPostId(null);
+            return true;
+        }
+        // Priority 5: Close chat detail
+        if (selectedChatId) {
+            setSelectedChatId(null);
+            setRoute('chats');
+            return true;
+        }
+        // Priority 6: Close startup detail
+        if (route === 'startupDetail' && selectedStartupId) {
+            setSelectedStartupId(null);
+            if (routeHistory.length > 0) {
+                const prev = routeHistory[routeHistory.length - 1];
+                setRouteHistory(h => h.slice(0, -1));
+                setRoute(prev);
+            } else {
+                setRoute('home');
+            }
+            return true;
+        }
+        // Priority 7: Close trade detail
+        if (route === 'tradeDetail' && selectedTradeId) {
+            setSelectedTradeId(null);
+            if (routeHistory.length > 0) {
+                const prev = routeHistory[routeHistory.length - 1];
+                setRouteHistory(h => h.slice(0, -1));
+                setRoute(prev);
+            } else {
+                setRoute('trade');
+            }
+            return true;
+        }
+        // Priority 8: Video call - go back to meetings
+        if (route === 'videoCall') {
+            setSelectedMeetingId(null);
+            setRoute('meetings');
+            setRouteHistory(h => h.slice(0, -1));
+            return true;
+        }
+        // Priority 9: Pop from history stack
+        if (routeHistory.length > 0) {
+            const prev = routeHistory[routeHistory.length - 1];
+            setRouteHistory(h => h.slice(0, -1));
+            setRoute(prev);
+            return true;
+        }
+        // At root (home) with no history - allow app to exit
+        if (route === 'home') {
+            return false; // Let the app exit
+        }
+        // Fallback: go to home
+        setRoute('home');
+        return true;
+    }, [showCreateMenu, selectedProfileId, selectedReelId, selectedPostId, selectedChatId, route, selectedStartupId, selectedTradeId, routeHistory]);
+
+    // Register back handler
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', goBack);
+        return () => backHandler.remove();
+    }, [goBack]);
 
     const handlePostPress = (postId: string) => {
         setSelectedPostId(postId);
@@ -112,7 +212,7 @@ const LandingPage = () => {
         }
         switch (route) {
             case 'home':
-                return <Home onNavigate={(r) => setRoute(r)} onChatSelect={handleChatSelect} onOpenProfile={(id: string) => { setSelectedProfileId(id); setRoute('profile'); }} />;
+                return <Home onNavigate={(r) => navigateTo(r)} onChatSelect={handleChatSelect} onOpenProfile={(id: string) => { setSelectedProfileId(id); navigateTo('profile', false); }} />;
             case 'search':
                 return <Search onPostPress={handlePostPress} />;
             case 'notifications':
@@ -123,12 +223,12 @@ const LandingPage = () => {
                 return <Reels userId={reelContext.userId} initialReelId={reelContext.initialReelId} />;
             case 'profile':
                 return <Profile
-                    onNavigate={(r: RouteKey) => setRoute(r)}
+                    onNavigate={(r: RouteKey) => navigateTo(r)}
                     onCreatePost={() => setShowCreateMenu(true)}
                     onPostPress={handlePostPress}
                     onReelSelect={(reelId, userId) => {
                         setReelContext({ userId, initialReelId: reelId });
-                        setRoute('reels');
+                        navigateTo('reels');
                     }}
                 />;
             case 'setup':
@@ -138,13 +238,13 @@ const LandingPage = () => {
             case 'trade':
                 return <TradingSection />;
             case 'jobs':
-                return <Opportunities onNavigate={(r: string) => setRoute(r as RouteKey)} />;
+                return <Opportunities onNavigate={(r: string) => navigateTo(r as RouteKey)} />;
             case 'myTeam':
                 return <MyTeam onBack={() => setRoute('jobs')} />;
             case 'meetings':
                 return <Meetings onJoinMeeting={(meetingId: string) => {
                     setSelectedMeetingId(meetingId);
-                    setRoute('videoCall');
+                    navigateTo('videoCall', false);
                 }} />;
             case 'videoCall':
                 return selectedMeetingId ? (
@@ -233,7 +333,10 @@ const LandingPage = () => {
                 setSelectedPostId(null);
                 setSelectedChatId(null);
                 setSelectedProfileId(null);
+                setSelectedReelId(null);
                 if (r !== 'reels') setReelContext({}); // Clear reel context if navigating away
+                // Don't track history for bottom nav - treat as fresh navigation
+                setRouteHistory([]);
                 setRoute(mapBottomToRoute(r));
             }} />}
 
@@ -241,8 +344,8 @@ const LandingPage = () => {
             <CreateMenu
                 visible={showCreateMenu}
                 onClose={() => setShowCreateMenu(false)}
-                onSelectPost={() => setRoute('createPost')}
-                onSelectReel={() => setRoute('createReel')}
+                onSelectPost={() => { setShowCreateMenu(false); navigateTo('createPost'); }}
+                onSelectReel={() => { setShowCreateMenu(false); navigateTo('createReel'); }}
             />
         </View>
     );
