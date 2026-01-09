@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 50,
-    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    backgroundColor: '#000',
   },
   inner: {
     flex: 1,

@@ -52,56 +52,57 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
     const navbarTranslateY = useRef(new Animated.Value(0)).current;
     const navbarOpacity = useRef(new Animated.Value(1)).current;
     const lastScrollY = useRef(0);
+    const isNavbarVisible = useRef(true);
+    const currentAnimation = useRef<Animated.CompositeAnimation | null>(null);
 
     const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const currentY = event.nativeEvent.contentOffset.y;
-        const diff = currentY - lastScrollY.current;
 
-        if (currentY <= 0) {
-            // At top, always show with full opacity
-            Animated.parallel([
-                Animated.spring(navbarTranslateY, {
-                    toValue: 0,
-                    useNativeDriver: true,
-                    tension: 80,
-                    friction: 12,
-                }),
-                Animated.timing(navbarOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        } else if (diff > 5 && currentY > 30) {
-            // Scrolling down, completely hide navbar with opacity 0
-            Animated.parallel([
-                Animated.spring(navbarTranslateY, {
-                    toValue: -80,
-                    useNativeDriver: true,
-                    tension: 80,
-                    friction: 12,
-                }),
-                Animated.timing(navbarOpacity, {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        } else if (diff < -5) {
-            // Scrolling up, show with full opacity
-            Animated.parallel([
-                Animated.spring(navbarTranslateY, {
-                    toValue: 0,
-                    useNativeDriver: true,
-                    tension: 80,
-                    friction: 12,
-                }),
-                Animated.timing(navbarOpacity, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
+        // Match web behavior: show when scrolling up more than 5px, hide when scrolling down and past 50px
+        if (currentY < lastScrollY.current && lastScrollY.current - currentY > 5) {
+            // Scrolling up - show navbar (only if not already visible/animating to visible)
+            if (!isNavbarVisible.current) {
+                isNavbarVisible.current = true;
+                // Stop any running animation
+                if (currentAnimation.current) {
+                    currentAnimation.current.stop();
+                }
+                currentAnimation.current = Animated.parallel([
+                    Animated.timing(navbarTranslateY, {
+                        toValue: 0,
+                        duration: 300,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(navbarOpacity, {
+                        toValue: 1,
+                        duration: 300,
+                        useNativeDriver: true,
+                    }),
+                ]);
+                currentAnimation.current.start();
+            }
+        } else if (currentY > lastScrollY.current && currentY > 50) {
+            // Scrolling down and past 50px - hide navbar (only if not already hidden/animating to hidden)
+            if (isNavbarVisible.current) {
+                isNavbarVisible.current = false;
+                // Stop any running animation
+                if (currentAnimation.current) {
+                    currentAnimation.current.stop();
+                }
+                currentAnimation.current = Animated.parallel([
+                    Animated.timing(navbarTranslateY, {
+                        toValue: -80,
+                        duration: 300,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(navbarOpacity, {
+                        toValue: 0,
+                        duration: 300,
+                        useNativeDriver: true,
+                    }),
+                ]);
+                currentAnimation.current.start();
+            }
         }
 
         lastScrollY.current = currentY;
