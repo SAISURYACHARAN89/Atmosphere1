@@ -488,23 +488,23 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                     </View>
                                 )}
                             </View>
-                            <View style={{ flex: 1, justifyContent: 'center', marginLeft: 12 }}>
+                            <View style={{ flex: 1, justifyContent: 'center', marginLeft: 18 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                    <Text style={{ color: theme.text, fontSize: 18, fontWeight: '700' }}>{src?.name}</Text>
+                                    <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>{src?.name}</Text>
                                     {src?.verified && <VerifiedBadge size={18} />}
                                 </View>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingRight: 16 }}>
-                                    <View style={styles.statCol}>
-                                        <Text style={[styles.statNum, { color: theme.text }]}>{posts.length}</Text>
-                                        <Text style={[styles.statLabel, { color: theme.placeholder }]}>posts</Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingRight: 40 }}>
+                                    <View style={{ alignItems: 'flex-start' }}>
+                                        <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>{posts.length}</Text>
+                                        <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>posts</Text>
                                     </View>
-                                    <TouchableOpacity style={styles.statCol} onPress={() => { setFollowersModalInitialTab('followers'); setFollowersModalVisible(true); }}>
-                                        <Text style={[styles.statNum, { color: theme.text }]}>{followersCount ?? src?.stats?.followers ?? 0}</Text>
-                                        <Text style={[styles.statLabel, { color: theme.placeholder }]}>followers</Text>
+                                    <TouchableOpacity style={{ alignItems: 'flex-start' }} onPress={() => { setFollowersModalInitialTab('followers'); setFollowersModalVisible(true); }}>
+                                        <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>{followersCount ?? src?.stats?.followers ?? 0}</Text>
+                                        <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>followers</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={styles.statCol} onPress={() => { setFollowersModalInitialTab('following'); setFollowersModalVisible(true); }}>
-                                        <Text style={[styles.statNum, { color: theme.text }]}>{followingCount ?? 0}</Text>
-                                        <Text style={[styles.statLabel, { color: theme.placeholder }]}>following</Text>
+                                    <TouchableOpacity style={{ alignItems: 'flex-start' }} onPress={() => { setFollowersModalInitialTab('following'); setFollowersModalVisible(true); }}>
+                                        <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>{followingCount ?? 0}</Text>
+                                        <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>following</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -551,11 +551,19 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                 <Text style={[styles.setupPillText, { color: '#fff' }]}>{isFollowing ? 'Following' : 'Follow'}</Text>
                             </TouchableOpacity>
                         ) : (
-                            <TouchableOpacity style={[styles.setupPill, { borderColor: theme.border }]} onPress={() => onNavigate ? onNavigate('setup') : null}>
-                                <Text style={[styles.setupPillText, { color: theme.text }]}>
-                                    {src?.profileSetupComplete ? 'Edit Profile' : 'Setup Profile'}
-                                </Text>
-                            </TouchableOpacity>
+                            <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 }}>
+                                <TouchableOpacity style={{ flex: 1, backgroundColor: '#2e2e2e', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }} onPress={() => onNavigate ? onNavigate('setup') : null}>
+                                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+                                        {src?.profileSetupComplete ? 'Edit profile' : 'Setup profile'}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={{ flex: 1, backgroundColor: '#2e2e2e', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }} onPress={() => {
+                                    const { Share } = require('react-native');
+                                    Share.share({ message: `Check out ${src?.name}'s profile on Atmosphere!`, url: `https://atmosphere.app/profile/${ownProfileId || ''}` });
+                                }}>
+                                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Share profile</Text>
+                                </TouchableOpacity>
+                            </View>
                         )}
 
                         <ProfilePager

@@ -1,9 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert, Animated, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { saveStartupProfile, getProfile, getStartupProfile, uploadDocument } from '../../lib/api';
+import { saveStartupProfile, getProfile, getStartupProfile, uploadDocument, searchUsers } from '../../lib/api';
 import { pick, types } from '@react-native-documents/picker';
+import CustomCalendar from '../../components/CustomCalendar';
+import { X, Plus } from 'lucide-react-native';
 
+// Types for multi-round funding
+interface FundingRound {
+    id: number;
+    amount: string;
+    investor: string;
+    docUrl?: string;
+    pendingDoc?: { uri: string; name?: string; type?: string } | null;
+}
+
+interface TeamMember {
+    id: number;
+    username: string;
+    role: string;
+    userId?: string;
+}
 function CollapsibleSection({ title, open, onPress, children }: any) {
     const [contentHeight, setContentHeight] = useState(0);
     const animatedHeight = useRef(new Animated.Value(0)).current;
@@ -64,6 +81,18 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
     const [uploadingInvestorDoc, setUploadingInvestorDoc] = useState(false);
     const [pendingDoc, setPendingDoc] = useState<{ uri: string; name?: string; type?: string } | null>(null);
     const [pendingInvestorDoc, setPendingInvestorDoc] = useState<{ uri: string; name?: string; type?: string } | null>(null);
+
+    // Date picker state
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [dateValue, setDateValue] = useState<Date | null>(null);
+
+    // Multi-round funding state
+    const [fundingRounds, setFundingRounds] = useState<FundingRound[]>([{ id: 1, amount: '', investor: '', docUrl: '', pendingDoc: null }]);
+
+    // Team members array state
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([{ id: 1, username: '', role: '', userId: '' }]);
+    const [searchingUser, setSearchingUser] = useState<number | null>(null);
+    const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
 
     useEffect(() => {
         (async () => {
@@ -174,6 +203,87 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
         }
     };
 
+    // Funding round helpers
+    const addFundingRound = () => {
+        const newId = fundingRounds.length > 0 ? Math.max(...fundingRounds.map(r => r.id)) + 1 : 1;
+        setFundingRounds([...fundingRounds, { id: newId, amount: '', investor: '', docUrl: '', pendingDoc: null }]);
+    };
+
+    const removeFundingRound = (id: number) => {
+        if (fundingRounds.length > 1) {
+            setFundingRounds(fundingRounds.filter(r => r.id !== id));
+        }
+    };
+
+    const updateFundingRound = (id: number, field: 'amount' | 'investor', value: string) => {
+        setFundingRounds(fundingRounds.map(r => r.id === id ? { ...r, [field]: value } : r));
+    };
+
+    const pickRoundDoc = async (roundId: number) => {
+        try {
+            const result = await pick({ type: [types.allFiles] });
+            if (!result || result.length === 0) return;
+            const doc = result[0];
+            if (doc && doc.uri) {
+                setFundingRounds(fundingRounds.map(r => r.id === roundId ? {
+                    ...r,
+                    pendingDoc: { uri: doc.uri, name: doc.name || undefined, type: doc.type || undefined },
+                    docUrl: doc.name || 'document'
+                } : r));
+            }
+        } catch (err: any) {
+            if (err?.code !== 'DOCUMENT_PICKER_CANCELED') {
+                Alert.alert('Error', err.message || 'Failed to pick document');
+            }
+        }
+    };
+
+    // Team member helpers
+    const addTeamMember = () => {
+        const newId = teamMembers.length > 0 ? Math.max(...teamMembers.map(m => m.id)) + 1 : 1;
+        setTeamMembers([...teamMembers, { id: newId, username: '', role: '', userId: '' }]);
+    };
+
+    const removeTeamMember = (id: number) => {
+        if (teamMembers.length > 1) {
+            setTeamMembers(teamMembers.filter(m => m.id !== id));
+        }
+    };
+
+    const updateTeamMember = (id: number, field: 'username' | 'role', value: string) => {
+        setTeamMembers(teamMembers.map(m => m.id === id ? { ...m, [field]: value } : m));
+        // Trigger user search when username changes
+        if (field === 'username' && value.length > 1) {
+            setSearchingUser(id);
+            handleUserSearch(value, id);
+        } else if (field === 'username') {
+            setUserSearchResults([]);
+            setSearchingUser(null);
+        }
+    };
+
+    const handleUserSearch = async (query: string, memberId: number) => {
+        try {
+            const results = await searchUsers(query);
+            if (searchingUser === memberId) {
+                setUserSearchResults(results || []);
+            }
+        } catch (err) {
+            console.log('User search error:', err);
+            setUserSearchResults([]);
+        }
+    };
+
+    const selectUser = (memberId: number, user: any) => {
+        setTeamMembers(teamMembers.map(m => m.id === memberId ? {
+            ...m,
+            username: user.username || user.displayName || '',
+            userId: user._id || user.id || ''
+        } : m));
+        setUserSearchResults([]);
+        setSearchingUser(null);
+    };
+
     const sendForVerification = async () => {
         if (!consent) return Alert.alert('Consent required', 'Please provide consent to proceed');
 
@@ -268,20 +378,72 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                     </View>
                     <View style={styles.formField}>
                         <Text style={styles.label}>Company Established On</Text>
-                        <TextInput placeholder="dd-mm-yyyy" placeholderTextColor="#999" value={establishedOn} onChangeText={setEstablishedOn} style={styles.input} />
+                        <TouchableOpacity onPress={() => {
+                            setDateValue(establishedOn ? new Date(establishedOn) : new Date());
+                            setShowDatePicker(true);
+                        }} style={styles.input}>
+                            <Text style={{ color: establishedOn ? '#fff' : '#999' }}>{establishedOn || 'Select date'}</Text>
+                        </TouchableOpacity>
                     </View>
-                    <View style={[styles.row, styles.formField]}>
-                        <View style={styles.flex1}>
-                            <Text style={styles.label}>Team</Text>
-                            <TextInput placeholder="@username" placeholderTextColor="#999" value={teamName} onChangeText={setTeamName} style={styles.input} />
-                        </View>
-                        <View style={styles.flex1}>
-                            <Text style={styles.label}>Role</Text>
-                            <TextInput placeholder="Role" placeholderTextColor="#999" value={teamRole} onChangeText={setTeamRole} style={styles.input} />
-                        </View>
+
+                    {/* Team Members */}
+                    <View style={styles.formField}>
+                        <Text style={styles.label}>Team Members</Text>
+                        {teamMembers.map((member, index) => (
+                            <View key={member.id} style={{ marginBottom: 12 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                    <Text style={{ color: '#888', fontSize: 12 }}>Member {index + 1}</Text>
+                                    {teamMembers.length > 1 && (
+                                        <TouchableOpacity onPress={() => removeTeamMember(member.id)} style={{ marginLeft: 8 }}>
+                                            <X size={16} color="#666" />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                                <View style={[styles.row, { gap: 8 }]}>
+                                    <View style={[styles.flex1, { position: 'relative' }]}>
+                                        <TextInput
+                                            placeholder="@username"
+                                            placeholderTextColor="#999"
+                                            value={member.username}
+                                            onChangeText={(v) => updateTeamMember(member.id, 'username', v)}
+                                            style={styles.input}
+                                        />
+                                        {searchingUser === member.id && userSearchResults.length > 0 && (
+                                            <View style={{ position: 'absolute', top: 48, left: 0, right: 0, backgroundColor: '#222', borderRadius: 8, zIndex: 10, maxHeight: 150 }}>
+                                                <ScrollView nestedScrollEnabled>
+                                                    {userSearchResults.slice(0, 5).map((user: any) => (
+                                                        <TouchableOpacity
+                                                            key={user._id || user.id}
+                                                            onPress={() => selectUser(member.id, user)}
+                                                            style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}
+                                                        >
+                                                            <Text style={{ color: '#fff' }}>@{user.username}</Text>
+                                                            {user.displayName && <Text style={{ color: '#888', fontSize: 12 }}>{user.displayName}</Text>}
+                                                        </TouchableOpacity>
+                                                    ))}
+                                                </ScrollView>
+                                            </View>
+                                        )}
+                                    </View>
+                                    <View style={styles.flex1}>
+                                        <TextInput
+                                            placeholder="Role"
+                                            placeholderTextColor="#999"
+                                            value={member.role}
+                                            onChangeText={(v) => updateTeamMember(member.id, 'role', v)}
+                                            style={styles.input}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                        <TouchableOpacity onPress={addTeamMember} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#333', borderRadius: 24, paddingVertical: 14, marginTop: 12 }}>
+                            <Text style={{ color: '#fff', fontSize: 15 }}>+   Add Member</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </CollapsibleSection>
+
 
             <CollapsibleSection title="Financial profile" open={activeSection === 'financial'} onPress={() => setActiveSection(activeSection === 'financial' ? '' : 'financial')}>
                 <View>
@@ -313,39 +475,57 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                             <Text style={styles.btnText}>Capital Raised</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={styles.formField}>
-                        <Text style={styles.label}>Raised amount</Text>
-                        <TextInput
-                            placeholder="Enter raised amount"
-                            placeholderTextColor="#999"
-                            value={raisedAmount}
-                            onChangeText={setRaisedAmount}
-                            style={styles.input}
-                            keyboardType="numeric"
-                        />
-                    </View>
+
                     {fundingMethod === 'Capital Raised' && (
-                        <>
-                            <View style={styles.formField}>
-                                <Text style={styles.label}>Investor name</Text>
-                                <TextInput
-                                    placeholder="Enter investor name"
-                                    placeholderTextColor="#999"
-                                    value={investorName}
-                                    onChangeText={setInvestorName}
-                                    style={styles.input}
-                                />
-                            </View>
-                            <View style={styles.uploadWrap}>
-                                <TouchableOpacity onPress={pickInvestorDoc} style={styles.uploadBtn} disabled={uploadingInvestorDoc}>
-                                    {uploadingInvestorDoc ? (
-                                        <ActivityIndicator size="small" color="#fff" />
-                                    ) : (
-                                        <Text style={styles.uploadText}>{investorDoc || 'Upload investor proof'}</Text>
-                                    )}
-                                </TouchableOpacity>
-                            </View>
-                        </>
+                        <View style={{ marginTop: 16 }}>
+                            {fundingRounds.map((round, index) => (
+                                <View key={round.id} style={{ marginBottom: 20, padding: 12, backgroundColor: '#151515', borderRadius: 8, borderWidth: 1, borderColor: '#222' }}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                        <Text style={{ color: '#fff', fontWeight: '600' }}>Round {index + 1}</Text>
+                                        {fundingRounds.length > 1 && (
+                                            <TouchableOpacity onPress={() => removeFundingRound(round.id)}>
+                                                <X size={18} color="#888" />
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+
+                                    <View style={[styles.formField, { marginBottom: 12 }]}>
+                                        <Text style={styles.label}>Amount (USD)</Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#222', borderRadius: 8, backgroundColor: '#111' }}>
+                                            <Text style={{ color: '#888', paddingLeft: 12 }}>$</Text>
+                                            <TextInput
+                                                placeholder="200000"
+                                                placeholderTextColor="#666"
+                                                value={round.amount}
+                                                onChangeText={(v) => updateFundingRound(round.id, 'amount', v)}
+                                                style={[styles.input, { flex: 1, borderWidth: 0 }]}
+                                                keyboardType="numeric"
+                                            />
+                                            <Text style={{ color: '#888', paddingRight: 12 }}>USD</Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={[styles.formField, { marginBottom: 12 }]}>
+                                        <Text style={styles.label}>Investor/Grant name</Text>
+                                        <TextInput
+                                            placeholder="Enter investor name"
+                                            placeholderTextColor="#666"
+                                            value={round.investor}
+                                            onChangeText={(v) => updateFundingRound(round.id, 'investor', v)}
+                                            style={styles.input}
+                                        />
+                                    </View>
+
+                                    <TouchableOpacity onPress={() => pickRoundDoc(round.id)} style={styles.uploadBtn}>
+                                        <Text style={styles.uploadText}>{round.docUrl || 'Upload investor proof'}</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+
+                            <TouchableOpacity onPress={addFundingRound} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#333', borderRadius: 24, paddingVertical: 14, marginTop: 12 }}>
+                                <Text style={{ color: '#fff', fontSize: 15 }}>+   Add Round</Text>
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
             </CollapsibleSection>
@@ -408,6 +588,21 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                 <Text style={[styles.btnText, consent ? styles.btnTextEnabled : styles.btnTextDisabled]}>Update Details</Text>
             </TouchableOpacity>
             <Text style={styles.infoText}>All submitted documents will be reviewed and updated automatically.</Text>
+
+            {/* Date picker modal */}
+            {showDatePicker && (
+                <CustomCalendar
+                    visible={showDatePicker}
+                    value={dateValue ?? new Date()}
+                    onChange={(selected: Date) => {
+                        setDateValue(selected);
+                        const d = selected;
+                        const formatted = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        setEstablishedOn(formatted);
+                    }}
+                    onClose={() => setShowDatePicker(false)}
+                />
+            )}
         </ScrollView>
     );
 }
