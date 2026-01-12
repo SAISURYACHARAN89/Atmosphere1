@@ -110,7 +110,7 @@ const normalizeProfile = (profileData: any) => {
     };
 };
 
-type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup';
+type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup' | 'portfolio';
 
 const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPostPress, onReelSelect }: { onNavigate?: (route: RouteKey) => void; userId?: string | null; onClose?: () => void; onCreatePost?: () => void; onPostPress?: (postId: string) => void; onReelSelect?: (reelId: string, userId: string) => void }) => {
     const { theme } = useContext(ThemeContext);

@@ -53,6 +53,12 @@ const ChatDetail = ({ chatId, onBackPress, onProfileOpen, onContentPress }: Chat
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // Pagination state
+    const [hasMoreMessages, setHasMoreMessages] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [skip, setSkip] = useState(0);
+    const PAGE_SIZE = 20;
+
     // Socket connection
     const {
         isConnected,
@@ -95,12 +101,15 @@ const ChatDetail = ({ chatId, onBackPress, onProfileOpen, onContentPress }: Chat
                 const headers: any = { 'Content-Type': 'application/json' };
                 if (token) headers.Authorization = `Bearer ${token}`;
 
-                const response = await fetch(`${baseUrl}/api/messages/${chatId}`, {
+                const response = await fetch(`${baseUrl}/api/messages/${chatId}?limit=${PAGE_SIZE}&skip=0`, {
                     headers,
                     credentials: 'include',
                 });
                 const data = await response.json();
-                setChatMessages(data.messages || []);
+                const messages = data.messages || [];
+                setChatMessages(messages);
+                setSkip(messages.length);
+                setHasMoreMessages(messages.length >= PAGE_SIZE);
             } catch (err) {
                 setError('Failed to load messages');
                 console.error('Error fetching messages:', err);
@@ -121,6 +130,36 @@ const ChatDetail = ({ chatId, onBackPress, onProfileOpen, onContentPress }: Chat
             fetchDetails();
         }
     }, [chatId]);
+
+    // Load more (older) messages
+    const loadMoreMessages = async () => {
+        if (loadingMore || !hasMoreMessages) return;
+
+        setLoadingMore(true);
+        try {
+            const baseUrl = await getBaseUrl();
+            const token = await AsyncStorage.getItem('token');
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (token) headers.Authorization = `Bearer ${token}`;
+
+            const response = await fetch(`${baseUrl}/api/messages/${chatId}?limit=${PAGE_SIZE}&skip=${skip}`, {
+                headers,
+                credentials: 'include',
+            });
+            const data = await response.json();
+            const olderMessages = data.messages || [];
+
+            if (olderMessages.length > 0) {
+                setChatMessages(prev => [...prev, ...olderMessages]);
+                setSkip(prev => prev + olderMessages.length);
+            }
+            setHasMoreMessages(olderMessages.length >= PAGE_SIZE);
+        } catch (err) {
+            console.error('Error loading more messages:', err);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     // Join chat room when socket is connected
     useEffect(() => {
@@ -189,13 +228,16 @@ const ChatDetail = ({ chatId, onBackPress, onProfileOpen, onContentPress }: Chat
         return unsubscribe;
     }, [onTypingUpdate, chatId, typingOpacity]);
 
-    // Scroll to bottom when messages change
+    // Scroll to bottom when NEW messages arrive (not when loading old ones)
+    const prevMessageCount = useRef(chatMessages.length);
     useEffect(() => {
-        if (chatMessages.length > 0 && flatListRef.current) {
-            setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
+        // Only scroll if we got new messages at the end (not older messages at start)
+        if (chatMessages.length > prevMessageCount.current) {
+            const diff = chatMessages.length - prevMessageCount.current;
+            // New messages are at index 0 in inverted list, so we don't need to scroll
+            // The FlatList inverted handles this automatically
         }
+        prevMessageCount.current = chatMessages.length;
     }, [chatMessages]);
 
     // Handle typing indicator emission
@@ -365,7 +407,12 @@ const ChatDetail = ({ chatId, onBackPress, onProfileOpen, onContentPress }: Chat
                     renderItem={renderMessage}
                     keyExtractor={(item) => item._id}
                     contentContainerStyle={styles.messageList}
-                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+                    inverted={true}
+                    onEndReached={loadMoreMessages}
+                    onEndReachedThreshold={0.3}
+                    ListFooterComponent={loadingMore ? (
+                        <ActivityIndicator size="small" color={theme.primary} style={{ marginVertical: 10 }} />
+                    ) : null}
                 />
             )}
 

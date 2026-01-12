@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { StatusBar, useColorScheme, View } from 'react-native';
+import { StatusBar, useColorScheme, View, Linking } from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets
@@ -22,6 +22,28 @@ function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
   const insets = useSafeAreaInsets();
   const [route, setRoute] = useState<'signin' | 'signup' | 'home' | 'forgotpw'>('signin');
+  const [initialDeepLink, setInitialDeepLink] = useState<string | null>(null);
+
+  // Handle deep links
+  useEffect(() => {
+    // Handle initial URL when app opens from link
+    const handleInitialURL = async () => {
+      const url = await Linking.getInitialURL();
+      if (url) {
+        setInitialDeepLink(url);
+      }
+    };
+    handleInitialURL();
+
+    // Listen for incoming links while app is running
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      if (url) {
+        setInitialDeepLink(url);
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     // On app start, check for existing token and user to persist login
@@ -77,7 +99,12 @@ function AppContent() {
           onResetSuccess={() => setRoute('signin')}
         />
       )}
-      {route === 'home' && <LandingPage />}
+      {route === 'home' && (
+        <LandingPage
+          initialDeepLink={initialDeepLink}
+          onDeepLinkHandled={() => setInitialDeepLink(null)}
+        />
+      )}
     </View>
   );
 }

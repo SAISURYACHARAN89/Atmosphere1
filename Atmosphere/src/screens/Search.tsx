@@ -205,17 +205,21 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress })
     const currentData = query.trim() ? searchResults : explorePosts;
     const isGrid = !query.trim() || activeTab === 'posts';
 
-    // Get user role/type label
+    // Get user role/type label (empty for personal accounts)
     const getUserTypeLabel = (item: any) => {
-        if (item.roles?.includes('investor')) return 'Investor';
-        if (item.roles?.includes('startup')) return 'Startup';
-        if (item.roles?.includes('personal')) return 'Personal';
-        if (item.role === 'investor') return 'Investor';
-        if (item.role === 'startup') return 'Startup';
-        if (item.accountType === 'investor') return 'Investor';
-        if (item.accountType === 'startup') return 'Startup';
-        if (item.companyName || item.company) return 'Startup';
-        return 'User';
+        if (item.roles?.includes('investor') || item.role === 'investor' || item.accountType === 'investor') {
+            return 'Investor';
+        }
+        if (item.roles?.includes('startup') || item.role === 'startup' || item.accountType === 'startup' || item.companyName || item.company) {
+            return 'Startup';
+        }
+        // Return empty for personal accounts
+        return '';
+    };
+
+    // Check if user is verified
+    const isUserVerified = (item: any) => {
+        return Boolean(item.verified || item.isVerified);
     };
 
     // Get initials from name
@@ -264,6 +268,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress })
         const displayName = item.displayName || item.fullName || item.username || 'User';
         const avatarUrl = item.avatarUrl || item.avatar || item.profileImage;
         const typeLabel = getUserTypeLabel(item);
+        const verified = isUserVerified(item);
 
         return (
             <TouchableOpacity
@@ -282,8 +287,15 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress })
                     </View>
                 )}
                 <View style={styles.userInfo}>
-                    <Text style={[styles.userName, { color: theme.text }]}>{displayName}</Text>
-                    <Text style={[styles.userType, { color: theme.placeholder }]}>{typeLabel}</Text>
+                    <View style={styles.userNameRow}>
+                        <Text style={[styles.userName, { color: theme.text }]}>{displayName}</Text>
+                        {verified && (
+                            <MaterialIcons name="verified" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
+                        )}
+                    </View>
+                    {typeLabel ? (
+                        <Text style={[styles.userType, { color: theme.placeholder }]}>{typeLabel}</Text>
+                    ) : null}
                 </View>
             </TouchableOpacity>
         );
@@ -439,6 +451,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
     userInfo: { marginLeft: 12, flex: 1 },
+    userNameRow: { flexDirection: 'row', alignItems: 'center' },
     userName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
     userType: { fontSize: 13, opacity: 0.8 },
     emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },

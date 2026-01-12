@@ -15,6 +15,7 @@ import {
     Easing,
     Dimensions,
     Image,
+    Share,
 } from 'react-native';
 import { ThemeContext } from '../contexts/ThemeContext';
 import { getFollowersList, getProfile, shareContent } from '../lib/api';
@@ -22,7 +23,7 @@ import { getImageSource } from '../lib/image';
 import Icon from 'react-native-vector-icons/Feather';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SHEET_HEIGHT = Math.round(SCREEN_HEIGHT * 0.55);
+const SHEET_HEIGHT = Math.round(SCREEN_HEIGHT * 0.50);
 
 type Follower = {
     _id: string;
@@ -73,10 +74,12 @@ const ShareModal: React.FC<ShareModalProps> = ({
                 const profile = await getProfile();
                 const id = profile?.user?._id || profile?.user?.id || profile?.id || null;
                 if (mounted && id) {
-                    const list = await getFollowersList(String(id));
+                    const result = await getFollowersList(String(id));
+                    // Handle both array and object responses
+                    const list = Array.isArray(result) ? result : (result?.followers || result?.users || []);
                     if (mounted) {
-                        setFollowers(list || []);
-                        setFilteredFollowers(list || []);
+                        setFollowers(list);
+                        setFilteredFollowers(list);
                     }
                 }
             } catch {
@@ -93,11 +96,12 @@ const ShareModal: React.FC<ShareModalProps> = ({
     // Filter followers based on search query
     useEffect(() => {
         if (!searchQuery.trim()) {
-            setFilteredFollowers(followers);
+            setFilteredFollowers(Array.isArray(followers) ? followers : []);
         } else {
             const q = searchQuery.toLowerCase();
+            const list = Array.isArray(followers) ? followers : [];
             setFilteredFollowers(
-                followers.filter(
+                list.filter(
                     (f) =>
                         f.username?.toLowerCase().includes(q) ||
                         f.displayName?.toLowerCase().includes(q)
@@ -207,7 +211,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
                         styles.sheet,
                         {
                             backgroundColor: theme?.background || '#121212',
-                            width: Math.min(640, SCREEN_WIDTH - 40),
+                            width: SCREEN_WIDTH,
                             height: SHEET_HEIGHT,
                             transform: [
                                 {
@@ -317,6 +321,31 @@ const ShareModal: React.FC<ShareModalProps> = ({
                         )}
                     </View>
 
+                    {/* Share to other apps button */}
+                    <TouchableOpacity
+                        style={styles.shareToAppsBtn}
+                        onPress={async () => {
+                            try {
+                                // Create deep link URL
+                                const deepLink = `https://atmosphere.app/${type}/${contentId}`;
+                                const message = contentTitle
+                                    ? `Check out "${contentTitle}" on Atmosphere! ${deepLink}`
+                                    : `Check out this ${type} on Atmosphere! ${deepLink}`;
+
+                                await Share.share({
+                                    message,
+                                    title: contentTitle || 'Share from Atmosphere',
+                                    url: deepLink, // iOS uses this
+                                });
+                            } catch (err) {
+                                console.warn('Share to apps failed:', err);
+                            }
+                        }}
+                    >
+                        <Icon name="share-2" size={18} color="#fff" style={{ marginRight: 8 }} />
+                        <Text style={styles.shareToAppsBtnText}>Share to other apps</Text>
+                    </TouchableOpacity>
+
                     {/* Share button */}
                     <TouchableOpacity
                         style={[
@@ -396,11 +425,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        marginTop: 16,
-        marginBottom: 12,
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        marginTop: 10,
+        marginBottom: 8,
     },
     searchInput: {
         flex: 1,
@@ -471,6 +500,22 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: 16,
         fontWeight: '700',
+    },
+    shareToAppsBtn: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: '#444',
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 8,
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    shareToAppsBtnText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
     },
 });
 

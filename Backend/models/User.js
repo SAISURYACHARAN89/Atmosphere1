@@ -12,18 +12,17 @@ const UserSchema = new Schema(
         bio: { type: String },
         avatarUrl: { type: String },
         roles: { type: [String], default: ['personal'], enum: ['investor', 'startup', 'personal', 'admin'] },
-        otpVerified: { type: Boolean, default: false },
-        verified: { type: Boolean, default: false },
-        profileSetupComplete: { type: Boolean, default: false },
+        otpVerified: { type: Boolean, default: false }, // Email OTP verified
+        verified: { type: Boolean, default: false }, // Profile verified (by admin/system)
+        profileSetupComplete: { type: Boolean, default: false }, // Initial profile setup done
         onboardingStep: { type: Number, default: 0 },
         blocked: { type: Boolean, default: false },
         blockedAt: { type: Date },
         blockedReason: { type: String },
         deletedAt: { type: Date, default: null },
-        kycCompleted: { type: Boolean, default: false },
+        kycCompleted: { type: Boolean, default: false }, // KYC verification completed & verified
         kycCompletedAt: { type: Date },
-        isKycVerified: { type: Boolean, default: false }, // KYC verification status
-        portfolioComplete: { type: Boolean, default: false }, // For investor portfolio step
+        portfolioComplete: { type: Boolean, default: false }, // Investor portfolio step done
         links: {
             website: String,
             linkedin: String,

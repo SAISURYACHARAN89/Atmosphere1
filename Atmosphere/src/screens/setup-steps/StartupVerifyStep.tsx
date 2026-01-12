@@ -22,7 +22,7 @@ export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => vo
                 const acct = roles[0] || 'personal';
                 setUserRole(acct);
                 // Check existing verification status
-                setKycCompleted(profile?.user?.isKycVerified || false);
+                setKycCompleted(profile?.user?.kycCompleted || false);
                 setPortfolioCompleted(profile?.user?.portfolioComplete || false);
             } catch {
                 setUserRole('personal');
@@ -40,7 +40,7 @@ export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => vo
                     setShowKyc(false);
                     // Save KYC status
                     try {
-                        await updateProfile({ userData: { isKycVerified: true } });
+                        await updateProfile({ userData: { kycCompleted: true } });
                     } catch {
                         // ignore
                     }
@@ -99,7 +99,7 @@ export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => vo
         try {
             await updateProfile({
                 userData: {
-                    isKycVerified: kycCompleted,
+                    kycCompleted: kycCompleted,
                     portfolioComplete: portfolioCompleted,
                     verified: true,
                     profileSetupComplete: true

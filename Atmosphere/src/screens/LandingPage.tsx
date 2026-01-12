@@ -15,6 +15,8 @@ import TradingSection from './TradingSection';
 import Opportunities from './Opportunities';
 import Meetings from './Meetings';
 import SetupProfile from './SetupProfile';
+import StartupPortfolioStep from './setup-steps/StartupPortfolioStep';
+import InvestorPortfolioStep from './setup-steps/InvestorPortfolioStep';
 import CreatePost from './CreatePost';
 import CreateReel from './CreateReel';
 import SavedPosts from './SavedPosts';
@@ -23,9 +25,14 @@ import VideoCall from './VideoCall';
 import MyTeam from './MyTeam';
 import StartupDetail from './StartupDetail';
 
-type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup' | 'chatDetail' | 'createPost' | 'createReel' | 'saved' | 'videoCall' | 'myTeam' | 'startupDetail' | 'tradeDetail';
+type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profile' | 'topstartups' | 'trade' | 'jobs' | 'meetings' | 'setup' | 'chatDetail' | 'createPost' | 'createReel' | 'saved' | 'videoCall' | 'myTeam' | 'startupDetail' | 'tradeDetail' | 'portfolio';
 
-const LandingPage = () => {
+interface LandingPageProps {
+    initialDeepLink?: string | null;
+    onDeepLinkHandled?: () => void;
+}
+
+const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) => {
     const [route, setRoute] = useState<RouteKey>('home');
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -40,6 +47,36 @@ const LandingPage = () => {
 
     // Navigation history stack for back button support
     const [routeHistory, setRouteHistory] = useState<RouteKey[]>([]);
+
+    // Handle deep link navigation
+    useEffect(() => {
+        if (initialDeepLink) {
+            try {
+                // Parse URL: https://atmosphere.app/{type}/{id} or atmosphere://{type}/{id}
+                const url = initialDeepLink
+                    .replace('atmosphere://', '')
+                    .replace('https://atmosphere.app/', '')
+                    .replace('http://atmosphere.app/', '');
+                const pathParts = url.split('/').filter(Boolean);
+
+                if (pathParts.length >= 2) {
+                    const [type, id] = pathParts;
+                    if (type === 'post' && id) {
+                        setSelectedPostId(id);
+                    } else if (type === 'reel' && id) {
+                        setReelContext({ initialReelId: id });
+                        setRoute('reels');
+                    } else if (type === 'startup' && id) {
+                        setSelectedStartupId(id);
+                        setRoute('startupDetail');
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to parse deep link:', e);
+            }
+            onDeepLinkHandled?.();
+        }
+    }, [initialDeepLink, onDeepLinkHandled]);
 
     // Navigate to a new route while tracking history
     const navigateTo = useCallback((newRoute: RouteKey, clearOverlays = true) => {
@@ -233,6 +270,9 @@ const LandingPage = () => {
                 />;
             case 'setup':
                 return <SetupProfile onDone={() => setRoute('profile')} onClose={() => setRoute('profile')} />;
+            case 'portfolio':
+                // Show portfolio step - we'll need to determine account type
+                return <StartupPortfolioStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} />;
             case 'topstartups':
                 return <TopStartups />;
             case 'trade':
@@ -316,6 +356,7 @@ const LandingPage = () => {
             myTeam: 'Opportunities',
             startupDetail: 'Launch',
             tradeDetail: 'Trade',
+            portfolio: 'Profile',
         };
         return rev[r] || 'Home';
     };

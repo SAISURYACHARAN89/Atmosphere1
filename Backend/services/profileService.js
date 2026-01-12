@@ -69,7 +69,7 @@ async function getProfile(userId) {
             bio: user.bio,
             avatarUrl: user.avatarUrl,
             roles: user.roles,
-            isKycVerified: user.isKycVerified,
+            kycCompleted: user.kycCompleted,
             portfolioComplete: user.portfolioComplete,
             otpVerified: user.otpVerified,
             verified: user.verified,
@@ -109,7 +109,7 @@ async function updateProfile(userId, data) {
     }
 
     if (userData) {
-        const allowedUserFields = ['username', 'email', 'fullName', 'displayName', 'bio', 'avatarUrl', 'otpVerified', 'verified', 'profileSetupComplete', 'onboardingStep', 'links', 'isKycVerified', 'portfolioComplete'];
+        const allowedUserFields = ['username', 'email', 'fullName', 'displayName', 'bio', 'avatarUrl', 'otpVerified', 'verified', 'profileSetupComplete', 'onboardingStep', 'links', 'kycCompleted', 'portfolioComplete'];
         allowedUserFields.forEach(field => {
             if (userData[field] !== undefined) {
                 user[field] = userData[field];

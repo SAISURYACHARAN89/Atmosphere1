@@ -32,10 +32,15 @@ const SignUp = ({ onSignedUp, onSignIn }: SignUpProps) => {
     const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>('idle');
     const [verifyMessage, setVerifyMessage] = useState('');
     const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
+    const [usernameWarning, setUsernameWarning] = useState('');
 
     const handleCheckUsername = async () => {
         if (!username || username.length < 3) {
             Alert.alert('Invalid username', 'Username must be at least 3 characters');
+            return;
+        }
+        if (username.includes(' ')) {
+            Alert.alert('Invalid username', 'Username cannot contain spaces. Use underscores (_) instead.');
             return;
         }
         setUsernameStatus('checking');
@@ -147,7 +152,17 @@ const SignUp = ({ onSignedUp, onSignIn }: SignUpProps) => {
                             placeholder="Username"
                             placeholderTextColor="#8e8e8e"
                             value={username}
-                            onChangeText={(text) => { setUsername(text); setUsernameStatus('idle'); }}
+                            onChangeText={(text) => {
+                                if (text.includes(' ')) {
+                                    setUsernameWarning('Spaces not allowed. Use underscores (_) instead.');
+                                    // Replace spaces with underscores
+                                    text = text.replace(/ /g, '_');
+                                } else {
+                                    setUsernameWarning('');
+                                }
+                                setUsername(text);
+                                setUsernameStatus('idle');
+                            }}
                             autoCapitalize="none"
                         />
                         <TouchableOpacity style={styles.checkButton} onPress={handleCheckUsername} disabled={usernameStatus === 'checking' || !username}>
@@ -166,6 +181,11 @@ const SignUp = ({ onSignedUp, onSignIn }: SignUpProps) => {
                             )}
                         </TouchableOpacity>
                     </View>
+                    {usernameWarning ? (
+                        <Text style={{ color: '#f59e0b', fontSize: 12, marginTop: -8, marginBottom: 8, marginLeft: 4 }}>
+                            {usernameWarning}
+                        </Text>
+                    ) : null}
 
                     <TextInput
                         style={styles.input}

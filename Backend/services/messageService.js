@@ -8,7 +8,7 @@ exports.getMessages = async (req, res, next) => {
 
         const messages = await Message.find({ chat: chatId })
             .populate('sender', 'username displayName avatarUrl')
-            .sort({ createdAt: 1 })
+            .sort({ createdAt: -1 })
             .limit(parseInt(limit))
             .skip(parseInt(skip));
 
@@ -41,13 +41,13 @@ exports.sendMessage = async (req, res, next) => {
         });
 
         await message.save();
-        
+
         // Populate sender data before returning
         await message.populate('sender', 'displayName email avatarUrl');
 
         // Get the chat to find other participants
         const chat = await Chat.findById(chatId).populate('participants', '_id');
-        
+
         // Update the lastMessage field in the chat and increment unread counts for other users
         const unreadCounts = { ...chat.unreadCounts || {} };
         chat.participants.forEach(participant => {
@@ -59,7 +59,7 @@ exports.sendMessage = async (req, res, next) => {
             }
         });
 
-        await Chat.findByIdAndUpdate(chatId, { 
+        await Chat.findByIdAndUpdate(chatId, {
             lastMessage: message._id,
             unreadCounts
         });

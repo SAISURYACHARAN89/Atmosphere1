@@ -8,7 +8,7 @@ import { getSettings, updateSettings, changePassword, getProfile, updateProfile,
 import { Picker } from '@react-native-picker/picker';
 import { pick, types } from '@react-native-documents/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, User, AtSign, Key, Mail, Phone, BarChart2, Bookmark, Settings2, MessageSquare, Users, Shield, Briefcase, Crown, HelpCircle, Info } from 'lucide-react-native';
 
 const SETTINGS_CACHE_KEY = 'ATMOSPHERE_SETTINGS_CACHE';
 
@@ -132,6 +132,9 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
     const [roundType, setRoundType] = useState('');
     const [requiredCapital, setRequiredCapital] = useState('');
 
+    // Verification status
+    const [isVerified, setIsVerified] = useState(false);
+
     // Fetch settings on mount with caching
     useEffect(() => {
         (async () => {
@@ -161,6 +164,12 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
                     try {
                         const profile = await getProfile();
                         const details = profile?.details;
+
+                        // Set verified status from profile
+                        if (profile?.user?.verified) {
+                            setIsVerified(true);
+                        }
+
                         if (details) {
                             if (accountType === 'investor') {
                                 setAbout(details.about || '');
@@ -465,296 +474,70 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
                     </View>
                 ) : (
                     <>
-                        {/* Investor Profile Sections */}
-                        {accountType === 'investor' && (
-                            <>
-                                <Text style={[styles.sectionLabel, themePlaceholderStyle]}>INVESTOR PROFILE</Text>
-                                <View style={[styles.sectionCard, themeBorderStyle]}>
-                                    <Collapsible title="Personal Interests" open={openInterests} onToggle={() => setOpenInterests(!openInterests)} theme={theme}>
-                                        <View style={localStyles.formSection}>
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>About Myself</Text>
-                                            <TextInput
-                                                value={about}
-                                                onChangeText={setAbout}
-                                                placeholder="Tell us more about yourself..."
-                                                placeholderTextColor={theme.placeholder}
-                                                multiline
-                                                style={[localStyles.textarea, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Location</Text>
-                                            <TextInput
-                                                value={location}
-                                                onChangeText={setLocation}
-                                                placeholder="San Francisco, USA"
-                                                placeholderTextColor={theme.placeholder}
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Investment Focus</Text>
-                                            <TouchableOpacity onPress={() => setShowFocusPicker(true)} style={[localStyles.input, { borderColor: theme.border }]}>
-                                                <Text style={{ color: selectedFocus.length ? theme.text : theme.placeholder }}>{selectedFocus.length ? selectedFocus.join(', ') : 'Select focus areas'}</Text>
-                                            </TouchableOpacity>
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Interested Rounds</Text>
-                                            <TouchableOpacity onPress={() => setShowRoundPicker(true)} style={[localStyles.input, { borderColor: theme.border }]}>
-                                                <Text style={{ color: selectedRounds.length ? theme.text : theme.placeholder }}>{selectedRounds.length ? selectedRounds.join(', ') : 'Select rounds'}</Text>
-                                            </TouchableOpacity>
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Stage</Text>
-                                            <TouchableOpacity onPress={() => setShowStagePicker(true)} style={[localStyles.input, { borderColor: theme.border }]}>
-                                                <Text style={{ color: selectedStages.length ? theme.text : theme.placeholder }}>{selectedStages.length ? selectedStages.join(', ') : 'Select stage'}</Text>
-                                            </TouchableOpacity>
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Investment Geography</Text>
-                                            <TextInput
-                                                value={geography}
-                                                onChangeText={setGeography}
-                                                placeholder="Worldwide"
-                                                placeholderTextColor={theme.placeholder}
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Check Size (USD)</Text>
-                                            <View style={{ flexDirection: 'row', gap: 12 }}>
-                                                <TextInput
-                                                    value={minCheck}
-                                                    onChangeText={setMinCheck}
-                                                    placeholder="Min $"
-                                                    placeholderTextColor={theme.placeholder}
-                                                    keyboardType="numeric"
-                                                    style={[localStyles.input, { borderColor: theme.border, color: theme.text, flex: 1 }]}
-                                                />
-                                                <TextInput
-                                                    value={maxCheck}
-                                                    onChangeText={setMaxCheck}
-                                                    placeholder="Max $"
-                                                    placeholderTextColor={theme.placeholder}
-                                                    keyboardType="numeric"
-                                                    style={[localStyles.input, { borderColor: theme.border, color: theme.text, flex: 1 }]}
-                                                />
-                                            </View>
-
-                                            <TouchableOpacity onPress={saveInvestorDetails} disabled={saving} style={[localStyles.saveBtn, { backgroundColor: theme.primary || '#1FADFF' }]}>
-                                                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '600' }}>Save Interests</Text>}
-                                            </TouchableOpacity>
-                                        </View>
-                                    </Collapsible>
-
-                                    <Collapsible title="Holdings" open={openHoldings} onToggle={() => setOpenHoldings(!openHoldings)} theme={theme}>
-                                        <View style={localStyles.formSection}>
-                                            {holdings.map((h, idx) => (
-                                                <View key={idx} style={[localStyles.holdingCard, { borderColor: theme.border }]}>
-                                                    <View style={{ flex: 1 }}>
-                                                        <Text style={[{ fontWeight: '700', color: theme.text }]}>{h.name}</Text>
-                                                        <Text style={[{ color: theme.placeholder, fontSize: 12 }]}>{new Date(h.date).toLocaleDateString()}</Text>
-                                                    </View>
-                                                    <Text style={[{ fontWeight: '700', color: theme.text }]}>${Number(h.amount).toLocaleString()}</Text>
-                                                </View>
-                                            ))}
-                                            {holdings.length === 0 && (
-                                                <Text style={{ color: theme.placeholder, textAlign: 'center', paddingVertical: 16 }}>No holdings added yet</Text>
-                                            )}
-                                            <TouchableOpacity
-                                                onPress={() => setShowAddHoldingModal(true)}
-                                                style={[localStyles.addHoldingsBtn, { borderColor: theme.border }]}
-                                            >
-                                                <Text style={{ color: theme.text, fontSize: 18, marginRight: 8 }}>+</Text>
-                                                <Text style={{ color: theme.text, fontWeight: '600' }}>Add Holdings</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </Collapsible>
+                        {/* ACCOUNT INFORMATION Section */}
+                        <Text style={[styles.sectionLabel, themePlaceholderStyle]}>ACCOUNT INFORMATION</Text>
+                        <View style={[styles.sectionCard, themeBorderStyle]}>
+                            <TouchableOpacity style={styles.settingRow} onPress={() => { _openEditModal('Name', settings.displayName); }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <User size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Name</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>{settings.displayName || 'Not set'}</Text>
+                                    </View>
                                 </View>
-                            </>
-                        )}
-
-                        {/* Startup Profile Sections */}
-                        {accountType === 'startup' && (
-                            <>
-                                <Text style={[styles.sectionLabel, themePlaceholderStyle]}>STARTUP PROFILE</Text>
-                                <View style={[styles.sectionCard, themeBorderStyle]}>
-                                    <Collapsible title="Company Profile" open={openCompanyProfile} onToggle={() => setOpenCompanyProfile(!openCompanyProfile)} theme={theme}>
-                                        <View style={localStyles.formSection}>
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Company Legal Name</Text>
-                                            <TextInput
-                                                value={companyName}
-                                                onChangeText={setCompanyName}
-                                                placeholder="Enter full legal name"
-                                                placeholderTextColor={theme.placeholder}
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>About your company</Text>
-                                            <TextInput
-                                                value={companyAbout}
-                                                onChangeText={setCompanyAbout}
-                                                placeholder="Write about your company..."
-                                                placeholderTextColor={theme.placeholder}
-                                                multiline
-                                                style={[localStyles.textarea, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Location</Text>
-                                            <TextInput
-                                                value={companyLocation}
-                                                onChangeText={setCompanyLocation}
-                                                placeholder="City, Country"
-                                                placeholderTextColor={theme.placeholder}
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Company Type</Text>
-                                            <TextInput
-                                                value={companyType}
-                                                onChangeText={setCompanyType}
-                                                placeholder="e.g., SaaS, Marketplace"
-                                                placeholderTextColor={theme.placeholder}
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Established On</Text>
-                                            <TextInput
-                                                value={establishedOn}
-                                                onChangeText={setEstablishedOn}
-                                                placeholder="dd-mm-yyyy"
-                                                placeholderTextColor={theme.placeholder}
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <View style={{ flexDirection: 'row', gap: 12 }}>
-                                                <View style={{ flex: 1 }}>
-                                                    <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Team Member</Text>
-                                                    <TextInput
-                                                        value={teamName}
-                                                        onChangeText={setTeamName}
-                                                        placeholder="@username"
-                                                        placeholderTextColor={theme.placeholder}
-                                                        style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                                    />
-                                                </View>
-                                                <View style={{ flex: 1 }}>
-                                                    <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Role</Text>
-                                                    <TextInput
-                                                        value={teamRole}
-                                                        onChangeText={setTeamRole}
-                                                        placeholder="Role"
-                                                        placeholderTextColor={theme.placeholder}
-                                                        style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                                    />
-                                                </View>
-                                            </View>
-
-                                            <TouchableOpacity onPress={saveCompanyProfile} disabled={saving} style={[localStyles.saveBtn, { backgroundColor: theme.primary || '#1FADFF' }]}>
-                                                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '600' }}>Save Company Profile</Text>}
-                                            </TouchableOpacity>
-                                        </View>
-                                    </Collapsible>
-
-                                    <Collapsible title="Financial Profile" open={openFinancialProfile} onToggle={() => setOpenFinancialProfile(!openFinancialProfile)} theme={theme}>
-                                        <View style={localStyles.formSection}>
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Revenue Type</Text>
-                                            <View style={[localStyles.input, { borderColor: theme.border, padding: 0 }]}>
-                                                <Picker
-                                                    selectedValue={revenueType}
-                                                    onValueChange={setRevenueType}
-                                                    dropdownIconColor={theme.text}
-                                                    style={{ color: theme.text }}
-                                                >
-                                                    <Picker.Item label="Pre-revenue" value="Pre-revenue" />
-                                                    <Picker.Item label="Revenue generating" value="Revenue generating" />
-                                                </Picker>
-                                            </View>
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Funding Method</Text>
-                                            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
-                                                <TouchableOpacity
-                                                    onPress={() => setFundingMethod('Bootstrapped')}
-                                                    style={[localStyles.optionBtn, fundingMethod === 'Bootstrapped' && { backgroundColor: '#333' }]}
-                                                >
-                                                    <Text style={{ color: '#fff' }}>Bootstrapped</Text>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    onPress={() => setFundingMethod('Capital Raised')}
-                                                    style={[localStyles.optionBtn, fundingMethod === 'Capital Raised' && { backgroundColor: '#333' }]}
-                                                >
-                                                    <Text style={{ color: '#fff' }}>Capital Raised</Text>
-                                                </TouchableOpacity>
-                                            </View>
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Raised Amount</Text>
-                                            <TextInput
-                                                value={raisedAmount}
-                                                onChangeText={setRaisedAmount}
-                                                placeholder="Enter raised amount"
-                                                placeholderTextColor={theme.placeholder}
-                                                keyboardType="numeric"
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            {fundingMethod === 'Capital Raised' && (
-                                                <>
-                                                    <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Investor Name</Text>
-                                                    <TextInput
-                                                        value={investorName}
-                                                        onChangeText={setInvestorName}
-                                                        placeholder="Enter investor name"
-                                                        placeholderTextColor={theme.placeholder}
-                                                        style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                                    />
-                                                </>
-                                            )}
-
-                                            <TouchableOpacity onPress={saveFinancialProfile} disabled={saving} style={[localStyles.saveBtn, { backgroundColor: theme.primary || '#1FADFF' }]}>
-                                                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '600' }}>Save Financial Profile</Text>}
-                                            </TouchableOpacity>
-                                        </View>
-                                    </Collapsible>
-
-                                    <Collapsible title="Raise a Round" open={openRaiseRound} onToggle={() => setOpenRaiseRound(!openRaiseRound)} theme={theme}>
-                                        <View style={localStyles.formSection}>
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Round</Text>
-                                            <View style={[localStyles.input, { borderColor: theme.border, padding: 0 }]}>
-                                                <Picker
-                                                    selectedValue={roundType}
-                                                    onValueChange={setRoundType}
-                                                    dropdownIconColor={theme.text}
-                                                    style={{ color: theme.text }}
-                                                >
-                                                    <Picker.Item label="Select round" value="" color="#999" />
-                                                    <Picker.Item label="Pre-seed" value="Pre-seed" />
-                                                    <Picker.Item label="Seed" value="Seed" />
-                                                    <Picker.Item label="Series A" value="Series A" />
-                                                    <Picker.Item label="Series B" value="Series B" />
-                                                    <Picker.Item label="Series C" value="Series C" />
-                                                    <Picker.Item label="Series D and beyond" value="Series D and beyond" />
-                                                </Picker>
-                                            </View>
-
-                                            <Text style={[localStyles.fieldLabel, themePlaceholderStyle]}>Required Capital</Text>
-                                            <TextInput
-                                                value={requiredCapital}
-                                                onChangeText={setRequiredCapital}
-                                                placeholder="Enter required capital"
-                                                placeholderTextColor={theme.placeholder}
-                                                keyboardType="numeric"
-                                                style={[localStyles.input, { borderColor: theme.border, color: theme.text }]}
-                                            />
-
-                                            <TouchableOpacity onPress={saveRaiseRound} disabled={saving} style={[localStyles.saveBtn, { backgroundColor: theme.primary || '#1FADFF' }]}>
-                                                {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '600' }}>Save Round Details</Text>}
-                                            </TouchableOpacity>
-                                        </View>
-                                    </Collapsible>
+                                <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.settingRow} onPress={() => { _openEditModal('Username', settings.username); }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <AtSign size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Username</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>@{settings.username || 'Not set'}</Text>
+                                    </View>
                                 </View>
-                            </>
-                        )}
+                                <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.settingRow} onPress={() => setPasswordModal(true)}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Key size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Password</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Change your password</Text>
+                                    </View>
+                                </View>
+                                <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Mail size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Email</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>{settings.email || 'Not set'}</Text>
+                                    </View>
+                                </View>
+                                <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.settingRow} onPress={() => { _openEditModal('Phone', settings.phone); }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Phone size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Phone</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>{settings.phone || 'Not set'}</Text>
+                                    </View>
+                                </View>
+                                <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
+                            </TouchableOpacity>
+                        </View>
 
                         <Text style={[styles.sectionLabel, themePlaceholderStyle]}>CONTENT</Text>
                         <View style={[styles.sectionCard, themeBorderStyle]}>
-                            <TouchableOpacity style={styles.settingRow} onPress={() => { _openEditModal('Name', settings.displayName); }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>Professional Dashboard</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>View analytics and insights</Text>
+                            <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <BarChart2 size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Professional Dashboard</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>View analytics and insights</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
@@ -762,16 +545,22 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
                                 handleClose();
                                 if (onNavigate) onNavigate('saved');
                             }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>Saved Content</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Access your saved posts and reels</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Bookmark size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Saved Content</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Access your saved posts and startups</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>Content Preference</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Customize your feed</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Settings2 size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Content Preference</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Customize your feed</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
@@ -780,31 +569,70 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
                         <Text style={[styles.sectionLabel, themePlaceholderStyle]}>PRIVACY</Text>
                         <View style={[styles.sectionCard, themeBorderStyle]}>
                             <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>Comments</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Control who can comment on your posts</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <MessageSquare size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Comments</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Control who can comment on your posts</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>Connect</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Manage direct message permissions</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Users size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Connect</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Manage direct message permissions</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={[styles.sectionLabel, themePlaceholderStyle]}>VERIFICATION</Text>
+                        {/* ACCOUNT section - Get Verified (if not verified) and Portfolio (for investor/startup) */}
+                        <Text style={[styles.sectionLabel, themePlaceholderStyle]}>ACCOUNT</Text>
                         <View style={[styles.sectionCard, themeBorderStyle]}>
-                            <TouchableOpacity style={styles.settingRow} onPress={() => {
-                                // Navigate to verification page
-                                handleClose();
-                                if (onNavigate) onNavigate('setup');
-                            }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>Get Verified</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Verify your account to get a badge</Text>
+                            {/* Get Verified - only show if not verified */}
+                            {!isVerified && (
+                                <TouchableOpacity style={styles.settingRow} onPress={() => {
+                                    handleClose();
+                                    if (onNavigate) onNavigate('setup');
+                                }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                        <Shield size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                        <View style={styles.settingLeft}>
+                                            <Text style={[styles.settingTitle, themeTextStyle]}>Verification</Text>
+                                            <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Verify your identity</Text>
+                                        </View>
+                                    </View>
+                                    <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
+                                </TouchableOpacity>
+                            )}
+                            {/* Portfolio - only for investor/startup */}
+                            {(accountType === 'investor' || accountType === 'startup') && (
+                                <TouchableOpacity style={styles.settingRow} onPress={() => {
+                                    handleClose();
+                                    if (onNavigate) onNavigate('portfolio');
+                                }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                        <Briefcase size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                        <View style={styles.settingLeft}>
+                                            <Text style={[styles.settingTitle, themeTextStyle]}>Portfolio Verification</Text>
+                                            <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Verify your {accountType === 'investor' ? 'investment' : 'startup'} portfolio</Text>
+                                        </View>
+                                    </View>
+                                    <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
+                                </TouchableOpacity>
+                            )}
+                            {/* Get Premium */}
+                            <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Crown size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Get Premium</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Unlock exclusive features</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
@@ -813,16 +641,22 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
                         <Text style={[styles.sectionLabel, themePlaceholderStyle]}>HELP</Text>
                         <View style={[styles.sectionCard, themeBorderStyle]}>
                             <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>Support</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Get help or contact us</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <HelpCircle size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>Support</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Get help or contact us</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.settingRow} onPress={() => { }}>
-                                <View style={styles.settingLeft}>
-                                    <Text style={[styles.settingTitle, themeTextStyle]}>About</Text>
-                                    <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Version 1.0.0</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Info size={20} color={theme.placeholder} style={{ marginRight: 12 }} />
+                                    <View style={styles.settingLeft}>
+                                        <Text style={[styles.settingTitle, themeTextStyle]}>About</Text>
+                                        <Text style={[styles.settingSubtitle, themePlaceholderStyle]}>Version 1.0.0</Text>
+                                    </View>
                                 </View>
                                 <Text style={[styles.chev, themePlaceholderStyle]}>{'›'}</Text>
                             </TouchableOpacity>
@@ -861,7 +695,7 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
                         <View style={{ height: 48 }} />
                     </>
                 )}
-            </ScrollView>
+            </ScrollView >
 
             {/* Multi-select Pickers */}
             {renderMultiPicker(showFocusPicker, 'Investment Focus', ['AI', 'SaaS', 'Drones', 'FinTech', 'HealthTech', 'EdTech', 'E-commerce', 'Blockchain', 'IoT', 'CleanTech'], selectedFocus, setSelectedFocus, () => setShowFocusPicker(false))}
@@ -1184,7 +1018,7 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
                     </View>
                 </View>
             </Modal>
-        </Animated.View>
+        </Animated.View >
     );
 }
 

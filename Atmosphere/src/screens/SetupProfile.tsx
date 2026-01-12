@@ -70,7 +70,7 @@ export default function SetupProfile({ onDone, onClose }: { onDone: () => void; 
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [accountType, setAccountType] = useState<'startup' | 'investor' | 'personal' | null>(null);
-    const [isKycVerified, setIsKycVerified] = useState(false);
+    const [kycCompleted, setKycCompleted] = useState(false);
     // portfolioComplete state not used directly here
 
     useEffect(() => {
@@ -89,14 +89,14 @@ export default function SetupProfile({ onDone, onClose }: { onDone: () => void; 
                     const primaryRole = roles[0] || 'personal';
                     setAccountType(primaryRole as 'startup' | 'investor' | 'personal');
                     // Get KYC status
-                    setIsKycVerified(profile.user.isKycVerified || false);
+                    setKycCompleted(profile.user.kycCompleted || false);
                     // Debug log
                     console.log('[SetupProfile] Loaded user state:', {
                         roles: profile.user.roles,
                         primaryRole,
                         profileSetupComplete: profile.user.profileSetupComplete,
                         isEditMode: !!profile.user.profileSetupComplete,
-                        isKycVerified: profile.user.isKycVerified,
+                        kycCompleted: profile.user.kycCompleted,
                         portfolioComplete: profile.user.portfolioComplete
                     });
                 }
@@ -198,14 +198,14 @@ export default function SetupProfile({ onDone, onClose }: { onDone: () => void; 
                     </Text>
                     {/* Show step info only in setup mode, or edit mode for non-personal accounts */}
                     {(() => {
-                        if (isEditMode && accountType === 'personal' && isKycVerified) {
+                        if (isEditMode && accountType === 'personal' && kycCompleted) {
                             return null; // No step info for personal with verified KYC in edit mode
                         }
                         if (isEditMode) {
                             return null; // No step info in edit mode
                         }
                         // Setup mode: show step counts
-                        const totalSteps = accountType === 'personal' && isKycVerified ? 1 : 2;
+                        const totalSteps = accountType === 'personal' && kycCompleted ? 1 : 2;
                         return <Text style={localStyles.smallText}>Step 1 of {totalSteps}</Text>;
                     })()}
                 </View>
@@ -250,40 +250,32 @@ export default function SetupProfile({ onDone, onClose }: { onDone: () => void; 
                 <TextInput placeholder="Tell us about yourself" value={bio} onChangeText={setBio} multiline numberOfLines={3} style={localStyles.textarea} placeholderTextColor={theme.placeholder} />
 
                 {/* Button Logic:
-                    - Personal + Edit mode -> No button (just Save)
-                    - Personal + Setup mode -> Next to KYC
-                    - Investor/Startup + Edit mode -> Update to Portfolio directly
-                    - Investor/Startup + Setup mode -> Next to Verification page
+                    - Edit mode + verified -> Go to Portfolio
+                    - Edit mode + not verified -> Go to Verification
+                    - Setup mode -> Go to Verification
                 */}
                 {(() => {
-                    // Personal accounts - no second page in edit mode, go to KYC in setup
-                    if (accountType === 'personal') {
-                        if (isEditMode) {
-                            return null; // No second page for personal in edit mode
+                    // Always show Next button
+                    let targetStep: any = accountType;
+                    let buttonText = 'Next';
+
+                    if (isEditMode) {
+                        if (kycCompleted) {
+                            // Verified users go to portfolio
+                            targetStep = accountType === 'investor' ? 'portfolio_investor' : 'portfolio_startup';
+                            buttonText = 'Edit Portfolio';
+                        } else {
+                            // Not verified - go to verification
+                            targetStep = accountType;
                         }
-                        // Setup mode - go to verification/KYC
-                        return (
-                            <TouchableOpacity
-                                onPress={() => setRoleStep('personal')}
-                                style={primaryButtonStyle as any}
-                            >
-                                <Text style={primaryButtonTextStyle}>Next</Text>
-                            </TouchableOpacity>
-                        );
                     }
 
-                    // Investor/Startup - only show Next button in setup mode (not edit mode)
-                    // In edit mode, users access portfolio settings via Settings overlay
-                    if (isEditMode) {
-                        return null; // No Next button in edit mode - use Settings instead
-                    }
-                    const targetStep = accountType;
                     return (
                         <TouchableOpacity
                             onPress={() => setRoleStep(targetStep as any)}
                             style={primaryButtonStyle as any}
                         >
-                            <Text style={primaryButtonTextStyle}>Next</Text>
+                            <Text style={primaryButtonTextStyle}>{buttonText}</Text>
                         </TouchableOpacity>
                     );
                 })()}

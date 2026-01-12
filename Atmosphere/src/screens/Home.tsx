@@ -389,7 +389,6 @@ const styles = StyleSheet.create({
     separator: {
         height: 1,
         backgroundColor: '#313131',
-        marginHorizontal: 16,
         marginVertical: 8,
     },
 });
