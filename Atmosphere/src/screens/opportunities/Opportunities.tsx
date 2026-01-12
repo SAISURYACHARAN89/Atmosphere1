@@ -53,7 +53,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         name: '', organization: '', sector: '', location: '', amount: '', deadline: '', type: '', description: '', url: '',
         organizer: '', date: '', time: '',
         startupName: '', roleTitle: '', locationType: '', employmentType: 'Full-time', compensation: '', requirements: '',
-        isRemote: false, applicationUrl: '',
+        isRemote: false, applicationUrl: '', customQuestions: ['', '', ''],
     });
     const [postLoading, setPostLoading] = useState(false);
     const [initialLoadDone, setInitialLoadDone] = useState(false);
@@ -266,8 +266,9 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                 payload = {
                     title: form.roleTitle, startupName: form.startupName, sector: form.sector,
                     locationType: form.locationType, employmentType: form.employmentType,
-                    compensation: form.compensation, requirements: form.requirements,
+                    compensation: form.compensation, description: form.description, requirements: form.requirements,
                     isRemote: form.isRemote, applicationUrl: form.applicationUrl,
+                    customQuestions: form.customQuestions.filter(q => q.trim() !== ''),
                 };
             }
 
@@ -284,7 +285,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                 name: '', organization: '', sector: '', location: '', amount: '', deadline: '', type: '',
                 description: '', url: '', organizer: '', date: '', time: '',
                 startupName: '', roleTitle: '', locationType: '', employmentType: 'Full-time',
-                compensation: '', requirements: '', isRemote: false, applicationUrl: '',
+                compensation: '', requirements: '', isRemote: false, applicationUrl: '', customQuestions: ['', '', ''],
             });
             Alert.alert('Success', editingJobId ? 'Job post updated successfully!' : 'Posted successfully!');
 
@@ -466,9 +467,11 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                             {tabName === 'Team' && (
                                 <>
                                     <View style={styles.actionButtonsContainer}>
-                                        <TouchableOpacity style={[styles.actionBtn, styles.createBtn]} onPress={() => setModalVisible(true)}>
-                                            <Text style={styles.createBtnText}>＋ Create Job Ad</Text>
-                                        </TouchableOpacity>
+                                        {(userRole === 'investor' || userRole === 'startup') && (
+                                            <TouchableOpacity style={[styles.actionBtn, styles.createBtn]} onPress={() => setModalVisible(true)}>
+                                                <Text style={styles.createBtnText}>＋ Create Job Ad</Text>
+                                            </TouchableOpacity>
+                                        )}
                                         <TouchableOpacity style={[styles.actionBtn, styles.myTeamsBtn]} onPress={() => onNavigate && onNavigate('myTeam')}>
                                             <Text style={styles.myTeamsBtnText}>My Teams</Text>
                                         </TouchableOpacity>
@@ -499,31 +502,16 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                                             ) : myJobPosts.length === 0 ? (
                                                 <Text style={styles.noActiveJobsText}>No active job posts</Text>
                                             ) : (
-                                                myJobPosts.map((job) => (
-                                                    <View key={job._id || job.id} style={styles.myJobCard}>
-                                                        <View style={styles.myJobCardContent}>
-                                                            <Text style={styles.myJobTitle} numberOfLines={1}>{job.title}</Text>
-                                                            <Text style={styles.myJobMeta}>
-                                                                {job.applicants?.length || 0} applicants • {job.employmentType || 'Full-time'}
-                                                            </Text>
-                                                        </View>
-                                                        <View style={styles.myJobActions}>
-                                                            <TouchableOpacity
-                                                                style={styles.myJobActionBtn}
-                                                                onPress={() => handleCloseJobPost(job._id || job.id)}
-                                                            >
-                                                                <MaterialIcons name="block" size={18} color="#ef4444" />
-                                                                <Text style={styles.closeJobText}>Close</Text>
-                                                            </TouchableOpacity>
-                                                            <TouchableOpacity
-                                                                style={styles.myJobActionBtn}
-                                                                onPress={() => handleEditJobPost(job)}
-                                                            >
-                                                                <MaterialIcons name="edit" size={18} color="#888" />
-                                                                <Text style={styles.editJobText}>Edit</Text>
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    </View>
+                                                myJobPosts.map((job, index) => (
+                                                    <RoleCard
+                                                        key={job._id || job.id}
+                                                        item={job}
+                                                        isMyAd={true}
+                                                        expanded={expandedId === `myad-${job._id || job.id}`}
+                                                        onExpand={() => setExpandedId(
+                                                            expandedId === `myad-${job._id || job.id}` ? null : `myad-${job._id || job.id}`
+                                                        )}
+                                                    />
                                                 ))
                                             )}
                                         </View>
@@ -650,6 +638,16 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                             {activeTab === 'Team' && (
                                 <>
                                     <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Organization / Company Name</Text>
+                                        <TextInput
+                                            placeholderTextColor="#666"
+                                            style={styles.inputDark}
+                                            placeholder="Enter your organization or company name"
+                                            value={form.startupName}
+                                            onChangeText={v => handleFormChange('startupName', v)}
+                                        />
+                                    </View>
+                                    <View style={styles.inputGroup}>
                                         <Text style={styles.label}>Role Title</Text>
                                         <TextInput placeholderTextColor="#666" style={styles.inputDark} placeholder="e.g., Co-Founder & CTO" value={form.roleTitle} onChangeText={v => handleFormChange('roleTitle', v)} />
                                     </View>
@@ -698,6 +696,31 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                                             multiline
                                         />
                                     </View>
+
+                                    {/* Custom Questions Section */}
+                                    <View style={styles.inputGroup}>
+                                        <Text style={[styles.label, { marginBottom: 4 }]}>Custom Questions (Optional, max 3)</Text>
+                                        <Text style={{ color: '#666', fontSize: 12, marginBottom: 12 }}>
+                                            Add up to 3 questions for applicants to answer
+                                        </Text>
+                                        {[0, 1, 2].map((index) => (
+                                            <View key={index} style={{ marginBottom: 12 }}>
+                                                <Text style={[styles.label, { fontSize: 12, marginBottom: 4 }]}>Question {index + 1}</Text>
+                                                <TextInput
+                                                    placeholderTextColor="#666"
+                                                    style={styles.inputDark}
+                                                    placeholder={`Enter question ${index + 1} (optional)`}
+                                                    value={form.customQuestions[index]}
+                                                    onChangeText={v => {
+                                                        const newQuestions = [...form.customQuestions];
+                                                        newQuestions[index] = v;
+                                                        handleFormChange('customQuestions', newQuestions);
+                                                    }}
+                                                />
+                                            </View>
+                                        ))}
+                                    </View>
+
                                     <View style={styles.inputGroup}>
                                         <Text style={styles.label}>Application Link</Text>
                                         <TextInput

@@ -6,13 +6,23 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 // Middleware to verify JWT and attach user to request
 module.exports = async function auth(req, res, next) {
     try {
-        const authHeader = req.headers.authorization;
+        let token = null;
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        // Check Authorization header first
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7);
+        }
+
+        // Fallback to query param token (for browser downloads)
+        if (!token && req.query.token) {
+            token = req.query.token;
+        }
+
+        if (!token) {
             return res.status(401).json({ error: 'No token provided' });
         }
 
-        const token = authHeader.substring(7);
         const decoded = jwt.verify(token, JWT_SECRET);
 
         const user = await User.findById(decoded.userId).select('-passwordHash');

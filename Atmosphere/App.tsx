@@ -25,18 +25,28 @@ function AppContent() {
 
   useEffect(() => {
     // On app start, check for existing token and user to persist login
-    (async () => {
+    const checkAuth = async () => {
       try {
         const AsyncStorage = require('@react-native-async-storage/async-storage').default;
         const token = await AsyncStorage.getItem('token');
-        if (token) {
+        if (token && route !== 'home') {
           setRoute('home');
+        } else if (!token && route === 'home') {
+          // Token was cleared (logout), go back to signin
+          setRoute('signin');
         }
       } catch {
         // ignore
       }
-    })();
-  }, []);
+    };
+
+    // Check immediately on mount
+    checkAuth();
+
+    // Also check periodically for logout detection in release mode
+    const interval = setInterval(checkAuth, 500);
+    return () => clearInterval(interval);
+  }, [route]);
 
   const isAuthRoute = ['signin', 'signup', 'forgotpw'].includes(route);
 

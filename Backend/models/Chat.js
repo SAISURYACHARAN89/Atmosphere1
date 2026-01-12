@@ -12,6 +12,8 @@ const ChatSchema = new Schema(
         groupImage: { type: String },
         groupType: { type: String, enum: ['Public', 'Private', 'Verified'], default: 'Public' },
         groupAdmin: { type: Schema.Types.ObjectId, ref: 'User' },
+        isJobGroup: { type: Boolean, default: false },
+        jobId: { type: Schema.Types.ObjectId, ref: 'Job' },
         meta: { type: Schema.Types.Mixed },
     },
     { timestamps: true }

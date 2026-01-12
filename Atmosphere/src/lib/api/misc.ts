@@ -48,6 +48,70 @@ export async function fetchJobs(limit = 20, skip = 0) {
     return data.jobs || [];
 }
 
+export async function getJob(jobId: string) {
+    const data = await request(`/api/jobs/${encodeURIComponent(jobId)}`, {}, { method: 'GET' });
+    return data;
+}
+
+export async function createJob(payload: {
+    title: string;
+    startupName?: string;
+    sector?: string;
+    locationType?: string;
+    employmentType?: string;
+    isRemote?: boolean;
+    compensation?: string;
+    description?: string;
+    requirements: string;
+    customQuestions?: string[];
+    applicationUrl?: string;
+}) {
+    const data = await request('/api/jobs', payload, { method: 'POST' });
+    return data;
+}
+
+export async function updateJob(jobId: string, payload: any) {
+    const data = await request(`/api/jobs/${encodeURIComponent(jobId)}`, payload, { method: 'PUT' });
+    return data;
+}
+
+export async function deleteJob(jobId: string) {
+    return request(`/api/jobs/${encodeURIComponent(jobId)}`, {}, { method: 'DELETE' });
+}
+
+export async function applyToJob(jobId: string, payload: {
+    responses?: { question: string; answer: string }[];
+    resumeUrl?: string;
+}) {
+    const data = await request(`/api/jobs/${encodeURIComponent(jobId)}/apply`, payload, { method: 'POST' });
+    return data;
+}
+
+export async function getMyAppliedJobs() {
+    const data = await request('/api/jobs/my-applied', {}, { method: 'GET' });
+    return data.jobs || [];
+}
+
+export async function getMyPostedJobs() {
+    const data = await request('/api/jobs/my-posted', {}, { method: 'GET' });
+    return data.jobs || [];
+}
+
+export async function getJobApplicants(jobId: string) {
+    const data = await request(`/api/jobs/${encodeURIComponent(jobId)}/applicants`, {}, { method: 'GET' });
+    return data;
+}
+
+export async function exportJobApplicants(jobId: string) {
+    const baseUrl = await getBaseUrl();
+    const token = await AsyncStorage.getItem('token');
+    const response = await fetch(`${baseUrl}/api/jobs/${encodeURIComponent(jobId)}/applicants/export`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('Failed to export applicants');
+    return response;
+}
+
 export async function fetchGrants(limit = 20, skip = 0) {
     const data = await request('/api/grants', { limit, skip }, { method: 'GET' });
     return data || [];
