@@ -51,6 +51,8 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
     const [routeHistory, setRouteHistory] = useState<RouteKey[]>([]);
     // Account type for portfolio routing
     const [accountType, setAccountType] = useState<'investor' | 'startup' | 'personal' | null>(null);
+    // Initial tab for TradingSection (when coming from Raise a Round)
+    const [tradeInitialTab, setTradeInitialTab] = useState<'Buy' | 'Sell' | undefined>(undefined);
 
     // Fetch user profile to get accountType
     useEffect(() => {
@@ -295,20 +297,20 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
                     }}
                 />;
             case 'setup':
-                return <SetupProfile onDone={() => setRoute('profile')} onClose={() => setRoute('profile')} onNavigateToTrade={() => setRoute('trade')} />;
+                return <SetupProfile onDone={() => setRoute('profile')} onClose={() => setRoute('profile')} onNavigateToTrade={() => { setTradeInitialTab('Sell'); setRoute('trade'); }} />;
             case 'verify':
                 // Direct navigation to Get Verified (StartupVerifyStep)
-                return <StartupVerifyStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} onNavigateToTrade={() => setRoute('trade')} />;
+                return <StartupVerifyStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} onNavigateToTrade={() => { setTradeInitialTab('Sell'); setRoute('trade'); }} />;
             case 'portfolio':
                 // Show appropriate portfolio step based on account type
                 if (accountType === 'investor') {
                     return <InvestorPortfolioStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} />;
                 }
-                return <StartupPortfolioStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} onNavigateToTrade={() => setRoute('trade')} />;
+                return <StartupPortfolioStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} onNavigateToTrade={() => { setTradeInitialTab('Sell'); setRoute('trade'); }} />;
             case 'topstartups':
                 return <TopStartups />;
             case 'trade':
-                return <TradingSection />;
+                return <TradingSection initialTab={tradeInitialTab} onTabChange={() => setTradeInitialTab(undefined)} />;
             case 'jobs':
                 return <Opportunities onNavigate={(r: string) => navigateTo(r as RouteKey)} />;
             case 'myTeam':

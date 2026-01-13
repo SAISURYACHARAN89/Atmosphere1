@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { View, Text, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator, Dimensions, Animated, ScrollView, Image as RNImage, FlatList, RefreshControl, LayoutAnimation, UIManager, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createTrade, getMyTrades, getAllTrades, updateTrade, deleteTrade, uploadImage, uploadVideo, getProfile, toggleTradeSave, getSavedTrades, createOrFindChat, sendMessage, shareContent } from '../lib/api';
+import { createTrade, getMyTrades, getAllTrades, updateTrade, deleteTrade, uploadImage, uploadVideo, getProfile, toggleTradeSave, getSavedTrades, createOrFindChat, sendMessage, shareContent, saveStartupProfile } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -45,13 +45,18 @@ interface ActiveTrade {
     externalLinkUrl?: string;
 }
 
-const Trading = () => {
+interface TradingProps {
+    initialTab?: 'Buy' | 'Sell';
+    onTabChange?: () => void;
+}
+
+const Trading = ({ initialTab, onTabChange }: TradingProps) => {
     // Data State
     const [refreshing, setRefreshing] = useState(false);
     const { showAlert } = useAlert();
 
     // UI State
-    const [activeTab, setActiveTab] = useState<'Data' | 'Buy' | 'Sell' | 'Leaderboard'>('Buy');
+    const [activeTab, setActiveTab] = useState<'Data' | 'Buy' | 'Sell' | 'Leaderboard'>(initialTab || 'Buy');
     const [searchValue, setSearchValue] = useState('');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [accountType, setAccountType] = useState<string>('personal'); // Track if user is investor
@@ -114,6 +119,8 @@ const Trading = () => {
     const [selectedCompanyName, setSelectedCompanyName] = useState<string>('');
     const [selectedCompanyAge, setSelectedCompanyAge] = useState<string>('');
     const [editingTradeId, setEditingTradeId] = useState<string | null>(null);
+    const [fundingTarget, setFundingTarget] = useState<string>('');
+    const [selectedRound, setSelectedRound] = useState<string>('');
 
     // Active trades
     const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
@@ -132,6 +139,29 @@ const Trading = () => {
             UIManager.setLayoutAnimationEnabledExperimental(true);
         }
     }, []);
+
+    // Auto-switch to Sell tab when initialTab is set (coming from Raise a Round)
+    useEffect(() => {
+        if (initialTab === 'Sell') {
+            console.log('[TradingSection] Auto-switching to Sell tab (from Raise a Round)');
+            setActiveTab('Sell');
+            // Scroll pager to Sell tab position after a brief delay
+            setTimeout(() => {
+                pagerRef.current?.scrollTo({ x: screenW, animated: false });
+            }, 100);
+
+            // Show alert to guide user on filling equity range and funding target
+            setTimeout(() => {
+                showAlert(
+                    'Raise a Round',
+                    'Fill in your desired equity range and funding target to open a trade. Your startup details will be auto-populated.',
+                );
+            }, 300);
+
+            // Clear the initial tab flag so future visits don't auto-switch
+            onTabChange?.();
+        }
+    }, [initialTab, onTabChange, showAlert]);
 
     // Animated filter toggle with smooth height animation
     const toggleFilterWithAnimation = () => {
@@ -299,6 +329,46 @@ const Trading = () => {
                                 // Store startup details for auto-population
                                 startupDetails: startupDetails,
                             } as any]);
+
+                            // Auto-expand the startup's company card for the Sell form
+                            const cardKey = `${userId}-${startupDetails.companyName}`;
+                            setExpandedCompany(cardKey);
+
+                            // Auto-populate form fields from startup profile data
+                            console.log('[TradingSection] startupDetails for auto-populate:', JSON.stringify(startupDetails, null, 2));
+
+                            // Description from 'about' field
+                            if (startupDetails.about) {
+                                setDescription(startupDetails.about);
+                            }
+
+                            // Industries from 'companyType' (single string, convert to array)
+                            if (startupDetails.companyType) {
+                                setSelectedIndustries([startupDetails.companyType]);
+                            }
+
+                            // Video from 'video' field
+                            if (startupDetails.video) {
+                                setVideoUri(startupDetails.video);
+                            }
+
+                            // Profile image from 'profileImage' field (convert to array)
+                            if (startupDetails.profileImage) {
+                                setImageUris([startupDetails.profileImage]);
+                            }
+
+                            // Revenue status from nested 'financialProfile.revenueType'
+                            if (startupDetails.financialProfile?.revenueType) {
+                                const revenueType = startupDetails.financialProfile.revenueType.toLowerCase();
+                                setRevenueStatus(revenueType.includes('revenue') && !revenueType.includes('pre') ? 'revenue-generating' : 'pre-revenue');
+                            }
+
+                            // Username
+                            if (profileData.user?.username) {
+                                setStartupUsername(`@${profileData.user.username}`);
+                            }
+
+                            console.log('[TradingSection] Auto-populated form fields from startup profile');
                         } else {
                             setInvestors([]);
                         }
@@ -310,9 +380,10 @@ const Trading = () => {
                 if (mounted) setInvestorsLoading(false);
             }
         };
+        // Load holdings on mount and whenever switching to Sell tab
         loadMyHoldings();
         return () => { mounted = false; };
-    }, []);
+    }, [activeTab]);
 
     // Fetch My Active Trades (Sell Tab)
     useEffect(() => {
@@ -526,6 +597,29 @@ const Trading = () => {
                     if (response && response.trade) {
                         setActiveTrades([...activeTrades, response.trade]);
                     }
+
+                    // For startups: Update startup profile with fundingNeeded and roundType
+                    if (accountType === 'startup' && (fundingTarget || selectedRound)) {
+                        try {
+                            const profileUpdate: any = {};
+                            if (fundingTarget) {
+                                // Parse funding target (remove currency symbols and commas)
+                                const numericTarget = parseFloat(fundingTarget.replace(/[^0-9.]/g, '')) || 0;
+                                profileUpdate.fundingNeeded = numericTarget;
+                                profileUpdate.requiredCapital = numericTarget;
+                            }
+                            if (selectedRound) {
+                                profileUpdate.roundType = selectedRound;
+                                profileUpdate.stage = selectedRound;
+                            }
+                            await saveStartupProfile(profileUpdate);
+                            console.log('[TradingSection] Updated startup profile with funding info:', profileUpdate);
+                        } catch (profileError) {
+                            console.warn('Failed to update startup profile with funding info:', profileError);
+                            // Don't show alert - trade was still created successfully
+                        }
+                    }
+
                     showAlert('Success', 'Trade opened successfully!');
                 }
 
@@ -796,6 +890,12 @@ const Trading = () => {
                                     toggleIndustry={toggleIndustry}
                                     onSubmit={handleOpenTrade}
                                     submitText={editingTradeId ? "Update Trade" : "Open Trade"}
+                                    isStartup={accountType === 'startup'}
+                                    fundingTarget={fundingTarget}
+                                    setFundingTarget={setFundingTarget}
+                                    selectedRound={selectedRound}
+                                    setSelectedRound={setSelectedRound}
+                                    isSubmitting={uploading}
                                 />
                             )}
                         </View>
@@ -909,6 +1009,12 @@ const Trading = () => {
                                                 onSubmit={handleOpenTrade}
                                                 submitText="Update Trade"
                                                 noPadding
+                                                isStartup={accountType === 'startup'}
+                                                fundingTarget={fundingTarget}
+                                                setFundingTarget={setFundingTarget}
+                                                selectedRound={selectedRound}
+                                                setSelectedRound={setSelectedRound}
+                                                isSubmitting={uploading}
                                             />
                                         ) : (
                                             <>

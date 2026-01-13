@@ -68,6 +68,9 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
     const [about, setAbout] = useState('');
     const [location, setLocation] = useState('');
     const [companyType, setCompanyType] = useState('');
+    // Multi-select industries (Startup Focus)
+    const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+    const [showIndustriesPicker, setShowIndustriesPicker] = useState(false);
     const [establishedOn, setEstablishedOn] = useState('');
     const [teamName, setTeamName] = useState('');
     const [teamRole, setTeamRole] = useState('');
@@ -129,6 +132,13 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
                         setAbout(data.about || '');
                         setLocation(data.location || '');
                         setCompanyType(data.companyType || '');
+                        // Load industries array for multi-select
+                        if (Array.isArray(data.industries)) {
+                            setSelectedIndustries(data.industries);
+                        } else if (data.companyType) {
+                            // Fallback: use companyType as single item if industries not set
+                            setSelectedIndustries([data.companyType]);
+                        }
                         setWebsite(data.website || '');
                         setVideoUrl(data.video || '');
                         setEstablishedOn(data.establishedOn ? String(data.establishedOn).slice(0, 10) : '');
@@ -395,6 +405,7 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
                 about,
                 location,
                 companyType,
+                industries: selectedIndustries, // Multi-select industries
                 website,
                 video: finalVideoUrl,
                 establishedOn,
@@ -460,7 +471,12 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
                         <TextInput placeholder="Search location" placeholderTextColor="#999" value={location} onChangeText={setLocation} style={styles.input} />
                     </View>
                     <View style={styles.formField}>
-                        <TextInput placeholder="Select company type" placeholderTextColor="#999" value={companyType} onChangeText={setCompanyType} style={styles.input} />
+                        <Text style={styles.label}>Startup Focus</Text>
+                        <TouchableOpacity onPress={() => setShowIndustriesPicker(true)} style={styles.input}>
+                            <Text style={{ color: selectedIndustries.length > 0 ? '#fff' : '#999' }}>
+                                {selectedIndustries.length > 0 ? selectedIndustries.join(', ') : 'Select focus areas'}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                     <View style={styles.formField}>
                         <Text style={styles.label}>Website</Text>
@@ -713,6 +729,37 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
                         ))}
                         <TouchableOpacity style={styles.modalCancel} onPress={() => setShowRoundDropdown(false)}>
                             <Text style={styles.modalCancelText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            {/* Startup Focus (Industries) Multi-Select Picker Modal */}
+            <Modal visible={showIndustriesPicker} transparent animationType="fade" onRequestClose={() => setShowIndustriesPicker(false)}>
+                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowIndustriesPicker(false)}>
+                    <View style={[styles.modalContent, { maxHeight: 400 }]}>
+                        <Text style={styles.modalTitle}>Startup Focus</Text>
+                        <ScrollView style={{ maxHeight: 280 }}>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                                {['AI', 'SaaS', 'Drones', 'FinTech', 'HealthTech', 'EdTech', 'E-commerce', 'Blockchain', 'IoT', 'CleanTech'].map((opt) => {
+                                    const active = selectedIndustries.includes(opt);
+                                    return (
+                                        <TouchableOpacity
+                                            key={opt}
+                                            onPress={() => {
+                                                setSelectedIndustries((prev) => prev.includes(opt) ? prev.filter(p => p !== opt) : [...prev, opt]);
+                                            }}
+                                            style={[styles.modalOption, { width: '48%' }, active && styles.modalOptionActive]}
+                                        >
+                                            <Text style={[styles.modalOptionLabel, active && styles.modalOptionLabelActive]}>{opt}</Text>
+                                            {active && <Text style={styles.checkmark}>✓</Text>}
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </ScrollView>
+                        <TouchableOpacity style={[styles.modalCancel, { marginTop: 12, backgroundColor: '#1a1a1a' }]} onPress={() => setShowIndustriesPicker(false)}>
+                            <Text style={[styles.modalCancelText, { fontWeight: '700' }]}>Done</Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
