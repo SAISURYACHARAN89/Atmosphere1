@@ -51,7 +51,7 @@ const makeLocalStyles = (theme: any) => StyleSheet.create({
     avatarUploadText: { color: '#fff', fontSize: 10, fontWeight: '600' },
 });
 
-export default function SetupProfile({ onDone, onClose }: { onDone: () => void; onClose?: () => void }) {
+export default function SetupProfile({ onDone, onClose, onNavigateToTrade }: { onDone: () => void; onClose?: () => void; onNavigateToTrade?: () => void }) {
     const { theme } = useContext(ThemeContext);
     const { showAlert } = useAlert();
     const localStyles = makeLocalStyles(theme);
@@ -288,13 +288,13 @@ export default function SetupProfile({ onDone, onClose }: { onDone: () => void; 
                 <View style={[localStyles.fullPage, roleOverlayStyle as any]}>
                     {/* Setup mode - full verification flow */}
                     {roleStep === 'startup' && (
-                        <StartupVerifyStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); onDone(); if (onClose) onClose(); }} />
+                        <StartupVerifyStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); onDone(); if (onClose) onClose(); }} onNavigateToTrade={onNavigateToTrade} />
                     )}
                     {roleStep === 'investor' && (
-                        <StartupVerifyStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); onDone(); if (onClose) onClose(); }} />
+                        <StartupVerifyStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); onDone(); if (onClose) onClose(); }} onNavigateToTrade={onNavigateToTrade} />
                     )}
                     {roleStep === 'personal' && (
-                        <StartupVerifyStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); onDone(); if (onClose) onClose(); }} />
+                        <StartupVerifyStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); onDone(); if (onClose) onClose(); }} onNavigateToTrade={onNavigateToTrade} />
                     )}
 
                     {/* Edit mode - direct to portfolio */}
@@ -302,7 +302,7 @@ export default function SetupProfile({ onDone, onClose }: { onDone: () => void; 
                         <InvestorPortfolioStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); if (onClose) onClose(); }} />
                     )}
                     {roleStep === 'portfolio_startup' && (
-                        <StartupPortfolioStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); if (onClose) onClose(); }} />
+                        <StartupPortfolioStep onBack={() => setRoleStep(null)} onDone={() => { setRoleStep(null); if (onClose) onClose(); }} onNavigateToTrade={onNavigateToTrade} />
                     )}
                 </View>
             )}

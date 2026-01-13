@@ -6,7 +6,7 @@ import InvestorPortfolioStep from './InvestorPortfolioStep';
 import KycScreen from '../KycScreen';
 import { getProfile, updateProfile } from '../../lib/api';
 
-export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+export default function StartupVerifyStep({ onBack, onDone, onNavigateToTrade }: { onBack: () => void; onDone: () => void; onNavigateToTrade?: () => void }) {
     const { showAlert } = useAlert();
     const [showPortfolio, setShowPortfolio] = useState(false);
     const [showKyc, setShowKyc] = useState(false);
@@ -82,6 +82,7 @@ export default function StartupVerifyStep({ onBack, onDone }: { onBack: () => vo
                             // ignore
                         }
                     }}
+                    onNavigateToTrade={onNavigateToTrade}
                 />
             );
         }

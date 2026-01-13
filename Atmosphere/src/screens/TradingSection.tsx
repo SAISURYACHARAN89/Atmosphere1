@@ -280,6 +280,28 @@ const Trading = () => {
                         } else {
                             setInvestors([]);
                         }
+                    } else if (userAccountType === 'startup') {
+                        // For startups, create a virtual portfolio entry from their startup profile
+                        const startupDetails = profileData.startupDetails || profileData.details || {};
+                        const userId = profileData.user?._id || profileData._id;
+                        const displayName = profileData.user?.displayName || profileData.displayName || startupDetails.companyName || 'Your Startup';
+
+                        // Use startup's own company as the "holding" they're selling equity in
+                        if (startupDetails.companyName) {
+                            const startupAsHolding = {
+                                companyName: startupDetails.companyName,
+                                date: startupDetails.establishedOn || new Date().toISOString(),
+                            };
+                            setInvestors([{
+                                _id: userId,
+                                user: { _id: userId, displayName, username: profileData.user?.username || '' },
+                                previousInvestments: [startupAsHolding],
+                                // Store startup details for auto-population
+                                startupDetails: startupDetails,
+                            } as any]);
+                        } else {
+                            setInvestors([]);
+                        }
                     }
                 }
             } catch (e) {
@@ -1143,8 +1165,8 @@ const Trading = () => {
         <SafeAreaView style={styles.container}>
             {/* Fixed header */}
             <View style={styles.headerContainer}>
-                {/* Swipeable tabs with underline indicator - Only show for investors */}
-                {accountType === 'investor' && (
+                {/* Swipeable tabs with underline indicator - Show for investors and startups */}
+                {(accountType === 'investor' || accountType === 'startup') && (
                     <View style={styles.tabsRow}>
                         <TouchableOpacity
                             style={styles.tabItem}

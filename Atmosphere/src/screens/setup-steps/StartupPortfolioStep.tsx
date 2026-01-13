@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert, Animated, ScrollView, StyleSheet, ActivityIndicator, Modal } from 'react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { useAlert } from '../../components/CustomAlert';
 import { Picker } from '@react-native-picker/picker';
 import { saveStartupProfile, getProfile, getStartupProfile, uploadDocument, uploadVideoFile, searchUsers } from '../../lib/api';
@@ -60,7 +61,7 @@ function CollapsibleSection({ title, open, onPress, children }: any) {
     );
 }
 
-export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade }: { onBack: () => void; onDone: () => void; onNavigateToTrade?: () => void }) {
     const { showAlert } = useAlert();
     const [activeSection, setActiveSection] = useState('');
     const [companyProfile, setCompanyProfile] = useState('');
@@ -622,29 +623,22 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
 
             <CollapsibleSection title="Raise a round" open={activeSection === 'raise'} onPress={() => setActiveSection(activeSection === 'raise' ? '' : 'raise')}>
                 <View>
-                    <View style={styles.formField}>
-                        <Text style={styles.label}>Round</Text>
-                        <TouchableOpacity
-                            style={styles.dropdownButton}
-                            onPress={() => setShowRoundDropdown(true)}
-                        >
-                            <View>
-                                <Text style={styles.dropdownValue}>{roundType || 'Select round'}</Text>
-                            </View>
-                            <Text style={styles.dropdownArrow}>▼</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.formField}>
-                        <Text style={styles.label}>Required capital</Text>
-                        <TextInput
-                            placeholder="Enter required capital"
-                            placeholderTextColor="#999"
-                            value={requiredCapital}
-                            onChangeText={setRequiredCapital}
-                            style={styles.input}
-                            keyboardType="numeric"
-                        />
-                    </View>
+                    {/* Trade Button */}
+                    <TouchableOpacity
+                        style={styles.tradeButton}
+                        onPress={() => {
+                            console.log('Trade button pressed, onNavigateToTrade:', !!onNavigateToTrade);
+                            // Navigate to Trading section with Sell tab
+                            if (onNavigateToTrade) {
+                                onNavigateToTrade();
+                            } else {
+                                console.warn('onNavigateToTrade is not defined!');
+                            }
+                        }}
+                    >
+                        <Text style={styles.tradeButtonText}>TRADE</Text>
+                        <ChevronRight size={20} color="#fff" />
+                    </TouchableOpacity>
                 </View>
             </CollapsibleSection>
 
@@ -868,5 +862,56 @@ const styles = StyleSheet.create({
         color: '#ef4444',
         fontSize: 16,
         fontWeight: '600',
+    },
+    // Trade button styles
+    tradeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#1a1a1a',
+        borderWidth: 1,
+        borderColor: '#444',
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 16,
+    },
+    tradeButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    tradeConsentRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 12,
+        marginTop: 8,
+    },
+    tradeConsentBtn: {
+        marginTop: 2,
+    },
+    tradeConsentBox: {
+        width: 20,
+        height: 20,
+        borderWidth: 1,
+        borderColor: '#444',
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tradeConsentBoxChecked: {
+        borderColor: '#4caf50',
+        backgroundColor: '#4caf50',
+    },
+    tradeConsentCheck: {
+        width: 10,
+        height: 10,
+        backgroundColor: '#fff',
+        borderRadius: 5,
+    },
+    tradeConsentText: {
+        flex: 1,
+        color: '#888',
+        fontSize: 13,
+        lineHeight: 18,
     },
 });

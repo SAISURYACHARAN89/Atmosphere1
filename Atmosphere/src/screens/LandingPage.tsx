@@ -295,16 +295,16 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
                     }}
                 />;
             case 'setup':
-                return <SetupProfile onDone={() => setRoute('profile')} onClose={() => setRoute('profile')} />;
+                return <SetupProfile onDone={() => setRoute('profile')} onClose={() => setRoute('profile')} onNavigateToTrade={() => setRoute('trade')} />;
             case 'verify':
                 // Direct navigation to Get Verified (StartupVerifyStep)
-                return <StartupVerifyStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} />;
+                return <StartupVerifyStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} onNavigateToTrade={() => setRoute('trade')} />;
             case 'portfolio':
                 // Show appropriate portfolio step based on account type
                 if (accountType === 'investor') {
                     return <InvestorPortfolioStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} />;
                 }
-                return <StartupPortfolioStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} />;
+                return <StartupPortfolioStep onDone={() => setRoute('profile')} onBack={() => setRoute('profile')} onNavigateToTrade={() => setRoute('trade')} />;
             case 'topstartups':
                 return <TopStartups />;
             case 'trade':
