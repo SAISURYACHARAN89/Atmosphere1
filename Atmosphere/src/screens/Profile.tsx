@@ -115,6 +115,7 @@ type RouteKey = 'home' | 'search' | 'notifications' | 'chats' | 'reels' | 'profi
 const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPostPress, onReelSelect }: { onNavigate?: (route: RouteKey) => void; userId?: string | null; onClose?: () => void; onCreatePost?: () => void; onPostPress?: (postId: string) => void; onReelSelect?: (reelId: string, userId: string) => void }) => {
     const { theme } = useContext(ThemeContext);
     const [data, setData] = useState<any | null>(null);
+    const [rawProfileData, setRawProfileData] = useState<any | null>(null); // Store raw API response for expanded view
     const [loading, setLoading] = useState(true);
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
     const [ownProfileId, setOwnProfileId] = useState<string | null>(null);
@@ -184,6 +185,9 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
 
                     const normalized = normalizeProfile(profileData);
                     const finalData = normalized || mockData;
+
+                    // Store raw profile data for expanded view (contains details with teamMembers, video, fundingRounds)
+                    setRawProfileData(profileData);
 
                     // Only update if data is different to avoid re-render flicker
                     const dataChanged = JSON.stringify(finalData) !== JSON.stringify(cachedData);
@@ -581,6 +585,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                 }
                             }}
                             profileData={src}
+                            rawProfileData={rawProfileData}
                             accountType={accountType}
                             trades={trades}
                             tradesLoading={tradesLoading}

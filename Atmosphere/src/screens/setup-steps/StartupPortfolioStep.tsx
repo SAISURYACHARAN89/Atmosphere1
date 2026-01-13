@@ -153,6 +153,18 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                                 setInvestorDocUrl(data.financialProfile.investorDoc);
                             }
                         }
+
+                        // Load fundingRounds from backend
+                        if (Array.isArray(data.fundingRounds) && data.fundingRounds.length > 0) {
+                            setFundingRounds(data.fundingRounds.map((r: any, i: number) => ({
+                                id: i + 1,
+                                amount: r.amount ? String(r.amount) : '',
+                                investor: r.investorName || '',
+                                docUrl: r.doc || '',
+                                pendingDoc: null
+                            })));
+                        }
+
                         // Load round/stage (backend stores as 'stage', frontend uses 'roundType')
                         setRoundType(data.roundType || data.stage || '');
                         // Load required capital (backend stores as 'fundingNeeded', frontend uses 'requiredCapital')
@@ -160,6 +172,12 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                         // Populate documents URL
                         if (data.documents) {
                             setUploadUrl(data.documents);
+                        }
+
+                        // Load video name if video URL exists
+                        if (data.video) {
+                            const parts = data.video.split('/');
+                            setVideoName(parts[parts.length - 1] || 'Video uploaded');
                         }
                     } else {
                         console.log('No startup data found for user');
@@ -385,6 +403,12 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                     role: m.role,
                     userId: m.userId
                 })),
+                fundingRounds: fundingMethod === 'Capital Raised' ? fundingRounds.map(r => ({
+                    round: `Round ${fundingRounds.indexOf(r) + 1}`,
+                    amount: Number(r.amount) || 0,
+                    investorName: r.investor,
+                    doc: r.docUrl || ''
+                })) : [],
                 financialProfile: {
                     revenueType,
                     fundingMethod,
@@ -572,7 +596,7 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                                     </View>
 
                                     <View style={[styles.formField, { marginBottom: 12 }]}>
-                                        <Text style={styles.label}>Investor/Grant name</Text>
+                                        <Text style={styles.label}>Investor / Grant name</Text>
                                         <TextInput
                                             placeholder="Enter investor name"
                                             placeholderTextColor="#666"
@@ -638,7 +662,7 @@ export default function StartupPortfolioStep({ onBack, onDone }: { onBack: () =>
                     {uploadingVideo ? (
                         <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                        <Text style={styles.uploadText}>{videoName || (videoUrl ? 'Video Uploaded - Tap to Change' : 'Upload company video / demo')}</Text>
+                        <Text style={styles.uploadText}>{videoUrl ? 'Video Uploaded - Tap to Change' : 'Upload company video / demo'}</Text>
                     )}
                 </TouchableOpacity>
             </View>

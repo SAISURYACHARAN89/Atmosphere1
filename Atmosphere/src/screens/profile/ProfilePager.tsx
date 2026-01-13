@@ -4,10 +4,15 @@ import { View, Text, TouchableOpacity, Dimensions, Animated, FlatList, ActivityI
 import { PLACEHOLDER } from '../../lib/localImages';
 import { getImageSource } from '../../lib/image';
 import styles from './Profile.styles';
-import { Play, Video, Copy, MapPin, Briefcase, TrendingUp, DollarSign, Users, Calendar, Target, Globe, CheckCircle, Building2 } from 'lucide-react-native';
+import { Play, Video, Copy } from 'lucide-react-native';
+import { ENDPOINTS } from '../../lib/api/endpoints';
+import { useNavigation } from '@react-navigation/native';
+import InvestorExpand from './InvestorExpand';
+import StartupExpand from './StartupExpand';
+import PersonalExpand from './PersonalExpand';
 
 type Props = {
-    posts: any[];
+    posts?: any[];
     reels?: any[];
     postsLoading: boolean;
     reelsLoading?: boolean;
@@ -15,6 +20,7 @@ type Props = {
     onPostPress?: (postId: string) => void;
     onReelPress?: (reelId: string) => void;
     profileData?: any;
+    rawProfileData?: any; // Raw API response with details
     accountType?: 'investor' | 'startup' | 'personal';
     trades?: any[];
     tradesLoading?: boolean;
@@ -22,7 +28,7 @@ type Props = {
 };
 
 export default function ProfilePager({
-    posts,
+    posts = [],
     reels = [],
     postsLoading,
     reelsLoading = false,
@@ -30,6 +36,7 @@ export default function ProfilePager({
     onPostPress,
     onReelPress,
     profileData,
+    rawProfileData,
     accountType = 'personal',
     trades = [],
     tradesLoading = false,
@@ -40,9 +47,27 @@ export default function ProfilePager({
     const screenW = Dimensions.get('window').width;
     const cardContainerWidth = Math.min(screenW - 24, 900);
     const [activeTab, setActiveTab] = useState<'posts' | 'expand' | 'trades'>('posts');
+    const [tabHeights, setTabHeights] = useState({ posts: 500, expand: 500, trades: 500 });
+    const pagerHeight = useRef(new Animated.Value(500)).current;
+
+    React.useEffect(() => {
+        const targetH = tabHeights[activeTab] || 500;
+        Animated.timing(pagerHeight, {
+            toValue: Math.max(targetH, 500),
+            duration: 300,
+            useNativeDriver: false // height cannot use native driver
+        }).start();
+    }, [activeTab, tabHeights]);
+
+    const handleLayout = (tab: 'posts' | 'expand' | 'trades', event: any) => {
+        const h = event.nativeEvent.layout.height;
+        if (Math.abs(h - tabHeights[tab]) > 10) {
+            setTabHeights(prev => ({ ...prev, [tab]: h }));
+        }
+    };
 
     const combinedContent = React.useMemo(() => {
-        const postsWithType = posts.map(p => ({ ...p, _type: 'post' as const }));
+        const postsWithType = (posts || []).map(p => ({ ...p, _type: 'post' as const }));
         const reelsWithType = reels.map(r => ({ ...r, _type: 'reel' as const }));
         const all = [...postsWithType, ...reelsWithType];
         all.sort((a, b) => {
@@ -104,250 +129,14 @@ export default function ProfilePager({
         );
     };
 
-    const renderInvestorExpand = () => {
-        const details = investorDetails || profileData?.details || {};
-        const about = details.about || profileData?.tagline || profileData?.description || '';
-        const investmentFocus = details.investmentFocus || [];
-        const stage = details.stage || '';
-        const interestedRounds = details.interestedRounds || [];
-        const geography = Array.isArray(details.geography) ? details.geography.join(', ') : (details.geography || '');
-        const checkSize = details.checkSize || {};
-        const holdings = details.previousInvestments || [];
-
-        return (
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100, alignItems: 'center' }}>
-                <View style={{ width: cardContainerWidth, gap: 16 }}>
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Investor Profile</Text>
-
-                    <View style={[cardStyles.card, { width: '100%' }]}> {/* main investor card */}
-                        <View style={cardStyles.aboutSection}>
-                            <Text style={cardStyles.aboutLabel}>About</Text>
-                            <Text style={cardStyles.aboutText}>
-                                {about || 'Angel investor | Early stage startup enthusiast'}
-                            </Text>
-                        </View>
-
-                        <Text style={cardStyles.sectionTitle}>Investment Focus</Text>
-
-                        <View style={cardStyles.firstRow}>
-                            <Target size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Industries</Text>
-                        </View>
-                        <View style={cardStyles.chipRow}>
-                            {(investmentFocus.length > 0 ? investmentFocus : ['AI & ML', 'SaaS', 'FinTech', 'HealthTech']).map((focus: string, idx: number) => (
-                                <View key={idx} style={cardStyles.chip}>
-                                    <Text style={cardStyles.chipText}>{focus}</Text>
-                                </View>
-                            ))}
-                        </View>
-
-                        <View style={cardStyles.row}>
-                            <TrendingUp size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Stage</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>{stage || 'Early Stage'}</Text>
-
-                        <View style={cardStyles.row}>
-                            <Briefcase size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Interested rounds</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>
-                            {interestedRounds.length > 0 ? interestedRounds.join(', ') : 'Pre-seed, Seed, Series A'}
-                        </Text>
-
-                        <View style={cardStyles.row}>
-                            <Globe size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Investable Geography</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>{geography || 'North America, Europe'}</Text>
-
-                        <View style={cardStyles.row}>
-                            <DollarSign size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Check Size</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>
-                            {checkSize.min || checkSize.max ? `$${(checkSize.min / 1000 || 0)}K - $${(checkSize.max / 1000 || 0)}K` : '$50K - $500K'}
-                        </Text>
-
-                        <View style={cardStyles.row}>
-                            <CheckCircle size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Verified Investments</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>{holdings.length || 4}</Text>
-                    </View>
-
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', marginTop: 4 }}>Holdings</Text>
-
-                    <View style={[holdingsStyles.grid, { width: '100%' }]}>
-                        {(holdings.length > 0 ? holdings : mockHoldings).map((holding: any, idx: number) => (
-                            <View key={idx} style={holdingsStyles.card}>
-                                <View style={holdingsStyles.cardContent}>
-                                    <View style={holdingsStyles.logoContainer}>
-                                        {holding.logo ? (
-                                            <Image source={{ uri: holding.logo }} style={holdingsStyles.logo} />
-                                        ) : (
-                                            <View style={holdingsStyles.logoPlaceholder}>
-                                                <Text style={holdingsStyles.logoText}>{(holding.name || holding.companyName || 'C').charAt(0)}</Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                    <View style={holdingsStyles.info}>
-                                        <Text style={holdingsStyles.name} numberOfLines={1}>{holding.name || holding.companyName || 'Company'}</Text>
-                                        <Text style={holdingsStyles.sector} numberOfLines={1}>{holding.sector || holding.industry || 'Tech'}</Text>
-                                    </View>
-                                    <TouchableOpacity style={holdingsStyles.viewBtn}>
-                                        <Text style={holdingsStyles.viewBtnText}>View</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            </ScrollView>
-        );
-    };
-
-    // Mock holdings data for display
-    const mockHoldings = [
-        { name: 'Airbound.co', sector: 'Logistics', logo: null },
-        { name: 'NeuralHealth', sector: 'HealthTech', logo: null },
-        { name: 'GreenCharge', sector: 'CleanTech', logo: null },
-        { name: 'CodeMentor AI', sector: 'EdTech', logo: null },
-    ];
-
-    // Render Startup Expand Section
-    const renderStartupExpand = () => {
-        const details = profileData?.details || profileData || {};
-        const about = details.about || profileData?.tagline || profileData?.description || '';
-        const location = details.location || profileData?.location || '';
-        const industry = details.companyType || profileData?.industry || '';
-        const stage = details.stage || profileData?.stage || '';
-        const teamSize = details.teamMembers?.length || profileData?.stats?.teamSize || 0;
-        const fundingRaised = details.fundingRaised || details.financialProfile?.fundingAmount || profileData?.stats?.fundingRaised || 0;
-        const founded = details.establishedOn ? new Date(details.establishedOn).getFullYear() : (profileData?.founded || '');
-
-        return (
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100, alignItems: 'center' }}>
-                <View style={{ width: cardContainerWidth, gap: 16 }}>
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Startup Profile</Text>
-
-                    {/* Main Card */}
-                    <View style={[cardStyles.card, { width: '100%' }]}>
-                        {/* About Section */}
-                        {about ? (
-                            <View style={cardStyles.aboutSection}>
-                                <Text style={cardStyles.aboutLabel}>About</Text>
-                                <Text style={cardStyles.aboutText}>{about}</Text>
-                            </View>
-                        ) : null}
-
-                        {/* Industry */}
-                        <View style={cardStyles.firstRow}>
-                            <Building2 size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Industry</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>{industry || 'Not specified'}</Text>
-
-                        {/* Location */}
-                        {location ? (
-                            <>
-                                <View style={cardStyles.row}>
-                                    <MapPin size={16} color="#888" />
-                                    <Text style={cardStyles.rowTitle}>Location</Text>
-                                </View>
-                                <Text style={cardStyles.rowValue}>{location}</Text>
-                            </>
-                        ) : null}
-
-                        {/* Founded */}
-                        {founded ? (
-                            <>
-                                <View style={cardStyles.row}>
-                                    <Calendar size={16} color="#888" />
-                                    <Text style={cardStyles.rowTitle}>Founded</Text>
-                                </View>
-                                <Text style={cardStyles.rowValue}>{founded}</Text>
-                            </>
-                        ) : null}
-
-                        {/* Stage */}
-                        <View style={cardStyles.row}>
-                            <TrendingUp size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Stage</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>{stage || 'Not specified'}</Text>
-
-                        {/* Team Size */}
-                        <View style={cardStyles.row}>
-                            <Users size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Team Size</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>{teamSize} members</Text>
-
-                        {/* Funding Raised */}
-                        <View style={cardStyles.row}>
-                            <DollarSign size={16} color="#888" />
-                            <Text style={cardStyles.rowTitle}>Funding Raised</Text>
-                        </View>
-                        <Text style={cardStyles.rowValue}>
-                            {fundingRaised ? `$${Number(fundingRaised).toLocaleString()}` : 'Bootstrapped'}
-                        </Text>
-                    </View>
-                </View>
-            </ScrollView>
-        );
-    };
-
-    // Render Personal Expand Section
-    const renderPersonalExpand = () => {
-        const bio = profileData?.tagline || profileData?.description || profileData?.bio || '';
-        const location = profileData?.location || '';
-
-        return (
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100, alignItems: 'center' }}>
-                <View style={{ width: cardContainerWidth, gap: 16 }}>
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Profile</Text>
-
-                    {/* Main Card */}
-                    <View style={[cardStyles.card, { width: '100%' }]}>
-                        {/* Bio */}
-                        {bio ? (
-                            <View style={cardStyles.aboutSection}>
-                                <Text style={cardStyles.aboutLabel}>About</Text>
-                                <Text style={cardStyles.aboutText}>{bio}</Text>
-                            </View>
-                        ) : (
-                            <View style={{ paddingVertical: 12 }}>
-                                <Text style={{ color: '#666', fontSize: 14, textAlign: 'center' }}>
-                                    No bio added yet
-                                </Text>
-                            </View>
-                        )}
-
-                        {/* Location */}
-                        {location ? (
-                            <>
-                                <View style={cardStyles.firstRow}>
-                                    <MapPin size={16} color="#888" />
-                                    <Text style={cardStyles.rowTitle}>Location</Text>
-                                </View>
-                                <Text style={cardStyles.rowValue}>{location}</Text>
-                            </>
-                        ) : null}
-                    </View>
-                </View>
-            </ScrollView>
-        );
-    };
-
     // Render Expand Section based on account type
     const renderExpandSection = () => {
         if (accountType === 'investor') {
-            return renderInvestorExpand();
+            return <InvestorExpand investorDetails={investorDetails} profileData={profileData} cardContainerWidth={cardContainerWidth} />;
         } else if (accountType === 'startup') {
-            return renderStartupExpand();
+            return <StartupExpand rawProfileData={rawProfileData} profileData={profileData} screenW={screenW} />;
         } else {
-            return renderPersonalExpand();
+            return <PersonalExpand profileData={profileData} cardContainerWidth={cardContainerWidth} />;
         }
     };
 
@@ -401,6 +190,7 @@ export default function ProfilePager({
                 data={trades}
                 keyExtractor={(item) => String(item._id || item.id || Math.random())}
                 renderItem={renderTradeCard}
+                scrollEnabled={false}
                 contentContainerStyle={{ padding: 16, paddingBottom: 100, alignItems: 'center' }}
                 showsVerticalScrollIndicator={false}
                 ListFooterComponent={<View style={{ height: 12 }} />}
@@ -434,7 +224,9 @@ export default function ProfilePager({
                 />
             </View>
 
-            <View style={styles.pagerWrap}>
+
+
+            <Animated.View style={[styles.pagerWrap, { height: pagerHeight }]}>
                 <Animated.ScrollView
                     horizontal
                     pagingEnabled
@@ -454,46 +246,52 @@ export default function ProfilePager({
                 >
                     {/* Posts Tab */}
                     <View style={[styles.pagerPage, { width: screenW, alignItems: 'flex-start', justifyContent: 'flex-start' }]}>
-                        <View style={{ height: 12 }} />
-                        {isLoading ? (
-                            <View style={styles.pagerEmpty}>
-                                <ActivityIndicator size="small" color={theme.primary} />
-                                <Text style={[styles.emptyText, { color: theme.placeholder }]}>Loading...</Text>
-                            </View>
-                        ) : combinedContent.length === 0 ? (
-                            <View style={styles.pagerEmpty}>
-                                <Text style={[styles.emptyTitle, { color: theme.text }]}>No posts yet</Text>
-                                <Text style={[styles.emptyText, { color: theme.placeholder }]}>
-                                    You haven't posted anything yet. Tap the + button to create your first post or reel.
-                                </Text>
-                            </View>
-                        ) : (
-                            <FlatList
-                                data={combinedContent}
-                                keyExtractor={(it) => `${it._type}-${String(it._id || it.id || Math.random())}`}
-                                numColumns={3}
-                                scrollEnabled={false}
-                                contentContainerStyle={{ paddingHorizontal: 1, paddingBottom: 80 }}
-                                columnWrapperStyle={{ gap: 2, marginBottom: 2 }}
-                                renderItem={renderGridItem}
-                                removeClippedSubviews={true}
-                                maxToRenderPerBatch={9}
-                                updateCellsBatchingPeriod={50}
-                            />
-                        )}
+                        <View onLayout={(e) => handleLayout('posts', e)} style={{ width: '100%' }}>
+                            <View style={{ height: 12 }} />
+                            {isLoading ? (
+                                <View style={styles.pagerEmpty}>
+                                    <ActivityIndicator size="small" color={theme.primary} />
+                                    <Text style={[styles.emptyText, { color: theme.placeholder }]}>Loading...</Text>
+                                </View>
+                            ) : combinedContent.length === 0 ? (
+                                <View style={styles.pagerEmpty}>
+                                    <Text style={[styles.emptyTitle, { color: theme.text }]}>No posts yet</Text>
+                                    <Text style={[styles.emptyText, { color: theme.placeholder }]}>
+                                        You haven't posted anything yet. Tap the + button to create your first post or reel.
+                                    </Text>
+                                </View>
+                            ) : (
+                                <FlatList
+                                    data={combinedContent}
+                                    keyExtractor={(it) => `${it._type}-${String(it._id || it.id || Math.random())}`}
+                                    numColumns={3}
+                                    scrollEnabled={false}
+                                    contentContainerStyle={{ paddingHorizontal: 1, paddingBottom: 80 }}
+                                    columnWrapperStyle={{ gap: 2, marginBottom: 2 }}
+                                    renderItem={renderGridItem}
+                                    removeClippedSubviews={true}
+                                    maxToRenderPerBatch={9}
+                                    updateCellsBatchingPeriod={50}
+                                />
+                            )}
+                        </View>
                     </View>
 
                     {/* Expand Tab */}
                     <View style={[styles.pagerPage, { width: screenW, alignItems: 'flex-start', justifyContent: 'flex-start' }]}>
-                        {renderExpandSection()}
+                        <View onLayout={(e) => handleLayout('expand', e)} style={{ width: '100%' }}>
+                            {renderExpandSection()}
+                        </View>
                     </View>
 
                     {/* Trades Tab */}
                     <View style={[styles.pagerPage, { width: screenW }]}>
-                        {renderTradesSection()}
+                        <View onLayout={(e) => handleLayout('trades', e)} style={{ width: '100%' }}>
+                            {renderTradesSection()}
+                        </View>
                     </View>
                 </Animated.ScrollView>
-            </View>
+            </Animated.View>
         </>
     );
 }
@@ -536,8 +334,8 @@ const expandStyles = {
 // Trade card styles
 const tradeStyles = {
     cardWrap: {
-        width: '100%',
-        alignSelf: 'center',
+        width: '100%' as any,
+        alignSelf: 'center' as any,
     },
     card: {
         backgroundColor: '#0d0d0d',
@@ -647,7 +445,7 @@ const holdingsStyles = {
         flexDirection: 'row' as const,
         flexWrap: 'wrap' as const,
         gap: 12,
-        width: '100%',
+        width: '100%' as any,
     },
     card: {
         width: '48%' as any,

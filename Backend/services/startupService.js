@@ -52,7 +52,7 @@ exports.updateStartup = async (req, res, next) => {
         if (!startupDetails) return res.status(404).json({ error: 'Startup details not found' });
         if (startupDetails.user.toString() !== req.user._id.toString()) return res.status(403).json({ error: 'Forbidden' });
 
-        const allowedFields = ['companyName', 'about', 'location', 'companyType', 'establishedOn', 'address', 'teamMembers', 'financialProfile', 'previousInvestments', 'verified', 'profileImage', 'stage', 'rounds', 'age', 'fundingRaised', 'fundingNeeded'];
+        const allowedFields = ['companyName', 'about', 'location', 'companyType', 'establishedOn', 'address', 'teamMembers', 'financialProfile', 'previousInvestments', 'verified', 'profileImage', 'stage', 'rounds', 'age', 'fundingRaised', 'fundingNeeded', 'website', 'video', 'fundingRounds'];
         allowedFields.forEach(field => { if (req.body[field] !== undefined) startupDetails[field] = req.body[field]; });
         await startupDetails.save();
         res.json({ startupDetails });

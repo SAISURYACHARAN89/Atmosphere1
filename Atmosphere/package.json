@@ -27,6 +27,7 @@
     "react-native": "0.82.1",
     "react-native-agora": "^4.5.3",
     "react-native-create-thumbnail": "^2.2.0",
+    "react-native-encrypted-storage": "^4.0.3",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.29.1",
     "react-native-image-crop-picker": "^0.51.1",

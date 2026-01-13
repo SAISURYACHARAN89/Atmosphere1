@@ -1,7 +1,20 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const TeamMemberSchema = new Schema({ name: String, role: String });
+const TeamMemberSchema = new Schema({
+    name: String,
+    username: String,
+    role: String,
+    userId: String // Optional string - allows empty values when user is not selected from search
+});
+
+const FundingRoundSchema = new Schema({
+    round: String,
+    amount: Number,
+    investorName: String,
+    doc: String
+});
+
 const PreviousInvestmentSchema = new Schema({ companyName: String, companyId: String, date: Date, amount: Number, docs: [String] });
 
 const StartupDetailsSchema = new Schema(
@@ -13,7 +26,10 @@ const StartupDetailsSchema = new Schema(
         companyType: String,
         establishedOn: Date,
         address: String,
+        website: String,
+        video: String,
         teamMembers: [TeamMemberSchema],
+        fundingRounds: [FundingRoundSchema],
         financialProfile: {
             revenueType: { type: String, enum: ['Pre-revenue', 'Revenue generating', 'Bootstrapped', 'Capital Raised'] },
             fundingMethod: { type: String, enum: ['Bootstrapped', 'Capital Raised'] },
@@ -25,7 +41,7 @@ const StartupDetailsSchema = new Schema(
         previousInvestments: [PreviousInvestmentSchema],
         verified: { type: Boolean, default: false },
         profileImage: String,
-        stage: { type: String, enum: ['MVP Launched', 'Revenue Generating', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C'], default: 'Seed' },
+        stage: { type: String, enum: ['MVP Launched', 'Revenue Generating', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Series D', 'Series D and beyond'], default: 'Seed' },
         rounds: { type: Number, default: 0 },
         age: { type: Number, default: 1 },
         fundingRaised: { type: Number, default: 0 },
