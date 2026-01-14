@@ -1,4 +1,5 @@
 const { VerificationDocument, VerificationStatus } = require('../models');
+const { refreshSignedUrl } = require('./s3Service');
 
 exports.uploadDocument = async (req, res, next) => {
     try {
@@ -20,7 +21,14 @@ exports.listUserDocuments = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const documents = await VerificationDocument.find({ user: userId }).populate('reviewedBy', 'username displayName').sort({ createdAt: -1 });
-        res.json({ documents });
+
+        const refreshedDocuments = await Promise.all(documents.map(async doc => {
+            const d = doc.toObject ? doc.toObject() : doc;
+            if (d.url) d.url = await refreshSignedUrl(d.url);
+            return d;
+        }));
+
+        res.json({ documents: refreshedDocuments });
     } catch (err) {
         next(err);
     }

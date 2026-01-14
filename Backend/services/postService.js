@@ -11,6 +11,20 @@ exports.sharePost = async (req, res, next) => {
 const { Post } = require('../models');
 const Like = require('../models/Like');
 const { User } = require('../models');
+const { refreshSignedUrl } = require('./s3Service');
+
+// Helper to refresh URLs
+const refreshPostUrls = async (post) => {
+    const p = post.toObject ? post.toObject() : post;
+    if (p.media && p.media.length > 0) {
+        p.media = await Promise.all(p.media.map(async (m) => {
+            if (m.url) m.url = await refreshSignedUrl(m.url);
+            if (m.thumbUrl) m.thumbUrl = await refreshSignedUrl(m.thumbUrl);
+            return m;
+        }));
+    }
+    return p;
+};
 
 exports.createPost = async (req, res, next) => {
     try {
@@ -36,7 +50,10 @@ exports.listPosts = async (req, res, next) => {
         if (blockedIds.length > 0) filter.author = { ...filter.author, $nin: blockedIds };
 
         const posts = await Post.find(filter).populate('author', 'username displayName avatarUrl verified').sort({ createdAt: -1 }).limit(parseInt(limit)).skip(parseInt(skip));
-        res.json({ posts, count: posts.length });
+
+        const refreshedPosts = await Promise.all(posts.map(post => refreshPostUrls(post)));
+
+        res.json({ posts: refreshedPosts, count: refreshedPosts.length });
     } catch (err) { next(err); }
 };
 
@@ -44,7 +61,8 @@ exports.listMyPosts = async (req, res, next) => {
     try {
         const { limit = 50, skip = 0 } = req.query;
         const posts = await Post.find({ author: req.user._id }).populate('author', 'username displayName avatarUrl verified').sort({ createdAt: -1 }).limit(parseInt(limit)).skip(parseInt(skip));
-        res.json({ posts, count: posts.length });
+        const refreshedPosts = await Promise.all(posts.map(post => refreshPostUrls(post)));
+        res.json({ posts: refreshedPosts, count: refreshedPosts.length });
     } catch (err) { next(err); }
 };
 
@@ -56,7 +74,9 @@ exports.getPost = async (req, res, next) => {
         if (req.user) {
             likedByUser = !!(await Like.findOne({ post: post._id, user: req.user._id }));
         }
-        res.json({ post: { ...post.toObject(), likedByUser } });
+
+        const refreshedPost = await refreshPostUrls(post);
+        res.json({ post: { ...refreshedPost, likedByUser } });
     } catch (err) { next(err); }
 };
 

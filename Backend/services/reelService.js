@@ -3,6 +3,7 @@ const ReelLike = require('../models/ReelLike');
 const ReelComment = require('../models/ReelComment');
 const ReelShare = require('../models/ReelShare');
 const { User } = require('../models');
+const { refreshSignedUrl } = require('./s3Service');
 
 // Create a new reel
 exports.createReel = async (req, res) => {
@@ -65,7 +66,14 @@ exports.getReelsFeed = async (req, res) => {
             });
         }
 
-        res.json({ reels });
+        // Refresh URLs
+        const refreshedReels = await Promise.all(reels.map(async (reel) => {
+            if (reel.videoUrl) reel.videoUrl = await refreshSignedUrl(reel.videoUrl);
+            if (reel.thumbnailUrl) reel.thumbnailUrl = await refreshSignedUrl(reel.thumbnailUrl);
+            return reel;
+        }));
+
+        res.json({ reels: refreshedReels });
     } catch (error) {
         console.error('Get reels error:', error);
         res.status(500).json({ error: 'Failed to fetch reels' });
@@ -85,7 +93,16 @@ exports.getUserReels = async (req, res) => {
             .populate('author', 'username displayName avatarUrl')
             .lean();
 
-        res.json({ reels });
+
+
+        // Refresh URLs
+        const refreshedReels = await Promise.all(reels.map(async (reel) => {
+            if (reel.videoUrl) reel.videoUrl = await refreshSignedUrl(reel.videoUrl);
+            if (reel.thumbnailUrl) reel.thumbnailUrl = await refreshSignedUrl(reel.thumbnailUrl);
+            return reel;
+        }));
+
+        res.json({ reels: refreshedReels });
     } catch (error) {
         console.error('Get user reels error:', error);
         res.status(500).json({ error: 'Failed to fetch user reels' });
@@ -113,6 +130,11 @@ exports.getReel = async (req, res) => {
             const like = await ReelLike.findOne({ reel: id, user: req.user.id });
             reel.isLiked = !!like;
         }
+
+
+
+        if (reel.videoUrl) reel.videoUrl = await refreshSignedUrl(reel.videoUrl);
+        if (reel.thumbnailUrl) reel.thumbnailUrl = await refreshSignedUrl(reel.thumbnailUrl);
 
         res.json({ reel });
     } catch (error) {

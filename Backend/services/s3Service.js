@@ -163,5 +163,37 @@ exports.getPresignedUploadUrl = async (fileName, fileType, folder = 'uploads') =
     return { uploadUrl, fileUrl, key };
 };
 
+/**
+ * Refresh a signed URL if it's expired (or just always refresh for safety)
+ * extracts key from the old URL and generates a new one.
+ */
+exports.refreshSignedUrl = async (oldUrl) => {
+    if (!oldUrl || !oldUrl.includes('amazonaws.com')) return oldUrl;
+    
+    try {
+        // Extract Key from URL
+        // Format: https://bucket.s3.region.amazonaws.com/KEY
+        const urlObj = new URL(oldUrl);
+        // Pathname starts with /, so slice(1) to get Key
+        const key = urlObj.pathname.slice(1);
+        
+        if (!key) return oldUrl;
+
+        const client = getS3Client();
+        const bucket = getBucketName();
+
+        const getCommand = new GetObjectCommand({
+            Bucket: bucket,
+            Key: key,
+        });
+
+        const newUrl = await getSignedUrl(client, getCommand, { expiresIn: 604800 }); // 7 days
+        return newUrl;
+    } catch (error) {
+        // If parsing fails, return old URL
+        return oldUrl;
+    }
+};
+
 exports.getS3Client = getS3Client;
 exports.getBucketName = getBucketName;

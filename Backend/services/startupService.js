@@ -1,4 +1,39 @@
 const { StartupDetails, User } = require('../models');
+const { refreshSignedUrl } = require('./s3Service');
+
+// Helper to refresh URLs
+const refreshStartupData = async (startup) => {
+    const s = startup.toObject ? startup.toObject() : startup;
+
+    // Refresh main fields
+    if (s.profileImage) s.profileImage = await refreshSignedUrl(s.profileImage);
+    if (s.video) s.video = await refreshSignedUrl(s.video);
+    if (s.documents) s.documents = await refreshSignedUrl(s.documents);
+    if (s.website && s.website.includes('amazonaws.com')) s.website = await refreshSignedUrl(s.website);
+
+    // Refresh nested Arrays
+    if (s.fundingRounds && s.fundingRounds.length) {
+        s.fundingRounds = await Promise.all(s.fundingRounds.map(async fr => {
+            if (fr.doc) fr.doc = await refreshSignedUrl(fr.doc);
+            return fr;
+        }));
+    }
+
+    if (s.previousInvestments && s.previousInvestments.length) {
+        s.previousInvestments = await Promise.all(s.previousInvestments.map(async pi => {
+            if (pi.docs && pi.docs.length) {
+                pi.docs = await Promise.all(pi.docs.map(d => refreshSignedUrl(d)));
+            }
+            return pi;
+        }));
+    }
+
+    if (s.financialProfile && s.financialProfile.investorDoc) {
+        s.financialProfile.investorDoc = await refreshSignedUrl(s.financialProfile.investorDoc);
+    }
+
+    return s;
+};
 
 exports.createStartup = async (req, res, next) => {
     try {
@@ -27,7 +62,8 @@ exports.getStartupByUser = async (req, res, next) => {
         // Populate user fields if not already populated
         try { await startupDetails.populate('user', 'username displayName avatarUrl'); } catch (e) { /* ignore */ }
         // Return both shapes for backward compatibility
-        return res.json({ startupDetails, user: startupDetails.user, details: startupDetails });
+        const refreshedDetails = await refreshStartupData(startupDetails);
+        return res.json({ startupDetails: refreshedDetails, user: startupDetails.user, details: refreshedDetails });
     } catch (err) {
         console.log('Error in getStartupByUser:', err);
         next(err);
@@ -39,7 +75,8 @@ exports.getStartupById = async (req, res, next) => {
         const startupId = req.params.startupId;
         const startupDetails = await StartupDetails.findById(startupId).populate('user', 'username displayName avatarUrl');
         if (!startupDetails) return res.status(404).json({ error: 'Startup details not found' });
-        return res.json({ startupDetails, user: startupDetails.user, details: startupDetails });
+        const refreshedDetails = await refreshStartupData(startupDetails);
+        return res.json({ startupDetails: refreshedDetails, user: startupDetails.user, details: refreshedDetails });
     } catch (err) {
         console.log('Error in getStartupById:', err);
         next(err);
@@ -133,10 +170,22 @@ exports.listStartupCards = async (req, res, next) => {
                 isFollowing: followSet.has(String(card.userId)),
             }));
 
-            return res.json({ startups: enriched, count: enriched.length });
+            // Refresh images for ALL cards
+            const refreshedEnriched = await Promise.all(enriched.map(async card => {
+                if (card.profileImage) card.profileImage = await refreshSignedUrl(card.profileImage);
+                return card;
+            }));
+
+            return res.json({ startups: refreshedEnriched, count: refreshedEnriched.length });
         }
 
-        res.json({ startups: startupCardsBase, count: startupCardsBase.length });
+        // Refresh images for base cards
+        const refreshedBase = await Promise.all(startupCardsBase.map(async card => {
+            if (card.profileImage) card.profileImage = await refreshSignedUrl(card.profileImage);
+            return card;
+        }));
+
+        res.json({ startups: refreshedBase, count: refreshedBase.length });
     } catch (err) {
         console.log('Error in listStartupCards:', err);
         next(err);
@@ -247,10 +296,12 @@ exports.hottestStartups = async (req, res, next) => {
                 isFollowing: followSet.has(String(card.user?._id || card.user)),
             }));
 
-            return res.json({ startups: enriched, count: enriched.length });
+            const refreshedEnriched = await Promise.all(enriched.map(async s => refreshStartupData(s)));
+            return res.json({ startups: refreshedEnriched, count: refreshedEnriched.length });
         }
 
-        return res.json({ startups: top, count: top.length });
+        const refreshedTop = await Promise.all(top.map(async s => refreshStartupData(s)));
+        return res.json({ startups: refreshedTop, count: refreshedTop.length });
     } catch (err) {
         console.log('Error in hottestStartups:', err);
         next(err);
