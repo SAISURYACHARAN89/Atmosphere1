@@ -289,11 +289,10 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress })
                 <View style={styles.userInfo}>
                     <View style={styles.userNameRow}>
                         <Text style={[styles.userName, { color: theme.text }]}>{displayName}</Text>
-                        {verified && (
-                            <MaterialIcons name="verified" size={16} color="#1DA1F2" style={{ marginLeft: 4 }} />
-                        )}
                     </View>
-                    {typeLabel ? (
+                    {verified && typeLabel ? (
+                        <Text style={{ color: '#878787', fontSize: 13, marginTop: 2 }}>Verified {typeLabel.toLowerCase()}</Text>
+                    ) : typeLabel ? (
                         <Text style={[styles.userType, { color: theme.placeholder }]}>{typeLabel}</Text>
                     ) : null}
                 </View>

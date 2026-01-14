@@ -213,7 +213,7 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: StartupPos
                             {companyData.verified && <Text style={styles.verifiedSubtext}>Verified startup</Text>}
                         </View>
                     </TouchableOpacity>
-                    {contentId !== String(currentUserId) && (
+                    {contentId !== String(currentUserId) && companyData.userId !== currentUserId && (
                         <TouchableOpacity onPress={toggleFollow} style={[styles.followBtn, followed && styles.followBtnActive]} disabled={followLoading}>
                             <Text style={[styles.followBtnText, followed && styles.followBtnTextActive]}>{followed ? 'Following' : 'Follow'}</Text>
                         </TouchableOpacity>

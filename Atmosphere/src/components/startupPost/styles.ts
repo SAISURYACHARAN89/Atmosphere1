@@ -140,7 +140,7 @@ export const styles = StyleSheet.create({
         flex: 1,
     },
     verifiedSubtext: {
-        color: '#888',
+        color: '#878787',
         fontSize: 12,
         marginTop: 2,
     },

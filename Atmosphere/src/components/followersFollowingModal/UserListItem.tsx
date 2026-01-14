@@ -31,11 +31,15 @@ const UserListItem: React.FC<UserListItemProps> = ({
             <View style={styles.userInfo}>
                 <View style={styles.nameRow}>
                     <Text style={styles.username} numberOfLines={1}>{user.username}</Text>
-                    {user.verified && <VerifiedBadge size={14} />}
                 </View>
                 <Text style={styles.displayName} numberOfLines={1}>
                     {user.displayName || user.username}
                 </Text>
+                {user.verified && (
+                    <Text style={{ color: '#878787', fontSize: 12, marginTop: 0 }}>
+                        {(user.roles?.includes('investor') || user.accountType === 'investor') ? 'Verified investor' : 'Verified startup'}
+                    </Text>
+                )}
             </View>
             {!isCurrentUser && (
                 <TouchableOpacity

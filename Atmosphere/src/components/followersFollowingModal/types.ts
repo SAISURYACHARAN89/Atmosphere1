@@ -4,6 +4,9 @@ export interface User {
     displayName?: string;
     avatarUrl?: string;
     verified?: boolean;
+    roles?: string[];
+    accountType?: string;
+    companyName?: string;
 }
 
 export type TabType = 'followers' | 'following';

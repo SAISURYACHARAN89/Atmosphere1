@@ -124,6 +124,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
     const routeUserId = routeCtx?.params?.userId || null;
     const routeStartupDetailsId = routeCtx?.params?.startupDetailsId || null;
     const viewingUserId = propUserId || routeUserId || null;
+    // const navigation = useNavigation<any>(); // Removed to prevent error outside NavContainer
 
     const getCacheKeys = (targetId: string | null) => {
         const suffix = targetId ? targetId : 'ME';
@@ -135,6 +136,17 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
 
     const [refreshing, setRefreshing] = useState(false);
     const [forceUpdate, setForceUpdate] = useState(0); // Trigger to re-run effects
+
+    // 0. Fetch Current User to compare with viewingUserId
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    useEffect(() => {
+        AsyncStorage.getItem('user').then(u => {
+            if (u) {
+                const parsed = JSON.parse(u);
+                setCurrentUserId(parsed._id || parsed.id);
+            }
+        });
+    }, []);
 
     // 1. Profile Data Effect
     useEffect(() => {
@@ -507,9 +519,8 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                 )}
                             </View>
                             <View style={{ flex: 1, justifyContent: 'center', marginLeft: 18 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                <View style={{ flexDirection: 'column', marginBottom: 8 }}>
                                     <Text style={{ color: theme.text, fontSize: 15, fontWeight: '600' }}>{src?.name}</Text>
-                                    {src?.verified && <VerifiedBadge size={18} />}
                                 </View>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingRight: 40 }}>
                                     <View style={{ alignItems: 'flex-start' }}>
@@ -529,6 +540,11 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                         </View>
 
                         <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+                            {src?.verified && (
+                                <Text style={{ color: '#878787', fontSize: 13, marginBottom: 4 }}>
+                                    {accountType === 'investor' ? 'Verified investor' : 'Verified startup'}
+                                </Text>
+                            )}
                             {src?.location ? (
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                                     <Ionicons name="location-outline" size={16} color={theme.placeholder} style={{ marginRight: 2 }} />
@@ -542,44 +558,68 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                             </Text>
                         </View>
 
-                        {viewingUserId ? (
-                            <TouchableOpacity
-                                style={[styles.setupPill, { borderColor: theme.border, backgroundColor: isFollowing ? '#111' : 'transparent' }]}
-                                onPress={async () => {
-                                    if (!viewingUserId || followLoading) return;
-                                    setFollowLoading(true);
-                                    const newState = !isFollowing;
-                                    setIsFollowing(newState);
-                                    try {
-                                        const api = await import('../lib/api');
-                                        if (newState) {
-                                            const resp: any = await api.followUser(String(viewingUserId));
-                                            if (resp && typeof resp.followersCount === 'number') setFollowersCount(resp.followersCount);
-                                        } else {
-                                            const resp: any = await api.unfollowUser(String(viewingUserId));
-                                            if (resp && typeof resp.followersCount === 'number') setFollowersCount(resp.followersCount);
-                                        }
-                                    } catch {
-                                        setIsFollowing(!newState);
-                                    } finally {
-                                        setFollowLoading(false);
-                                    }
-                                }}
-                            >
-                                <Text style={[styles.setupPillText, { color: '#fff' }]}>{isFollowing ? 'Following' : 'Follow'}</Text>
-                            </TouchableOpacity>
-                        ) : (
+                        {!viewingUserId || (currentUserId && viewingUserId === currentUserId) ? (
                             <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 }}>
                                 <TouchableOpacity style={{ flex: 1, backgroundColor: '#2e2e2e', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }} onPress={() => onNavigate ? onNavigate('setup') : null}>
-                                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
-                                        {src?.profileSetupComplete ? 'Edit profile' : 'Setup profile'}
-                                    </Text>
+                                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{accountType === 'investor' ? 'Edit Profile' : 'Setup Profile'}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={{ flex: 1, backgroundColor: '#2e2e2e', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }} onPress={() => {
                                     const { Share } = require('react-native');
                                     Share.share({ message: `Check out ${src?.name}'s profile on Atmosphere!`, url: `https://atmosphere.app/profile/${ownProfileId || ''}` });
                                 }}>
                                     <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Share profile</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 }}>
+                                <TouchableOpacity
+                                    style={{ flex: 1, backgroundColor: isFollowing ? '#2e2e2e' : '#0095f6', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }}
+                                    onPress={async () => {
+                                        if (!viewingUserId || followLoading) return;
+                                        setFollowLoading(true);
+                                        const newState = !isFollowing;
+                                        setIsFollowing(newState);
+                                        try {
+                                            const api = await import('../lib/api');
+                                            if (newState) {
+                                                const resp: any = await api.followUser(String(viewingUserId));
+                                                if (resp && typeof resp.followersCount === 'number') setFollowersCount(resp.followersCount);
+                                            } else {
+                                                const resp: any = await api.unfollowUser(String(viewingUserId));
+                                                if (resp && typeof resp.followersCount === 'number') setFollowersCount(resp.followersCount);
+                                            }
+                                        } catch {
+                                            setIsFollowing(!newState);
+                                        } finally {
+                                            setFollowLoading(false);
+                                        }
+                                    }}
+                                >
+                                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{isFollowing ? 'Following' : 'Follow'}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={{ flex: 1, backgroundColor: '#2e2e2e', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }}
+                                    onPress={() => {
+                                        // Navigate to Chat
+                                        // Use onNavigate prop if available (custom routing)
+                                        if (onNavigate) {
+                                            // Handle internal nav
+                                            // We need to pass params to 'chats' or 'chatDetail'
+                                            // Since onNavigate might only take a string, we might need a workaround or check if LandingPage handles it.
+                                            // LandingPage passes `onNavigate={(r: RouteKey) => navigateTo(r)}`.
+                                            // But it doesn't seem to pass params via onNavigate(r).
+
+                                            // Ideally we should use onChatSelect if available, but it's not passed to Profile.
+                                            // We can check if 'chats' route in LandingPage handles selection?
+                                            // LandingPage: case 'chats': return <Chats onChatSelect={handleChatSelect} />;
+
+                                            // Workaround: We can't easily open a SPECIFIC chat without context.
+                                            // But we can navigate to 'chats'.
+                                            onNavigate('chats');
+                                        }
+                                    }}
+                                >
+                                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Message</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
