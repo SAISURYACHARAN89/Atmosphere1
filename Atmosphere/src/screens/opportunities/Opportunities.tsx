@@ -85,6 +85,9 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
     const LIMIT = 20;
     const { width } = Dimensions.get('window');
     const flatListRef = useRef<FlatList>(null);
+    const scrollX = useRef(new Animated.Value(0)).current;
+
+    // Sub-tab animation
     const tabAnim = useRef(new Animated.Value(0)).current;
 
     // Animate tab indicator when sub-tab changes
@@ -396,13 +399,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         flatListRef.current?.scrollToIndex({ index, animated: true });
     };
 
-    const handleMomentumScrollEnd = (event: any) => {
-        const index = Math.round(event.nativeEvent.contentOffset.x / width);
-        const newTab = TABS[index];
-        if (newTab && newTab !== activeTab) {
-            setActiveTab(newTab);
-        }
-    };
+
 
     const renderTabContent = ({ item: tabName }: { item: string }) => {
         let data: any[] = [];
@@ -576,10 +573,29 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         <View style={styles.container}>
             {/* Tab Bar */}
             <View style={styles.tabBar}>
+                {/* Animated Pill Background */}
+                <Animated.View
+                    style={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        bottom: 8,
+                        width: (width - 40) / 3, // (screenW - 24margin - 16padding) / 3
+                        backgroundColor: '#000305',
+                        borderRadius: 20,
+                        transform: [{
+                            translateX: scrollX.interpolate({
+                                inputRange: [0, width, width * 2],
+                                outputRange: [0, (width - 40) / 3, ((width - 40) / 3) * 2]
+                            })
+                        }]
+                    }}
+                />
+
                 {TABS.map((tab, index) => (
                     <TouchableOpacity
                         key={tab}
-                        style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
+                        style={[styles.tabBtn]} // Removed active style background
                         onPress={() => handleTabPress(tab, index)}
                     >
                         <Text style={[styles.tabText, activeTab === tab ? styles.tabTextActive : styles.tabTextInactive]}>
@@ -597,7 +613,20 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={handleMomentumScrollEnd}
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(e) => {
+                    const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+                    if (idx >= 0 && idx < TABS.length) {
+                        const newTab = TABS[idx];
+                        if (newTab !== activeTab) {
+                            setActiveTab(newTab);
+                        }
+                    }
+                }}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                    { useNativeDriver: false }
+                )}
                 renderItem={renderTabContent}
                 initialScrollIndex={TABS.indexOf(activeTab)}
                 getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
