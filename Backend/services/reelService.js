@@ -5,6 +5,13 @@ const ReelShare = require('../models/ReelShare');
 const { User } = require('../models');
 const { refreshSignedUrl } = require('./s3Service');
 
+const refreshReelData = async (reel) => {
+    if (reel.videoUrl) reel.videoUrl = await refreshSignedUrl(reel.videoUrl);
+    if (reel.thumbnailUrl) reel.thumbnailUrl = await refreshSignedUrl(reel.thumbnailUrl);
+    if (reel.author && reel.author.avatarUrl) reel.author.avatarUrl = await refreshSignedUrl(reel.author.avatarUrl);
+    return reel;
+};
+
 // Create a new reel
 exports.createReel = async (req, res) => {
     try {
@@ -67,11 +74,7 @@ exports.getReelsFeed = async (req, res) => {
         }
 
         // Refresh URLs
-        const refreshedReels = await Promise.all(reels.map(async (reel) => {
-            if (reel.videoUrl) reel.videoUrl = await refreshSignedUrl(reel.videoUrl);
-            if (reel.thumbnailUrl) reel.thumbnailUrl = await refreshSignedUrl(reel.thumbnailUrl);
-            return reel;
-        }));
+        const refreshedReels = await Promise.all(reels.map(async (reel) => refreshReelData(reel)));
 
         res.json({ reels: refreshedReels });
     } catch (error) {
@@ -96,11 +99,7 @@ exports.getUserReels = async (req, res) => {
 
 
         // Refresh URLs
-        const refreshedReels = await Promise.all(reels.map(async (reel) => {
-            if (reel.videoUrl) reel.videoUrl = await refreshSignedUrl(reel.videoUrl);
-            if (reel.thumbnailUrl) reel.thumbnailUrl = await refreshSignedUrl(reel.thumbnailUrl);
-            return reel;
-        }));
+        const refreshedReels = await Promise.all(reels.map(async (reel) => refreshReelData(reel)));
 
         res.json({ reels: refreshedReels });
     } catch (error) {
@@ -133,10 +132,9 @@ exports.getReel = async (req, res) => {
 
 
 
-        if (reel.videoUrl) reel.videoUrl = await refreshSignedUrl(reel.videoUrl);
-        if (reel.thumbnailUrl) reel.thumbnailUrl = await refreshSignedUrl(reel.thumbnailUrl);
+        const refreshedReel = await refreshReelData(reel);
 
-        res.json({ reel });
+        res.json({ reel: refreshedReel });
     } catch (error) {
         console.error('Get reel error:', error);
         res.status(500).json({ error: 'Failed to fetch reel' });

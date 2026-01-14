@@ -23,6 +23,9 @@ const refreshPostUrls = async (post) => {
             return m;
         }));
     }
+    if (p.author && p.author.avatarUrl) {
+        p.author.avatarUrl = await refreshSignedUrl(p.author.avatarUrl);
+    }
     return p;
 };
 

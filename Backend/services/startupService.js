@@ -11,6 +11,8 @@ const refreshStartupData = async (startup) => {
     if (s.documents) s.documents = await refreshSignedUrl(s.documents);
     if (s.website && s.website.includes('amazonaws.com')) s.website = await refreshSignedUrl(s.website);
 
+    if (s.user && s.user.avatarUrl) s.user.avatarUrl = await refreshSignedUrl(s.user.avatarUrl);
+
     // Refresh nested Arrays
     if (s.fundingRounds && s.fundingRounds.length) {
         s.fundingRounds = await Promise.all(s.fundingRounds.map(async fr => {

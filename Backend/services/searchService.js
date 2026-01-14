@@ -1,4 +1,28 @@
 const { User, Post, Company } = require('../models');
+const { refreshSignedUrl } = require('./s3Service');
+
+// Helper to refresh user/post/company
+const refreshItem = async (item, type = 'user') => {
+    const i = item.toObject ? item.toObject() : item;
+    if (type === 'user' || type === 'account') {
+        if (i.avatarUrl) i.avatarUrl = await refreshSignedUrl(i.avatarUrl);
+    } else if (type === 'post') {
+        if (i.media && i.media.length) {
+            i.media = await Promise.all(i.media.map(async m => {
+                if (m.url) m.url = await refreshSignedUrl(m.url);
+                if (m.thumbUrl) m.thumbUrl = await refreshSignedUrl(m.thumbUrl);
+                return m;
+            }));
+        }
+        if (i.author && i.author.avatarUrl) i.author.avatarUrl = await refreshSignedUrl(i.author.avatarUrl);
+    } else if (type === 'company') {
+        if (i.logoUrl) i.logoUrl = await refreshSignedUrl(i.logoUrl);
+        if (i.employees && i.employees.length) {
+            // refresh employee avatars
+        }
+    }
+    return i;
+};
 
 exports.searchAll = async (req, res, next) => {
     try {
@@ -34,6 +58,11 @@ exports.searchAll = async (req, res, next) => {
             results.companies = companies;
         }
 
+        // Refresh Results
+        if (results.accounts) results.accounts = await Promise.all(results.accounts.map(u => refreshItem(u, 'user')));
+        if (results.posts) results.posts = await Promise.all(results.posts.map(p => refreshItem(p, 'post')));
+        if (results.companies) results.companies = await Promise.all(results.companies.map(c => refreshItem(c, 'company')));
+
         res.json({ query: searchQuery, results });
     } catch (err) {
         next(err);
@@ -54,7 +83,9 @@ exports.searchUsers = async (req, res, next) => {
 
         const users = await User.find(filter).select('username displayName avatarUrl bio verified roles').sort({ verified: -1, createdAt: -1 }).limit(parseInt(limit)).skip(parseInt(skip));
         const total = await User.countDocuments(filter);
-        res.json({ users, count: users.length, total });
+
+        const refreshedUsers = await Promise.all(users.map(u => refreshItem(u, 'user')));
+        res.json({ users: refreshedUsers, count: refreshedUsers.length, total });
     } catch (err) {
         next(err);
     }
@@ -78,8 +109,11 @@ exports.getTrending = async (req, res, next) => {
             { $limit: parseInt(limit) },
         ]);
 
+
+
+        const refreshedPosts = await Promise.all(trendingPosts.map(p => refreshItem(p, 'post')));
         const trendingTags = tagAggregation.map(t => ({ tag: t._id, count: t.count }));
-        res.json({ posts: trendingPosts, tags: trendingTags });
+        res.json({ posts: refreshedPosts, tags: trendingTags });
     } catch (err) {
         next(err);
     }
@@ -99,7 +133,13 @@ exports.getSuggestions = async (req, res, next) => {
             ...companySuggestions.map(c => ({ type: 'company', id: c._id, text: c.name, slug: c.slug, avatar: c.logoUrl })),
         ];
 
-        res.json({ suggestions: suggestions.slice(0, parseInt(limit)) });
+        // Refresh avatars in suggestions
+        const refreshedSuggestions = await Promise.all(suggestions.map(async s => {
+            if (s.avatar) s.avatar = await refreshSignedUrl(s.avatar);
+            return s;
+        }));
+
+        res.json({ suggestions: refreshedSuggestions.slice(0, parseInt(limit)) });
     } catch (err) {
         next(err);
     }
