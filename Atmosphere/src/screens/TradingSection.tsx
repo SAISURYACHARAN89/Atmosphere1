@@ -122,6 +122,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
     const [editingTradeId, setEditingTradeId] = useState<string | null>(null);
     const [fundingTarget, setFundingTarget] = useState<string>('');
     const [selectedRound, setSelectedRound] = useState<string>('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
 
     // Active trades
     const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
@@ -519,61 +520,76 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
         setImageS3Urls(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Investor Autofill: Fetch startup details when username is entered
+    // Investor Autofill: Search for users when username is entered
     useEffect(() => {
-        const fetchStartupDetails = async () => {
-            if (accountType === 'investor' && !isManualEntry && startupUsername && startupUsername.length > 2) {
-                try {
-                    // Search for user (strip @ if present)
-                    const cleanUsername = startupUsername.replace(/^@/, '');
-                    console.log('[Autofill] Searching for:', cleanUsername);
-                    const users = await searchUsers(cleanUsername, undefined, 1);
-                    if (users && users.length > 0) {
-                        const targetUser = users[0];
-                        // Fetch details
-                        const profileData = await getStartupProfile(targetUser._id);
-                        if (profileData && profileData.details) {
-                            const details = profileData.details;
+        const fetchSearchResults = async () => {
+            // Clear results if input is too short or manual entry is on
+            if (isManualEntry || !startupUsername || startupUsername.length <= 2) {
+                setSearchResults([]);
+                return;
+            }
 
-                            // Autofill fields if they are empty (or always overwrite? user said "autofill should work")
-                            // We'll overwrite to ensure it matches the user
-                            if (details.companyName || targetUser.displayName) {
-                                setSelectedCompanyName(details.companyName || targetUser.displayName || '');
-                            }
-                            if (details.oneLiner) setDescription(details.oneLiner);
-                            if (details.videoUrl) setVideoUri(details.videoUrl);
-
-                            // Images - use logo if available and no images selected
-                            if (details.logoUrl && imageUris.length === 0) {
-                                setImageUris([details.logoUrl]);
-                            }
-
-                            if (details.stage) setSelectedRound(details.stage);
-
-                            if (details.foundedDate) {
-                                const calcAge = (dateStr: string) => {
-                                    const d = new Date(dateStr);
-                                    const years = (new Date().getTime() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-                                    return `${years.toFixed(1)} years`;
-                                };
-                                setCompanyAge(calcAge(details.foundedDate));
-                            }
-
-                            if (details.industry && selectedIndustries.length === 0) {
-                                // Match industry if possible, or just add if it matches types
-                                setSelectedIndustries([details.industry]);
-                            }
-                        }
-                    }
-                } catch (err) {
-                    console.log('Autofill error:', err);
-                }
+            // Perform search for all account types
+            try {
+                // Search for user (strip @ if present)
+                const cleanUsername = startupUsername.replace(/^@/, '');
+                console.log('[Autofill] Searching for:', cleanUsername);
+                const users = await searchUsers(cleanUsername, undefined, 5); // Fetch top 5 results
+                console.log('[Autofill] Results found:', users?.length);
+                setSearchResults(users || []);
+            } catch (err) {
+                console.log('Autofill error:', err);
+                setSearchResults([]);
             }
         };
 
-        const timer = setTimeout(fetchStartupDetails, 800); // 800ms debounce
+        const timer = setTimeout(fetchSearchResults, 500); // 500ms debounce
         return () => clearTimeout(timer);
-    }, [startupUsername, accountType, isManualEntry, imageUris.length, selectedIndustries.length]);
+    }, [startupUsername, accountType, isManualEntry]);
+
+    const handleSelectStartup = async (targetUser: any) => {
+        try {
+            // Update username display
+            setStartupUsername(`@${targetUser.username}`);
+            setSearchResults([]); // Clear results
+
+            // Fetch details
+            const profileData = await getStartupProfile(targetUser._id);
+            if (profileData && profileData.details) {
+                const details = profileData.details;
+
+                // Autofill fields
+                if (details.companyName || targetUser.displayName) {
+                    setSelectedCompanyName(details.companyName || targetUser.displayName || '');
+                }
+                if (details.oneLiner) setDescription(details.oneLiner);
+                if (details.videoUrl) setVideoUri(details.videoUrl);
+
+                // Images - use logo if available and no images selected
+                if (details.logoUrl) {
+                    setImageUris([details.logoUrl]);
+                }
+
+                if (details.stage) setSelectedRound(details.stage);
+
+                if (details.foundedDate) {
+                    const calcAge = (dateStr: string) => {
+                        const d = new Date(dateStr);
+                        const years = (new Date().getTime() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+                        return `${years.toFixed(1)} years`;
+                    };
+                    setCompanyAge(calcAge(details.foundedDate));
+                }
+
+                if (details.industry) {
+                    setSelectedIndustries([details.industry]);
+                }
+                console.log('[TradingSection] Auto-populated form fields from selection');
+            }
+        } catch (err) {
+            console.log('Selection autofill error:', err);
+        }
+    };
 
     const handleOpenTrade = async () => {
         if (!expandedCompany) return;
@@ -890,7 +906,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                     const yearsText = getYearsAgo(item.date);
 
                     return (
-                        <View key={index} style={styles.portfolioCard}>
+                        <View key={index} style={[styles.portfolioCard, isExpanded && { zIndex: 1000 }]}>
                             <TouchableOpacity
                                 style={styles.portfolioCardHeader}
                                 onPress={() => {
@@ -958,6 +974,8 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                                     selectedRound={selectedRound}
                                     setSelectedRound={setSelectedRound}
                                     isSubmitting={uploading}
+                                    searchResults={searchResults}
+                                    onSelectResult={handleSelectStartup}
                                 />
                             )}
                         </View>
@@ -1077,6 +1095,8 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                                                 selectedRound={selectedRound}
                                                 setSelectedRound={setSelectedRound}
                                                 isSubmitting={uploading}
+                                                searchResults={searchResults}
+                                                onSelectResult={handleSelectStartup}
                                             />
                                         ) : (
                                             <>

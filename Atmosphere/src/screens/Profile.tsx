@@ -355,13 +355,8 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                 // If normalized data already has follower counts (from server), use them
                 // and skip the separate follower/following API calls which can overwrite
                 // the correct server-provided value.
-                if (src && typeof src.stats?.followers === 'number') {
-                    if (mounted) {
-                        setFollowersCount(Number(src.stats.followers || 0));
-                        setFollowingCount(Number(src.stats?.following || 0));
-                    }
-                    return;
-                }
+                // Always fetch fresh counts
+                // if (src && typeof src.stats?.followers === 'number') { ... } removed
                 if (!userId) {
                     try {
                         const stored = await AsyncStorage.getItem('user');

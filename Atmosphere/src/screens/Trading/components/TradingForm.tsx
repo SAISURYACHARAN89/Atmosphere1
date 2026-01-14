@@ -39,6 +39,9 @@ interface TradingFormProps {
     setSelectedRound?: (val: string) => void;
     // Loading state
     isSubmitting?: boolean;
+    // Search Results
+    searchResults?: any[];
+    onSelectResult?: (user: any) => void;
 }
 
 export const TradingForm: React.FC<TradingFormProps> = ({
@@ -73,7 +76,9 @@ export const TradingForm: React.FC<TradingFormProps> = ({
     setFundingTarget,
     selectedRound,
     setSelectedRound,
-    isSubmitting
+    isSubmitting,
+    searchResults,
+    onSelectResult
 }) => {
     const [showRoundPicker, setShowRoundPicker] = React.useState(false);
     const roundOptions = ['Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Series D+'];
@@ -201,6 +206,43 @@ export const TradingForm: React.FC<TradingFormProps> = ({
                                 value={startupUsername}
                                 onChangeText={setStartupUsername}
                             />
+                            {/* Search Results Dropdown */}
+                            {searchResults && searchResults.length > 0 && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: 50, // Below TextInput
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: 1000,
+                                    elevation: 5,
+                                    backgroundColor: '#111',
+                                    borderRadius: 8,
+                                    marginTop: 4,
+                                    marginBottom: 12,
+                                    borderWidth: 1,
+                                    borderColor: '#333'
+                                }}>
+                                    {searchResults.map((user) => (
+                                        <TouchableOpacity
+                                            key={user._id || user.id}
+                                            style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: '#222' }}
+                                            onPress={() => onSelectResult?.(user)}
+                                        >
+                                            {user.avatarUrl ? (
+                                                <RNImage source={{ uri: user.avatarUrl }} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }} />
+                                            ) : (
+                                                <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#333', marginRight: 10, alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Text style={{ color: '#aaa', fontSize: 14 }}>{(user.username || 'U').charAt(0).toUpperCase()}</Text>
+                                                </View>
+                                            )}
+                                            <View>
+                                                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>@{user.username}</Text>
+                                                <Text style={{ color: '#888', fontSize: 12 }}>{user.displayName || user.name}</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
 
                             <Text style={styles.formLabel}>Add external link</Text>
                             <View style={styles.linkRow}>

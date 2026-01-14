@@ -70,7 +70,7 @@ export const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#333',
-        overflow: 'hidden',
+        // overflow: 'hidden', // Removed to allow dropdowns to overflow
     },
     portfolioCardHeader: {
         flexDirection: 'row',

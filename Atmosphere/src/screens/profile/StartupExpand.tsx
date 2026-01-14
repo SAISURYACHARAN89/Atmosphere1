@@ -61,6 +61,7 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
 
     React.useEffect(() => {
         checkOwner();
+        checkPitchStatus();
     }, [details, profileData]);
 
     const checkOwner = async () => {
@@ -102,6 +103,26 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
             }
         } else {
             console.log('[StartupExpand] Missing IDs for check');
+        }
+    };
+
+    const checkPitchStatus = async () => {
+        if (isOwner) return;
+        const startupId = details._id || profileData?._id || details.id;
+        if (!startupId) return;
+
+        try {
+            const token = await AsyncStorage.getItem('token');
+            // Use CREATE_NOTIFICATION base as it points to /api/notifications
+            const baseUrl = ENDPOINTS.CREATE_NOTIFICATION || 'http://10.0.2.2:5000/api/notifications';
+            const res = await axios.get(`${baseUrl}/check-pitch-deck/${startupId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.data && res.data.requested) {
+                setPitchRequested(true);
+            }
+        } catch (error) {
+            console.log('Error checking pitch status:', error);
         }
     };
 
@@ -176,8 +197,14 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
             }, { headers: { Authorization: `Bearer ${finalToken}` } });
 
             setPitchRequested(true);
-        } catch (error) {
+        } catch (error: any) {
             console.log('Error requesting pitch deck:', error);
+            if (error.response?.status === 400 && error.response?.data?.error === 'Pitch deck already requested') {
+                setPitchRequested(true);
+                Alert.alert('Info', 'You have already requested the pitch deck.');
+            } else {
+                Alert.alert('Error', 'Failed to request pitch deck');
+            }
         }
     };
 

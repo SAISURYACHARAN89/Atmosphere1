@@ -15,7 +15,7 @@ import ThemedRefreshControl from '../components/ThemedRefreshControl';
 
 interface NotificationItem {
     _id: string;
-    type: 'like' | 'comment' | 'follow' | 'investment' | 'meeting' | 'milestone' | 'share' | 'crown';
+    type: 'like' | 'comment' | 'follow' | 'investment' | 'meeting' | 'milestone' | 'share' | 'crown' | 'pitch_deck_request';
     fromUser?: {
         _id: string;
         username: string;
@@ -47,6 +47,8 @@ const getNotificationIcon = (type: string): { name: string; color: string } => {
             return { name: 'share-social', color: '#a855f7' };
         case 'crown':
             return { name: 'ribbon', color: '#f59e0b' };
+        case 'pitch_deck_request':
+            return { name: 'document-text', color: '#8b5cf6' };
         default:
             return { name: 'notifications', color: '#6b7280' };
     }
@@ -85,6 +87,8 @@ const getActionText = (type: string): string => {
             return 'shared your post';
         case 'crown':
             return 'crowned your post';
+        case 'pitch_deck_request':
+            return 'requested your pitch deck';
         default:
             return 'interacted with you';
     }

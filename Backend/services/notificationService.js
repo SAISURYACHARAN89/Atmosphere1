@@ -35,8 +35,34 @@ exports.createNotification = async (req, res, next) => {
     try {
         const { userId, type, payload } = req.body;
         if (!userId || !type) return res.status(400).json({ error: 'userId and type are required' });
+
+        // Duplicate check for pitch deck requests
+        if (type === 'pitch_deck_request') {
+            const existing = await Notification.findOne({
+                user: userId,
+                actor: req.user._id,
+                type: 'pitch_deck_request',
+                'payload.startupId': payload?.startupId
+            });
+            if (existing) {
+                return res.status(400).json({ error: 'Pitch deck already requested' });
+            }
+        }
+
         const notification = new Notification({ user: userId, actor: req.user._id, type, payload: payload || {} });
         await notification.save();
         res.status(201).json({ notification });
+    } catch (err) { next(err); }
+};
+
+exports.checkPitchDeckStatus = async (req, res, next) => {
+    try {
+        const { startupId } = req.params;
+        const existing = await Notification.findOne({
+            actor: req.user._id,
+            type: 'pitch_deck_request',
+            'payload.startupId': startupId
+        });
+        res.json({ requested: !!existing });
     } catch (err) { next(err); }
 };
