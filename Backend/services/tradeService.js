@@ -1,4 +1,28 @@
 const { Asset, Portfolio, User, Trade } = require('../models');
+const { refreshSignedUrl } = require('./s3Service');
+
+const refreshTradeMedia = async (trade) => {
+    if (!trade) return trade;
+    try {
+        if (trade.videoUrl) trade.videoUrl = await refreshSignedUrl(trade.videoUrl);
+        if (trade.videoThumbnailUrl) trade.videoThumbnailUrl = await refreshSignedUrl(trade.videoThumbnailUrl);
+        if (trade.imageUrls && trade.imageUrls.length > 0) {
+            trade.imageUrls = await Promise.all(trade.imageUrls.map(url => refreshSignedUrl(url)));
+        }
+    } catch (err) {
+        console.error('Error refreshing trade media:', err);
+    }
+    return trade;
+};
+
+const cleanMediaUrl = (url) => {
+    if (!url || !url.includes('amazonaws.com')) return url;
+    try {
+        const urlObj = new URL(url);
+        // Strips query params (Signature) to save space and avoid expiry issues
+        return urlObj.origin + urlObj.pathname;
+    } catch (e) { return url; }
+};
 
 exports.getMarkets = async (req, res, next) => {
     try {
@@ -104,14 +128,18 @@ exports.createTrade = async (req, res, next) => {
             isManualEntry: isManualEntry || false,
             externalLinkHeading,
             externalLinkUrl,
-            videoUrl: videoUrl || '',
-            videoThumbnailUrl: videoThumbnailUrl || '',
-            imageUrls: imageUrls || []
+            videoUrl: cleanMediaUrl(videoUrl) || '',
+            videoThumbnailUrl: cleanMediaUrl(videoThumbnailUrl) || '',
+            imageUrls: imageUrls ? imageUrls.map(cleanMediaUrl) : []
         });
 
         await trade.save();
 
-        res.status(201).json({ trade });
+        // Refresh URLs so frontend can display them immediately
+        const tradeObj = trade.toObject();
+        await refreshTradeMedia(tradeObj);
+
+        res.status(201).json({ trade: tradeObj });
     } catch (err) {
         next(err);
     }
@@ -125,6 +153,8 @@ exports.getMyTrades = async (req, res, next) => {
         const trades = await Trade.find({ user: req.user._id })
             .sort({ createdAt: -1 })
             .lean();
+
+        await Promise.all(trades.map(t => refreshTradeMedia(t)));
 
         res.json({ trades });
     } catch (err) {
@@ -163,6 +193,8 @@ exports.getAllTrades = async (req, res, next) => {
             .skip(parseInt(skip))
             .lean();
 
+        await Promise.all(trades.map(t => refreshTradeMedia(t)));
+
         res.json({ trades });
     } catch (err) {
         next(err);
@@ -178,6 +210,8 @@ exports.getTradeById = async (req, res, next) => {
         if (!trade) {
             return res.status(404).json({ error: 'Trade not found' });
         }
+
+        await refreshTradeMedia(trade);
 
         res.json({ trade });
     } catch (err) {
@@ -234,15 +268,18 @@ exports.updateTrade = async (req, res, next) => {
         }
         if (externalLinkHeading !== undefined) trade.externalLinkHeading = externalLinkHeading;
         if (externalLinkUrl !== undefined) trade.externalLinkUrl = externalLinkUrl;
-        if (videoUrl !== undefined) trade.videoUrl = videoUrl;
-        if (videoThumbnailUrl !== undefined) trade.videoThumbnailUrl = videoThumbnailUrl;
-        if (imageUrls !== undefined) trade.imageUrls = imageUrls;
+        if (videoUrl !== undefined) trade.videoUrl = cleanMediaUrl(videoUrl);
+        if (videoThumbnailUrl !== undefined) trade.videoThumbnailUrl = cleanMediaUrl(videoThumbnailUrl);
+        if (imageUrls !== undefined) trade.imageUrls = imageUrls.map(cleanMediaUrl);
 
         trade.isEdited = true;
 
         await trade.save();
 
-        res.json({ trade });
+        const tradeObj = trade.toObject();
+        await refreshTradeMedia(tradeObj);
+
+        res.json({ trade: tradeObj });
     } catch (err) {
         next(err);
     }
@@ -338,9 +375,11 @@ exports.getSavedTrades = async (req, res, next) => {
         const userId = req.user._id;
         const trades = await Trade.find({ savedByUsers: userId })
             .populate('user', 'displayName username avatarUrl')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
-        // Return just the trade IDs for efficiency
+        await Promise.all(trades.map(t => refreshTradeMedia(t)));
+
         const savedTradeIds = trades.map(t => t._id.toString());
         res.json({ savedTradeIds, trades });
     } catch (err) {

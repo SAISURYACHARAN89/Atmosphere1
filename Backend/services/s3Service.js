@@ -169,14 +169,14 @@ exports.getPresignedUploadUrl = async (fileName, fileType, folder = 'uploads') =
  */
 exports.refreshSignedUrl = async (oldUrl) => {
     if (!oldUrl || !oldUrl.includes('amazonaws.com')) return oldUrl;
-    
+
     try {
         // Extract Key from URL
         // Format: https://bucket.s3.region.amazonaws.com/KEY
         const urlObj = new URL(oldUrl);
         // Pathname starts with /, so slice(1) to get Key
-        const key = urlObj.pathname.slice(1);
-        
+        const key = decodeURIComponent(urlObj.pathname.slice(1));
+
         if (!key) return oldUrl;
 
         const client = getS3Client();

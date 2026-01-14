@@ -381,6 +381,7 @@ export const styles = StyleSheet.create({
     // Buy tab styles
     categoriesContainer: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         paddingHorizontal: 16,
         paddingVertical: 8,
         gap: 8,
@@ -575,10 +576,12 @@ export const styles = StyleSheet.create({
         marginBottom: 10,
         borderRadius: 10,
         overflow: 'hidden',
+        height: 240,
+        width: '100%',
     },
     professionalImage: {
         width: '100%',
-        height: 320, // Increased height for better visibility
+        height: '100%',
         backgroundColor: '#1a1a1a',
         borderRadius: 10,
     },

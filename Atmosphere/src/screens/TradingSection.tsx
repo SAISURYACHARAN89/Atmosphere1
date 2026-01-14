@@ -558,32 +558,55 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
             if (profileData && profileData.details) {
                 const details = profileData.details;
 
-                // Autofill fields
+                // Autofill Company Name
                 if (details.companyName || targetUser.displayName) {
                     setSelectedCompanyName(details.companyName || targetUser.displayName || '');
                 }
-                if (details.oneLiner) setDescription(details.oneLiner);
-                if (details.videoUrl) setVideoUri(details.videoUrl);
 
-                // Images - use logo if available and no images selected
-                if (details.logoUrl) {
-                    setImageUris([details.logoUrl]);
+                // Autofill Description (about -> description)
+                if (details.about) setDescription(details.about);
+                else if (targetUser.bio) setDescription(targetUser.bio);
+
+                // Autofill Video
+                if (details.video) setVideoUri(details.video);
+
+                // Autofill Image (profileImage -> imageUris)
+                if (details.profileImage) {
+                    setImageUris([details.profileImage]);
+                } else if (targetUser.avatarUrl) {
+                    setImageUris([targetUser.avatarUrl]);
                 }
 
+                // Autofill Stage
                 if (details.stage) setSelectedRound(details.stage);
 
-                if (details.foundedDate) {
-                    const calcAge = (dateStr: string) => {
+                // Autofill Age (establishedOn -> companyAge)
+                if (details.establishedOn) {
+                    const calcAge = (dateStr: string | Date) => {
                         const d = new Date(dateStr);
                         const years = (new Date().getTime() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
                         return `${years.toFixed(1)} years`;
                     };
-                    setCompanyAge(calcAge(details.foundedDate));
+                    setCompanyAge(calcAge(details.establishedOn));
                 }
 
-                if (details.industry) {
-                    setSelectedIndustries([details.industry]);
+                // Autofill Industry (companyType -> selectedIndustries)
+                if (details.companyType) {
+                    setSelectedIndustries([details.companyType]);
                 }
+
+                // Autofill Revenue Status
+                if (details.financialProfile?.revenueType) {
+                    const rType = details.financialProfile.revenueType;
+                    if (rType === 'Revenue generating') setRevenueStatus('revenue-generating');
+                    else setRevenueStatus('pre-revenue');
+                }
+
+                // Autofill Funding Target
+                if (details.fundingNeeded) {
+                    setFundingTarget(details.fundingNeeded.toString());
+                }
+
                 console.log('[TradingSection] Auto-populated form fields from selection');
             }
         } catch (err) {
@@ -606,34 +629,49 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
             let uploadedThumbnailUrl = '';
             let uploadedImageUrls: string[] = [];
 
-            // Upload video if selected
-            if (videoUri) {
-                try {
-                    const s3Result = await uploadVideo(videoUri);
-                    uploadedVideoUrl = s3Result.url;
-                    uploadedThumbnailUrl = s3Result.thumbnailUrl || s3Result.url;
-                } catch (videoError: any) {
-                    console.error('Video upload error:', videoError);
-                    showAlert('Upload Error', 'Failed to upload video. Please try again.');
-                    setUploading(false);
-                    return;
+            // Upload video if selected (skip if already a remote URL)
+            if (videoUri && typeof videoUri === 'string' && videoUri.trim()) {
+                if (videoUri.startsWith('http') || videoUri.startsWith('https')) {
+                    uploadedVideoUrl = videoUri;
+                    // Keep existing thumbnail or handle auto-fill logic
+                } else {
+                    try {
+                        const s3Result = await uploadVideo(videoUri);
+                        uploadedVideoUrl = s3Result.url;
+                        uploadedThumbnailUrl = s3Result.thumbnailUrl || s3Result.url;
+                    } catch (videoError: any) {
+                        console.error('Video upload error:', videoError);
+                        showAlert('Upload Error', 'Failed to upload video. Please try again.');
+                        setUploading(false);
+                        return;
+                    }
                 }
             }
 
             // Upload images if selected
             if (imageUris.length > 0) {
-                try {
-                    const uploadPromises = imageUris.map(async (uri) => {
-                        const fileName = uri.split('/').pop() || 'image.jpg';
-                        return uploadImage(uri, fileName, 'image/jpeg');
-                    });
-                    uploadedImageUrls = await Promise.all(uploadPromises);
-                } catch (imageError: any) {
-                    console.error('Image upload error:', imageError);
-                    showAlert('Upload Error', 'Failed to upload images. Please try again.');
-                    setUploading(false);
-                    return;
+                // Filter valid strings only
+                const validUris = imageUris.filter(u => typeof u === 'string' && u.trim());
+
+                const urisToUpload = validUris.filter(uri => !(uri.startsWith('http') || uri.startsWith('https')));
+                const existingUrls = validUris.filter(uri => (uri.startsWith('http') || uri.startsWith('https')));
+                let newlyUploadedUrls: string[] = [];
+
+                if (urisToUpload.length > 0) {
+                    try {
+                        const uploadPromises = urisToUpload.map(async (uri) => {
+                            const fileName = uri.split('/').pop() || 'image.jpg';
+                            return uploadImage(uri, fileName, 'image/jpeg');
+                        });
+                        newlyUploadedUrls = await Promise.all(uploadPromises);
+                    } catch (imageError: any) {
+                        console.error('Image upload error:', imageError);
+                        showAlert('Upload Error', 'Failed to upload images. Please try again.');
+                        setUploading(false);
+                        return;
+                    }
                 }
+                uploadedImageUrls = [...existingUrls, ...newlyUploadedUrls];
             }
 
             const tradeData = {
@@ -1265,25 +1303,27 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
 
                 {/* Category Filters - Animated container */}
                 <Animated.View style={filterContainerStyle}>
-                    <View style={styles.categoriesContainer}>
-                        {categories.map(category => (
-                            <TouchableOpacity
-                                key={category}
-                                onPress={() => handleCategoryClick(category)}
-                                style={[
-                                    styles.categoryChip,
-                                    selectedCategories.includes(category) && styles.categoryChipActive
-                                ]}
-                            >
-                                <Text style={[
-                                    styles.categoryChipText,
-                                    selectedCategories.includes(category) && styles.categoryChipTextActive
-                                ]}>
-                                    {category}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                    <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 100 }}>
+                        <View style={styles.categoriesContainer}>
+                            {categories.map(category => (
+                                <TouchableOpacity
+                                    key={category}
+                                    onPress={() => handleCategoryClick(category)}
+                                    style={[
+                                        styles.categoryChip,
+                                        selectedCategories.includes(category) && styles.categoryChipActive
+                                    ]}
+                                >
+                                    <Text style={[
+                                        styles.categoryChipText,
+                                        selectedCategories.includes(category) && styles.categoryChipTextActive
+                                    ]}>
+                                        {category}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </ScrollView>
                 </Animated.View>
                 {/* Suggested for you heading */}
                 <Text style={styles.suggestedHeading}>Suggested for you</Text>
