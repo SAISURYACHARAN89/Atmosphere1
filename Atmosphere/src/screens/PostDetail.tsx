@@ -34,6 +34,7 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
 
   const [activeImage, setActiveImage] = useState(0);
   const [showComments, setShowComments] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Computed images
   const images: string[] = post?.media?.map((m: any) => m.url) || (post?.image ? [post.image] : []);
@@ -101,6 +102,20 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
     };
     fetchPost();
   }, [postId]);
+
+  // Load current user ID
+  useEffect(() => {
+    const loadUserId = async () => {
+      try {
+        const userStr = await AsyncStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setCurrentUserId(user._id || user.id || null);
+        }
+      } catch { }
+    };
+    loadUserId();
+  }, []);
 
   useEffect(() => {
     const checkSaved = async () => {
@@ -236,6 +251,8 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
 
   const authorName = post.author?.displayName || post.author?.username || 'Unknown';
   const authorImage = post.author?.profileImage || post.author?.avatarUrl || 'https://via.placeholder.com/100x100.png?text=User';
+  const authorId = post.author?._id || post.author?.id;
+  const isOwner = currentUserId && authorId && String(authorId) === String(currentUserId);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -264,9 +281,11 @@ const PostDetail: React.FC<PostDetailProps & { onBackPress?: () => void }> = ({ 
               </Text>
             )}
           </View>
-          <TouchableOpacity style={styles.followBtnGray}>
-            <Text style={styles.followBtnGrayText}>Follow</Text>
-          </TouchableOpacity>
+          {!isOwner && (
+            <TouchableOpacity style={styles.followBtnGray}>
+              <Text style={styles.followBtnGrayText}>Follow</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Image Slider with double-tap to like */}

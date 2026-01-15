@@ -75,6 +75,27 @@ exports.getStartupByUser = async (req, res, next) => {
         // Return both shapes for backward compatibility
         const refreshedDetails = await refreshStartupData(startupDetails);
 
+        // Calculate funding metrics same way as listStartupCards
+        const fundingRounds = refreshedDetails.fundingRounds || [];
+        const currentRound = refreshedDetails.stage || refreshedDetails.roundType || 'Seed';
+        const uniqueRounds = Array.isArray(fundingRounds)
+            ? [...new Set(fundingRounds.map((inv) => inv.round).filter(Boolean))]
+            : [];
+        const calculatedRounds = uniqueRounds.length || Number(refreshedDetails.rounds || 0);
+        const totalRaisedAll = Array.isArray(fundingRounds)
+            ? fundingRounds.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0)
+            : Number(refreshedDetails.fundingRaised || 0);
+        const matchingInvestments = Array.isArray(fundingRounds)
+            ? fundingRounds.filter((inv) => inv.round === currentRound)
+            : [];
+        const fundingRaisedFromRound = matchingInvestments.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+        const finalFundingRaised = fundingRaisedFromRound > 0 ? fundingRaisedFromRound : totalRaisedAll;
+
+        // Apply calculated values
+        refreshedDetails.rounds = calculatedRounds;
+        refreshedDetails.fundingRaised = finalFundingRaised;
+        refreshedDetails.totalRaisedAll = totalRaisedAll;
+
         // Add user-specific flags if authenticated
         if (req.user) {
             const StartupLike = require('../models/StartupLike');
@@ -109,6 +130,27 @@ exports.getStartupById = async (req, res, next) => {
         const startupDetails = await StartupDetails.findById(startupId).populate('user', 'username displayName avatarUrl');
         if (!startupDetails) return res.status(404).json({ error: 'Startup details not found' });
         const refreshedDetails = await refreshStartupData(startupDetails);
+
+        // Calculate funding metrics same way as listStartupCards
+        const fundingRounds = refreshedDetails.fundingRounds || [];
+        const currentRound = refreshedDetails.stage || refreshedDetails.roundType || 'Seed';
+        const uniqueRounds = Array.isArray(fundingRounds)
+            ? [...new Set(fundingRounds.map((inv) => inv.round).filter(Boolean))]
+            : [];
+        const calculatedRounds = uniqueRounds.length || Number(refreshedDetails.rounds || 0);
+        const totalRaisedAll = Array.isArray(fundingRounds)
+            ? fundingRounds.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0)
+            : Number(refreshedDetails.fundingRaised || 0);
+        const matchingInvestments = Array.isArray(fundingRounds)
+            ? fundingRounds.filter((inv) => inv.round === currentRound)
+            : [];
+        const fundingRaisedFromRound = matchingInvestments.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+        const finalFundingRaised = fundingRaisedFromRound > 0 ? fundingRaisedFromRound : totalRaisedAll;
+
+        // Apply calculated values
+        refreshedDetails.rounds = calculatedRounds;
+        refreshedDetails.fundingRaised = finalFundingRaised;
+        refreshedDetails.totalRaisedAll = totalRaisedAll;
 
         // Add user-specific flags if authenticated
         if (req.user) {
