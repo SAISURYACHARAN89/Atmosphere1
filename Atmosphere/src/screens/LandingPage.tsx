@@ -240,11 +240,24 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
     };
 
     const renderContent = () => {
+        if (selectedPostId) {
+            return <PostDetail route={{ params: { postId: selectedPostId } }} onBackPress={handleBackFromPost} />;
+        }
+        if (selectedReelId) {
+            return <Reels
+                initialReelId={selectedReelId}
+                onBack={() => setSelectedReelId(null)}
+            />;
+        }
         if (selectedProfileId) {
             return <Profile
                 onNavigate={(r: RouteKey) => setRoute(r)}
                 userId={selectedProfileId}
                 onClose={() => setSelectedProfileId(null)}
+                onPostPress={handlePostPress}
+                onReelSelect={(reelId: string, userId: string) => {
+                    setSelectedReelId(reelId);
+                }}
                 onChatWithUser={async (userId: string) => {
                     try {
                         const { createOrFindChat } = await import('../lib/api');
@@ -258,15 +271,6 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
                         console.warn('Failed to create/find chat:', err);
                     }
                 }}
-            />;
-        }
-        if (selectedPostId) {
-            return <PostDetail route={{ params: { postId: selectedPostId } }} onBackPress={handleBackFromPost} />;
-        }
-        if (selectedReelId) {
-            return <Reels
-                initialReelId={selectedReelId}
-                onBack={() => setSelectedReelId(null)}
             />;
         }
         if (route === 'startupDetail' && selectedStartupId) {

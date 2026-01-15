@@ -13,24 +13,18 @@ import { ThemeContext } from '../contexts/ThemeContext';
 import { fetchSavedPosts, unsavePost } from '../lib/api';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ThemedRefreshControl from '../components/ThemedRefreshControl';
+import { Play } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 const GRID_SIZE = (width - 4) / 3; // 3 columns with 2px gaps
 
 interface SavedItem {
     _id: string;
-    contentType?: 'Post' | 'StartupDetails' | 'Reel'; // Track content type
-    postId: string | {
-        _id: string;
-        content?: string;
-        media?: { url: string; type: string }[];
-        author?: {
-            username: string;
-            displayName?: string;
-            avatarUrl?: string;
-        };
-    };
-    createdAt: string;
+    postId?: any;
+    post?: any;
+    user?: any;
+    savedAt?: string;
+    contentType?: 'Post' | 'StartupDetails' | 'Reel';
 }
 
 interface SavedPostsProps {
@@ -79,17 +73,23 @@ const SavedPosts = ({ onClose, onPostPress, onStartupPress, onReelPress }: Saved
     };
 
     const handlePostPress = (item: SavedItem) => {
-        if (!item || !item.postId) return;
-        const postId = typeof item.postId === 'string' ? item.postId : item.postId?._id;
-        if (!postId) return;
+        const contentType = item.contentType || 'Post';
+        const contentId = item.postId?._id || item.postId || item.post?._id || item.post;
 
-        // Check content type for navigation
-        if (item.contentType === 'Reel' && onReelPress) {
-            onReelPress(postId);
-        } else if (item.contentType === 'StartupDetails' && onStartupPress) {
-            onStartupPress(postId);
-        } else if (onPostPress) {
-            onPostPress(postId);
+        // Handle different content types
+        if (contentType === 'Reel') {
+            if (onReelPress && contentId) {
+                onReelPress(String(contentId));
+            }
+        } else if (contentType === 'StartupDetails') {
+            if (onStartupPress && contentId) {
+                onStartupPress(String(contentId));
+            }
+        } else {
+            // Default to Post
+            if (onPostPress && contentId) {
+                onPostPress(String(contentId));
+            }
         }
     };
 
@@ -97,6 +97,10 @@ const SavedPosts = ({ onClose, onPostPress, onStartupPress, onReelPress }: Saved
         if (!item.postId) return null;
         if (typeof item.postId === 'object' && item.postId.media && item.postId.media.length > 0) {
             return item.postId.media[0].url;
+        }
+        // For reels, use thumbnailUrl
+        if (typeof item.postId === 'object' && item.postId.thumbnailUrl) {
+            return item.postId.thumbnailUrl;
         }
         return null;
     };
@@ -106,11 +110,16 @@ const SavedPosts = ({ onClose, onPostPress, onStartupPress, onReelPress }: Saved
         if (typeof item.postId === 'object' && item.postId.content) {
             return item.postId.content;
         }
+        // For reels, show caption
+        if (typeof item.postId === 'object' && item.postId.caption) {
+            return item.postId.caption;
+        }
         return 'Saved post';
     };
 
     const renderItem = ({ item }: { item: SavedItem }) => {
         const imageUrl = getPostImageUrl(item);
+        const isReel = item.contentType === 'Reel';
         // Debug: log saved item (especially StartupDetails) to compare with feed
         if (console && console.log) {
             console.log('SavedPosts item:', item);
@@ -131,6 +140,12 @@ const SavedPosts = ({ onClose, onPostPress, onStartupPress, onReelPress }: Saved
                         <Text style={[styles.placeholderText, { color: theme.placeholder }]} numberOfLines={3}>
                             {getPostContent(item)}
                         </Text>
+                    </View>
+                )}
+                {/* Video/Reel icon overlay */}
+                {isReel && (
+                    <View style={styles.reelIconOverlay}>
+                        <Play size={16} color="#fff" fill="#fff" />
                     </View>
                 )}
             </TouchableOpacity>
@@ -269,6 +284,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: 'center',
         marginTop: 8,
+    },
+    reelIconOverlay: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 4,
+        padding: 4,
+        zIndex: 10,
     },
 });
 
