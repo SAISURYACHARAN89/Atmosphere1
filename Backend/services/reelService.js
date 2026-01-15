@@ -62,8 +62,12 @@ exports.getReelsFeed = async (req, res) => {
         // Add user interaction status if authenticated
         if (req.user) {
             const reelIds = reels.map(r => r._id);
+            const authorIds = reels.map(r => r.author?._id).filter(Boolean);
+
             const Saved = require('../models/Saved');
-            const [likes, savedDocs] = await Promise.all([
+            const Follow = require('../models/Follow');
+
+            const [likes, savedDocs, follows] = await Promise.all([
                 ReelLike.find({
                     reel: { $in: reelIds },
                     user: req.user.id
@@ -71,16 +75,31 @@ exports.getReelsFeed = async (req, res) => {
                 Saved.find({
                     user: req.user.id,
                     $or: [{ contentId: { $in: reelIds } }, { post: { $in: reelIds } }]
+                }).lean(),
+                Follow.find({
+                    follower: req.user.id,
+                    following: { $in: authorIds }
                 }).lean()
             ]);
+
             const likedMap = new Set(likes.map(l => l.reel.toString()));
             const savedMap = {};
             savedDocs.forEach(s => { savedMap[String(s.contentId || s.post)] = String(s._id); });
+
+            const followMap = new Set(follows.map(f => f.following.toString()));
 
             reels.forEach(reel => {
                 reel.isLiked = likedMap.has(reel._id.toString());
                 reel.isSaved = !!savedMap[reel._id.toString()];
                 reel.savedId = savedMap[reel._id.toString()] || null;
+                // Check if user follows the reel author
+                if (reel.author && reel.author._id) {
+                    const isFollowing = followMap.has(reel.author._id.toString());
+                    reel.isFollowing = isFollowing;
+                    reel.author.isFollowing = isFollowing;
+                } else {
+                    reel.isFollowing = false;
+                }
             });
         }
 
@@ -107,9 +126,48 @@ exports.getUserReels = async (req, res) => {
             .populate('author', 'username displayName avatarUrl')
             .lean();
 
+        // Add user interaction status if authenticated
+        if (req.user) {
+            const reelIds = reels.map(r => r._id);
+            const authorIds = reels.map(r => r.author?._id).filter(Boolean);
 
+            const Saved = require('../models/Saved');
+            const ReelLike = require('../models/ReelLike');
+            const Follow = require('../models/Follow');
 
-        // Refresh URLs
+            const [likes, savedDocs, follows] = await Promise.all([
+                ReelLike.find({
+                    reel: { $in: reelIds },
+                    user: req.user.id
+                }).lean(),
+                Saved.find({
+                    user: req.user.id,
+                    $or: [{ contentId: { $in: reelIds } }, { post: { $in: reelIds } }]
+                }).lean(),
+                Follow.find({
+                    follower: req.user.id,
+                    following: { $in: authorIds }
+                }).lean()
+            ]);
+
+            const likedMap = new Set(likes.map(l => l.reel.toString()));
+            const savedMap = {};
+            savedDocs.forEach(s => { savedMap[String(s.contentId || s.post)] = String(s._id); });
+            const followMap = new Set(follows.map(f => f.following.toString()));
+
+            reels.forEach(reel => {
+                reel.isLiked = likedMap.has(reel._id.toString());
+                reel.isSaved = !!savedMap[reel._id.toString()];
+                reel.savedId = savedMap[reel._id.toString()] || null;
+                if (reel.author && reel.author._id) {
+                    const isFollowing = followMap.has(reel.author._id.toString());
+                    reel.isFollowing = isFollowing;
+                    reel.author.isFollowing = isFollowing;
+                } else {
+                    reel.isFollowing = false;
+                }
+            });
+        }
         const refreshedReels = await Promise.all(reels.map(async (reel) => refreshReelData(reel)));
 
         res.json({ reels: refreshedReels });
@@ -135,10 +193,26 @@ exports.getReel = async (req, res) => {
         // Increment view count
         await Reel.findByIdAndUpdate(id, { $inc: { viewsCount: 1 } });
 
-        // Check if user liked
+        // Check if user liked, saved, or follows author
         if (req.user) {
-            const like = await ReelLike.findOne({ reel: id, user: req.user.id });
+            const Saved = require('../models/Saved');
+            const ReelLike = require('../models/ReelLike');
+            const Follow = require('../models/Follow');
+
+            const [like, saved, follow] = await Promise.all([
+                ReelLike.findOne({ reel: id, user: req.user.id }),
+                Saved.findOne({
+                    user: req.user.id,
+                    $or: [{ contentId: id }, { post: id }]
+                }),
+                reel.author ? Follow.findOne({ follower: req.user.id, following: reel.author._id }) : Promise.resolve(null)
+            ]);
+
             reel.isLiked = !!like;
+            reel.isSaved = !!saved;
+            reel.savedId = saved ? saved._id : null;
+            reel.isFollowing = !!follow;
+            if (reel.author) reel.author.isFollowing = !!follow;
         }
 
 

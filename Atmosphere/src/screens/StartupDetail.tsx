@@ -9,6 +9,7 @@ const { width } = Dimensions.get('window');
 
 import StartupPost from '../components/StartupPost';
 
+import AsyncStorage from '@react-native-async-storage/async-storage;
 
 
 const StartupDetail = ({ route, navigation }: any) => {
@@ -17,6 +18,20 @@ const StartupDetail = ({ route, navigation }: any) => {
 
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<any>(null);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const loadUserId = async () => {
+            try {
+                const userStr = await AsyncStorage.getItem('user');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    setCurrentUserId(user._id || user.id || null);
+                }
+            } catch { }
+        };
+        loadUserId();
+    }, []);
 
     useEffect(() => {
         console.log('StartupDetail mounted with id:', startupId);
@@ -115,7 +130,7 @@ const StartupDetail = ({ route, navigation }: any) => {
                 {/* Use StartupPost to render the detailed card */}
                 <StartupPost
                     company={startupCardData as any}
-                    currentUserId={null} // Pass null or fetch if specific user context needed for ownership check
+                    currentUserId={currentUserId} // Pass loaded currentUserId for ownership check
                     onOpenProfile={() => { }} // Already on details, maybe ignore or open profile modal
                 />
 
