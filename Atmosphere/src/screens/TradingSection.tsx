@@ -954,7 +954,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
 
         return (
             <ScrollView
-                style={flexOneStyle as any}
+                style={[flexOneStyle, { backgroundColor: '#070707' }] as any}
                 contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
                 refreshControl={
                     <RefreshControl
@@ -1377,7 +1377,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
         return (
             <FlatList
                 data={data}
-
+                style={{ backgroundColor: '#070707' }}
                 keyExtractor={(item, index) => `${String(item._id || item.id)}_${index}`}
                 contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
                 renderItem={({ item }) => {

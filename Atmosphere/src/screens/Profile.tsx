@@ -522,10 +522,10 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
     // only open setup when user explicitly taps the pill
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: theme.background || '#000' }}>
             <ScrollView
-                style={[styles.container, { backgroundColor: theme.background }]}
-                contentContainerStyle={[styles.contentContainer]}
+                style={[styles.container, { backgroundColor: theme.background || '#000' }]}
+                contentContainerStyle={[styles.contentContainer, { backgroundColor: theme.background || '#000' }]}
                 refreshControl={
                     <ThemedRefreshControl
                         refreshing={refreshing}

@@ -411,7 +411,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.container, { backgroundColor: theme.background || '#000' }]}>
             {/* Search Bar */}
             <View style={styles.searchBarContainer}>
                 <View style={[styles.searchBar, { backgroundColor: '#1a1a1a', borderColor: '#333' }]}>
@@ -452,6 +452,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
 
             <FlatList
                 ref={flatListRef}
+                style={{ backgroundColor: theme.background || '#000' }}
                 key={isGrid ? 'grid' : 'list'}
                 data={currentData}
                 numColumns={isGrid ? 3 : 1}
@@ -485,7 +486,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: { flex: 1, backgroundColor: '#000' },
     searchBarContainer: { padding: 12, paddingTop: 8 },
     searchBar: {
         flexDirection: 'row',

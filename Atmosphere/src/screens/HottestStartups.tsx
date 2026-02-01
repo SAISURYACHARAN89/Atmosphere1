@@ -194,14 +194,14 @@ const HottestStartups = () => {
     // Use a single FlatList as the main scroll container to avoid nesting VirtualizedLists
     if (loading) {
         return (
-            <View style={[styles.container, styles.loadingWrap, { backgroundColor: theme?.background || '#fff' }]}>
+            <View style={[styles.container, styles.loadingWrap, { backgroundColor: theme?.background || '#000' }]}>
                 <ActivityIndicator size="large" color="#FB923C" />
             </View>
         );
     }
 
     return (
-        <View style={[styles.container, { backgroundColor: theme?.background || '#fff' }]}>
+        <View style={[styles.container, { backgroundColor: theme?.background || '#000' }]}>
             {/* <TopNavbar /> */}
             <FlatList
                 data={topList.slice(3)}

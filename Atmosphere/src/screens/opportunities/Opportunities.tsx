@@ -566,8 +566,8 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                                         ? `${data.length} position${data.length !== 1 ? 's' : ''} available`
                                         : `Total ${tabName.toLowerCase()}: ${data.length}`}
                                 </Text>
-                                <TouchableOpacity onPress={() => setFilterModalVisible(true)}>
-                                    <Text style={styles.filterIcon}>▼</Text>
+                                <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.filterIconBtn}>
+                                    <MaterialIcons name="filter-list" size={20} color="#fff" />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -599,7 +599,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme?.background || '#000' }]}>
             {/* Tab Bar */}
             <View style={styles.tabBar}>
                 {/* Animated Pill Background */}
