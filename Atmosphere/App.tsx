@@ -78,12 +78,12 @@ function AppContent() {
   const viewStyle = {
     flex: 1,
     paddingTop: isAuthRoute ? 0 : insets.top,
-    backgroundColor: isDarkMode ? '#000' : '#fff',
+    backgroundColor: '#000000', // Force black background
   };
 
   return (
     <View style={viewStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle="light-content" />
       {route === 'signin' && (
         <SignIn
           onSignUp={() => setRoute('signup')}

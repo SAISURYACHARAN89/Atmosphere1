@@ -414,7 +414,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.container, { backgroundColor: '#000000' }]}>
             <Animated.View style={[styles.navbarWrapper, { transform: [{ translateY: navbarTranslateY }], opacity: navbarOpacity }]}>
                 <TopNavbar
                     title="Atmosphere"
