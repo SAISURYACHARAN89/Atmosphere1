@@ -14,7 +14,7 @@ export default StyleSheet.create({
     headerStats: { flexDirection: 'row', flex: 1, justifyContent: 'space-around' },
     statCol: { alignItems: 'center' },
     statNum: { fontWeight: '600', fontSize: 15 },
-    statLabel: { fontWeight: '600', fontSize: 15 },
+    statLabel: { fontWeight: '600', fontSize: 14.5 },
     setupPill: { marginHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, alignItems: 'center', marginBottom: 8 },
     setupPillText: { fontWeight: '600' },
     tabsRow: { flexDirection: 'row', marginTop: 8, position: 'relative' },

@@ -603,7 +603,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                                     <Text style={{ color: theme.placeholder, fontSize: 13 }}>{src.location}</Text>
                                 </View>
                             ) : null}
-                            <Text style={{ color: theme.text, fontSize: 14, lineHeight: 20, marginLeft: 5 }}>
+                            <Text style={{ color: theme.text, fontSize: 14.5, lineHeight: 20, marginLeft: 5 }}>
                                 {src?.tagline && src?.description && src?.tagline !== src?.description
                                     ? `${src.tagline} | ${src.description}`
                                     : (src?.tagline || src?.description || '')}
