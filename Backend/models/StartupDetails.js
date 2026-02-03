@@ -18,6 +18,7 @@ const FundingRoundSchema = new Schema({
             "Market ready",
             "Semi running",
             "Fully running",
+            "Pre-seed",
         ],
         default: "Idea",
     },
