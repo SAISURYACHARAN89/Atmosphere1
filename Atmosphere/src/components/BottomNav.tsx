@@ -12,7 +12,8 @@ import {
   SquarePlay,
 } from "lucide-react-native";
 import IconFA from 'react-native-vector-icons/FontAwesome';
-import IconEntypo from 'react-native-vector-icons/Entypo';
+import IconFA5 from 'react-native-vector-icons/FontAwesome5';
+import IconIon from 'react-native-vector-icons/Ionicons';
 import ReelsIcon from './icons/ReelsIcon';
 import ReelsOutline from './icons/ReelsOutline';
 import HomeFilled from './icons/HomeFilled';
@@ -90,6 +91,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
     if (!name) return;
     if (leftModeTabs.some((t) => t.route === name)) setLastLeftPage(name);
     if (rightModeTabs.some((t) => t.route === name)) setLastRightPage(name);
+    // debug: log current route for icon active checks
+    try { console.debug('[BottomNav] route.name =', name, 'appMode =', appMode); } catch (e) { }
   }, [route?.name]);
 
   const tabs = appMode === "left" ? leftModeTabs : rightModeTabs;
@@ -123,11 +126,15 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
   const isTabActive = (tabRoute: string) => {
     const current = activeRoute || (route?.name as string | undefined);
     if (!current) return false;
-    return current === tabRoute;
+    const active = current === tabRoute;
+    try { console.debug('[BottomNav] isTabActive', { tabRoute, current, active }); } catch (e) { }
+    return active;
   };
 
   if (shouldHideMobileNav) return null;
 
+  // Debug: show which mode and tabs are being rendered so we can verify the 'launch' tab
+  try { console.log('[BottomNav] render', { appMode, tabs: tabs.map(t => t.id) }); } catch (e) { }
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <View style={styles.row}>
@@ -147,6 +154,13 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
                     <HomeFilled color="#fff" size={24} />
                   ) : (
                     <HomeOutline color="#fff" size={24} />
+                  )
+                ) : tab.id === 'launch' ? (
+                  // Launch can appear in the first slice when `appMode` is 'right'
+                  active ? (
+                      <IconIon name="rocket" size={24} color="#fff" solid={true} />
+                  ) : (
+                    <IconIon name='rocket-outline' size={24} color="#fff" />
                   )
                 ) : (
                   <IconComponent
@@ -221,8 +235,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
             );
           }
 
-          // Special-case Meetings: show Entypo calendar when active
-          if (tab.id === 'meetings') {
+          // Special-case Launch: use solid FontAwesome rocket when active, Ionicons outline when inactive
+          if (tab.id === 'launch') {
             return (
               <TouchableOpacity
                 key={tab.id}
@@ -232,14 +246,30 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
               >
                 <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? '#111' : 'transparent' }}>
                   {active ? (
-                    <IconEntypo name="calendar" size={24} color="#fff" />
+                    <IconFA5 name="rocket" size={24} color="#fff" solid={true} />
                   ) : (
-                    <Calendar
-                      color="#fff"
-                      size={26}
-                      strokeWidth={active ? 2.5 : 1.2}
-                    />
+                    <IconIon name={'rocket-outline'} size={24} color="#fff" />
                   )}
+                </View>
+              </TouchableOpacity>
+            );
+          }
+
+          // Special-case Meetings: show Ionicons calendar when active
+          if (tab.id === 'meetings') {
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                onPress={() => handleTabPress(tab.route)}
+                style={[styles.tab]}
+                activeOpacity={0.8}
+              >
+                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? '#111' : 'transparent' }}>
+                  <IconIon
+                    name={active ? 'calendar' : 'calendar-outline'}
+                    size={24}
+                    color="#fff"
+                  />
                 </View>
               </TouchableOpacity>
             );

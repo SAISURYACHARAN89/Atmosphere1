@@ -225,16 +225,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
                 ? fundingRaisedFromRound
                 : Number(p.fundingRaised || 0);
 
-            console.log('[Home.normalizeData]', p.companyName || p.name, {
-                fundingRounds: fundingRounds.length,
-                currentRound,
-                calculatedRounds,
-                fundingRaisedFromRound,
-                finalFundingRaised,
-                storedRounds: p.rounds,
-                storedFundingRaised: p.fundingRaised
-            });
-
             return {
                 id: String(p.id || p._id || Math.random()) + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5), // Ensure unique key for looping
                 originalId: String(p.id || p._id),
@@ -278,8 +268,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
                     const cached = await AsyncStorage.getItem(CACHE_KEY);
                     if (cached) {
                         const rawData = JSON.parse(cached);
-                        console.log('[Home] Loaded cached feed:', rawData.length, 'items');
-                        // Normalize cached data (generates fresh IDs for this session)
                         const normalized = normalizeData(rawData);
                         setPosts(normalized);
                         setBackendSkip(rawData.length);
@@ -327,7 +315,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
 
             // Loop Logic: If we got fewer items than requested (or 0), we reached the end.
             if (data.length === 0 && posts.length > 0 && !isRefresh) {
-                console.log('[Home] Reached end of feed, looping back to start');
                 skipToUse = 0;
                 data = await fetchStartupPosts(PAGE_SIZE, 0); // Re-fetch from start
                 nextSkip = data.length; // Update skip for next time
@@ -390,8 +377,6 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
                 contentContainerStyle={[styles.listContent]}
                 renderItem={({ item, index }) => (
                     <View>
-                        {/* Debug: log the startup card object coming from feed */}
-                        {console.log && console.log('Home feed StartupPost item:', item)}
                         <StartupPost post={item} currentUserId={currentUserId} onOpenProfile={onOpenProfile} />
                         {/* Separator line between cards */}
                         {index < posts.length - 1 && <View style={styles.separator} />}

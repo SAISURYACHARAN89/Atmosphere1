@@ -39,7 +39,7 @@ export const styles = StyleSheet.create({
     filterButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#0f0f0f',
+        backgroundColor: 'transparent',
         paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 8,
@@ -52,6 +52,69 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         flex: 1,
+    },
+    filtersRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 12,
+        marginHorizontal: 20,
+    },
+    filtersCount: {
+        color: '#999',
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    filterButtonSmall: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        gap: 6,
+    },
+    filterIconBtn: {
+        padding: 6,
+        borderRadius: 6,
+        backgroundColor: 'transparent',
+    },
+    filterIcon: {
+        fontSize: 18,
+    },
+    filterButtonTextSmall: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    filterModalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    filterModalCard: {
+        backgroundColor: '#111',
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    filterModalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    filterModalTitle: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    filterModalClose: {
+        padding: 6,
+        borderRadius: 12,
+        backgroundColor: '#1a1a1a',
     },
     pagerPage: { flex: 1 },
 
@@ -444,7 +507,7 @@ export const styles = StyleSheet.create({
     // Collapsed Card Styles - Matching Active Trades Structure
     collapsedCardRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         gap: 12,
     },
     expandedCardHeader: {
@@ -467,28 +530,45 @@ export const styles = StyleSheet.create({
         flex: 1,
     },
     collapsedNameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
         flexWrap: 'wrap',
     },
     collapsedCompanyName: {
         color: '#fff',
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    collapsedOwnerName: {
+        color: '#bfbfbf',
+        fontSize: 13,
+        marginTop: 3,
     },
     collapsedDescription: {
-        color: '#666',
-        fontSize: 11,
+        color: '#bfbfbf',
+        fontSize: 13,
         marginTop: 4, // Matching tradeMetaText/tradeUsername spacing
     },
     collapsedActions: {
         flexDirection: 'row', // Matching Active Trades structure
         gap: 8,
     },
+    collapsedActionsColumn: {
+        flexDirection: 'column',
+        gap: 8,
+        alignItems: 'center',
+    },
     collapsedActionBtn: {
         padding: 8,
         borderRadius: 8,
         backgroundColor: '#1a1a1a',
+    },
+    buyCardActionBtn: {
+        width: 36,
+        height: 36,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 10,
     },
     collapsedBookmarkBtn: {
         width: 32,
@@ -663,7 +743,27 @@ export const styles = StyleSheet.create({
         marginBottom: 16,
         marginTop: 12,
     },
+    tradeActionRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 4,
+    },
+    chatOwnerButton: {
+        flex: 1,
+        backgroundColor: '#1f1f1f',
+        paddingVertical: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#2d2d2d',
+    },
+    chatOwnerText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '600',
+    },
     expressInterestButton: {
+        flex: 1,
         backgroundColor: '#4a4a4a',
         paddingVertical: 14,
         borderRadius: 8,

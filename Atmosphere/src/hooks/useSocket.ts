@@ -47,12 +47,12 @@ export const useSocket = (options: UseSocketOptions = { autoConnect: true }) => 
             });
 
             socket.on('connect', () => {
-                console.log('Socket connected');
+                // console.log('Socket connected');
                 setIsConnected(true);
             });
 
             socket.on('disconnect', (reason) => {
-                console.log('Socket disconnected:', reason);
+                // console.log('Socket disconnected:', reason);
                 setIsConnected(false);
             });
 

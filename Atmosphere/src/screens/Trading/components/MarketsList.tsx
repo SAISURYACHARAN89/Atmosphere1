@@ -8,8 +8,10 @@ import {
     ActivityIndicator,
     RefreshControl,
     Animated,
+    Modal,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconFA from 'react-native-vector-icons/FontAwesome';
 
 import { ActiveTrade, categories } from '../types';
 import { styles } from '../styles';
@@ -109,42 +111,16 @@ const MarketsList: React.FC<MarketsListProps> = ({
                 </TouchableOpacity>
             </View>
 
-            {/* Filter Button */}
-            <TouchableOpacity
-                style={styles.filterButton}
-                onPress={toggleFilterWithAnimation}
-            >
-                <MaterialCommunityIcons name="tune" size={18} color="#fff" />
-                <Text style={styles.filterButtonText}>Filters</Text>
-                <MaterialCommunityIcons
-                    name={isFilterOpen ? "chevron-up" : "chevron-down"}
-                    size={20}
-                    color="#bfbfbf"
-                />
-            </TouchableOpacity>
-
-            {/* Category Filters - Animated container */}
-            <Animated.View style={filterContainerStyle}>
-                <View style={styles.categoriesContainer}>
-                    {categories.map(category => (
-                        <TouchableOpacity
-                            key={category}
-                            onPress={() => handleCategoryClick(category)}
-                            style={[
-                                styles.categoryChip,
-                                selectedCategories.includes(category) && styles.categoryChipActive
-                            ]}
-                        >
-                            <Text style={[
-                                styles.categoryChipText,
-                                selectedCategories.includes(category) && styles.categoryChipTextActive
-                            ]}>
-                                {category}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </Animated.View>
+            {/* Entries count + Filter Button */}
+            <View style={styles.filtersRow}>
+                <Text style={styles.filtersCount}>{data.length} entries</Text>
+                <TouchableOpacity
+                    style={styles.filterIconBtn}
+                    onPress={toggleFilterWithAnimation}
+                >
+                    <IconFA name="filter" size={18} color="#fff" />
+                </TouchableOpacity>
+            </View>
 
             {/* Suggested for you heading */}
             <Text style={styles.suggestedHeading}>Suggested for you</Text>
@@ -168,45 +144,91 @@ const MarketsList: React.FC<MarketsListProps> = ({
     }
 
     return (
-        <FlatList
-            data={data}
-            keyExtractor={(item, index) => `${String(item._id || item.id)}_${index}`}
-            contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
-            renderItem={({ item }) => {
-                const tradeId = item._id || item.id;
-                if (!tradeId) return null;
-                const isExpanded = expandedBuyTradeId === tradeId;
-                const isSaved = savedItems.includes(String(tradeId));
+        <>
+            <FlatList
+                data={data}
+                keyExtractor={(item, index) => `${String(item._id || item.id)}_${index}`}
+                contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
+                renderItem={({ item }) => {
+                    const tradeId = item._id || item.id;
+                    if (!tradeId) return null;
+                    const isExpanded = expandedBuyTradeId === tradeId;
+                    const isSaved = savedItems.includes(String(tradeId));
 
-                return (
-                    <TradeCard
-                        trade={item}
-                        isExpanded={isExpanded}
-                        isSaved={isSaved}
-                        currentPhotoIndex={currentPhotoIndex[String(tradeId)] || 0}
-                        onToggleExpand={() => {
-                            setExpandedBuyTradeId(isExpanded ? null : (tradeId as string | number));
-                        }}
-                        onToggleSave={() => toggleSaveItem(String(tradeId))}
-                        onPhotoIndexChange={(index) => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: index }))}
-                        onExpressInterest={() => handleExpressInterest(item)}
+                    return (
+                        <TradeCard
+                            trade={item}
+                            isExpanded={isExpanded}
+                            isSaved={isSaved}
+                            currentPhotoIndex={currentPhotoIndex[String(tradeId)] || 0}
+                            onToggleExpand={() => {
+                                setExpandedBuyTradeId(isExpanded ? null : (tradeId as string | number));
+                            }}
+                            onToggleSave={() => toggleSaveItem(String(tradeId))}
+                            onPhotoIndexChange={(index) => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: index }))}
+                            onExpressInterest={() => handleExpressInterest(item)}
+                        />
+                    );
+                }}
+                ListHeaderComponent={ListHeader}
+                onEndReached={handleLoadMoreBuy}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={() => buyLoading && data.length > 0 ? <ActivityIndicator size="small" color="#1a73e8" style={footerLoaderStyle} /> : null}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#1a73e8"
+                        title="Release to refresh"
+                        titleColor="#888"
                     />
-                );
-            }}
-            ListHeaderComponent={ListHeader}
-            onEndReached={handleLoadMoreBuy}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={() => buyLoading && data.length > 0 ? <ActivityIndicator size="small" color="#1a73e8" style={footerLoaderStyle} /> : null}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                    tintColor="#1a73e8"
-                    title="Release to refresh"
-                    titleColor="#888"
-                />
-            }
-        />
+                }
+            />
+            <Modal
+                visible={isFilterOpen}
+                transparent
+                animationType="fade"
+                onRequestClose={toggleFilterWithAnimation}
+            >
+                <TouchableOpacity
+                    style={styles.filterModalBackdrop}
+                    activeOpacity={1}
+                    onPress={toggleFilterWithAnimation}
+                >
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={() => { }}
+                        style={styles.filterModalCard}
+                    >
+                        <View style={styles.filterModalHeader}>
+                            <Text style={styles.filterModalTitle}>Filters</Text>
+                            <TouchableOpacity onPress={toggleFilterWithAnimation} style={styles.filterModalClose}>
+                                <MaterialCommunityIcons name="close" size={18} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={styles.categoriesContainer}>
+                            {categories.map(category => (
+                                <TouchableOpacity
+                                    key={category}
+                                    onPress={() => handleCategoryClick(category)}
+                                    style={[
+                                        styles.categoryChip,
+                                        selectedCategories.includes(category) && styles.categoryChipActive
+                                    ]}
+                                >
+                                    <Text style={[
+                                        styles.categoryChipText,
+                                        selectedCategories.includes(category) && styles.categoryChipTextActive
+                                    ]}>
+                                        {category}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+        </>
     );
 };
 

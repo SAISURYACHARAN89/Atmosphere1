@@ -87,26 +87,18 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
         // Case 4: profileData.user is an object with _id
         let startupOwnerId = details.userId || (details.user && details.user._id) || details.user || (profileData && profileData.user && profileData.user._id) || (profileData && profileData.user);
 
-        console.log('[StartupExpand] Checking owner:', {
-            currentUserId: uid,
-            startupOwnerId,
-            startupId: details._id,
-            detailsUserType: typeof details.user,
-            profileDataUserType: typeof profileData?.user
-        });
-
         if (uid && startupOwnerId) {
             const ownerIdStr = typeof startupOwnerId === 'object' ? startupOwnerId.toString() : String(startupOwnerId);
             const currentIdStr = String(uid);
 
             if (currentIdStr === ownerIdStr) {
-                console.log('[StartupExpand] Owner Match Confirmed');
+                // console.log('[StartupExpand] Owner Match Confirmed');
                 setIsOwner(true);
             } else {
-                console.log(`[StartupExpand] Mismatch: ${currentIdStr} !== ${ownerIdStr}`);
+                // console.log(`[StartupExpand] Mismatch: ${currentIdStr} !== ${ownerIdStr}`);
             }
         } else {
-            console.log('[StartupExpand] Missing IDs for check');
+            // console.log('[StartupExpand] Missing IDs for check');
         }
     };
 
@@ -126,7 +118,7 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
                 setPitchRequested(true);
             }
         } catch (error) {
-            console.log('Error checking pitch status:', error);
+            // console.log('Error checking pitch status:', error);
         }
     };
 
@@ -159,7 +151,7 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
             setSelectedUserId('');
             Alert.alert('Success', 'Team member added! Pull to refresh.');
         } catch (error) {
-            console.log('Error adding team member:', error);
+            // console.log('Error adding team member:', error);
             Alert.alert('Error', 'Failed to add team member');
         } finally {
             setSavingMember(false);
@@ -202,7 +194,7 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
 
             setPitchRequested(true);
         } catch (error: any) {
-            console.log('Error requesting pitch deck:', error);
+            // console.log('Error requesting pitch deck:', error);
             if (error.response?.status === 400 && error.response?.data?.error === 'Pitch deck already requested') {
                 setPitchRequested(true);
                 Alert.alert('Info', 'You have already requested the pitch deck.');

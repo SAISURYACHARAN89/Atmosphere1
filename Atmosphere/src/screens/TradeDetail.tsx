@@ -18,6 +18,7 @@ const TradeDetail: React.FC<TradeDetailProps> = ({ route, navigation }) => {
     const [loading, setLoading] = useState(true);
     const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
     const [saved, setSaved] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchTrade = async () => {
@@ -44,6 +45,13 @@ const TradeDetail: React.FC<TradeDetailProps> = ({ route, navigation }) => {
             }
         };
         fetchTrade();
+        // set current user id for ownership checks
+        (async () => {
+            try {
+                const p = await getProfile();
+                if (p) setCurrentUserId(p.user?._id || p._id);
+            } catch { }
+        })();
     }, [tradeId, navigation]);
 
     const handleToggleSave = async () => {
@@ -62,6 +70,10 @@ const TradeDetail: React.FC<TradeDetailProps> = ({ route, navigation }) => {
         try {
             // @ts-ignore
             const ownerId = trade.user?._id || trade.user?.id || trade.user;
+            if (currentUserId && String(ownerId) === String(currentUserId)) {
+                showAlert('Notice', "This is your post — you can't express interest in your own listing.");
+                return;
+            }
             const ownerName = trade.companyName || 'the company';
 
             if (!ownerId) {
@@ -92,7 +104,12 @@ const TradeDetail: React.FC<TradeDetailProps> = ({ route, navigation }) => {
             }
         } catch (error) {
             console.error('Express interest error:', error);
-            showAlert('Error', 'Failed to send interest message.');
+            const msg = (error && (error as Error).message) || '';
+            if (msg.includes('Cannot create chat with yourself')) {
+                showAlert('Notice', "This is your post — you can't express interest in your own listing.");
+            } else {
+                showAlert('Error', 'Failed to send interest message.');
+            }
         }
     };
 

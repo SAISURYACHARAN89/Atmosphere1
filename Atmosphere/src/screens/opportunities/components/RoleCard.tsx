@@ -115,7 +115,7 @@ function RoleCard({ item, isMyAd = false, expanded = false, onExpand, onApplySuc
             setShowSuccessModal(true);
 
         } catch (err: any) {
-            console.log('Export error:', err);
+            // console.log('Export error:', err);
             showAlert('Export Failed', err.message || 'Could not save file');
         } finally {
             setExporting(false);
@@ -385,7 +385,7 @@ function RoleCard({ item, isMyAd = false, expanded = false, onExpand, onApplySuc
                                             <TouchableOpacity
                                                 onPress={async () => {
                                                     try {
-                                                        console.log('Opening file:', exportedFilePath);
+                                                        // console.log('Opening file:', exportedFilePath);
 
                                                         if (!exportedFilePath) {
                                                             showAlert('Error', 'No file path available');
@@ -403,7 +403,7 @@ function RoleCard({ item, isMyAd = false, expanded = false, onExpand, onApplySuc
                                                         const cachePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
                                                         await RNFS.copyFile(exportedFilePath, cachePath);
 
-                                                        console.log('File copied to cache:', cachePath);
+                                                        // console.log('File copied to cache:', cachePath);
 
                                                         // Share using file path from cache
                                                         await RNShare.open({
@@ -417,7 +417,7 @@ function RoleCard({ item, isMyAd = false, expanded = false, onExpand, onApplySuc
                                                             setShowSuccessModal(false);
                                                             return;
                                                         }
-                                                        console.log('Open file error:', err);
+                                                        // console.log('Open file error:', err);
                                                         showAlert('Error', 'Could not open file: ' + (err?.message || 'Unknown error'));
                                                     }
                                                 }}

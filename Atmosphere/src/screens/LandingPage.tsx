@@ -61,7 +61,7 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
             try {
                 const { getProfile } = await import('../lib/api');
                 const profile = await getProfile();
-                console.log('LandingPage - profile.user.roles:', profile?.user?.roles);
+                // console.log('LandingPage - profile.user.roles:', profile?.user?.roles);
                 // Check roles array for account type (profile returns roles:['investor'] not accountType)
                 const roles = profile?.user?.roles || [];
                 if (roles.includes('investor')) {
@@ -333,7 +333,13 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
             case 'topstartups':
                 return <TopStartups />;
             case 'trade':
-                return <TradingSection initialTab={tradeInitialTab} onTabChange={() => setTradeInitialTab(undefined)} />;
+                return (
+                    <TradingSection
+                        initialTab={tradeInitialTab}
+                        onTabChange={() => setTradeInitialTab(undefined)}
+                        onChatSelect={handleChatSelect}
+                    />
+                );
             case 'jobs':
                 return <Opportunities onNavigate={(r: string) => navigateTo(r as RouteKey)} />;
             case 'myTeam':

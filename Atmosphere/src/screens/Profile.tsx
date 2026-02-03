@@ -234,7 +234,7 @@ const Profile = ({ onNavigate, userId: propUserId, onClose, onCreatePost, onPost
                         }
                     }
 
-                    console.log('Profile detected accountType:', type, 'for user:', profileData?.user?.username);
+                    // console.log('Profile detected accountType:', type, 'for user:', profileData?.user?.username);
                     setAccountType(type as 'investor' | 'startup' | 'personal');
                 }
             } catch {

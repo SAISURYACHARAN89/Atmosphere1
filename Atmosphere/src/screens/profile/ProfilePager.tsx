@@ -195,7 +195,7 @@ export default function ProfilePager({
                             }}
                             onExpressInterest={() => {
                                 // TODO: Implement express interest navigation
-                                console.log('Express interest for trade:', tradeId);
+                                // console.log('Express interest for trade:', tradeId);
                             }}
                         />
                     );

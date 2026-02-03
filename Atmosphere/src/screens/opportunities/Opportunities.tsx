@@ -19,6 +19,7 @@ import { ThemeContext } from '../../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getBaseUrl } from '../../lib/config';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import IconFA from 'react-native-vector-icons/FontAwesome';
 
 import { TABS } from './constants';
 import GrantEventCard from './components/GrantEventCard';
@@ -414,8 +415,6 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         flatListRef.current?.scrollToIndex({ index, animated: true });
     };
 
-
-
     const renderTabContent = ({ item: tabName }: { item: string }) => {
         let data: any[] = [];
         let loading = false;
@@ -453,8 +452,6 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                 onRefresh = async () => { setRefreshing(true); await loadTeam(0); setRefreshing(false); };
             }
         }
-
-
 
         return (
             <View style={{ width }}>
@@ -567,7 +564,7 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                                         : `Total ${tabName.toLowerCase()}: ${data.length}`}
                                 </Text>
                                 <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.filterIconBtn}>
-                                    <MaterialIcons name="filter-list" size={20} color="#fff" />
+                                    <IconFA name="filter" size={18} color="#fff" />
                                 </TouchableOpacity>
                             </View>
                         </View>

@@ -34,12 +34,12 @@ const StartupDetail = ({ route, navigation }: any) => {
     }, []);
 
     useEffect(() => {
-        console.log('StartupDetail mounted with id:', startupId);
+        // console.log('StartupDetail mounted with id:', startupId);
         const fetch = async () => {
             if (!startupId) return;
             try {
                 const result = await getStartupProfile(startupId);
-                console.log('StartupDetail fetched result:', result ? 'found' : 'null');
+                // console.log('StartupDetail fetched result:', result ? 'found' : 'null');
                 setData(result);
             } catch (err) {
                 console.warn('Failed to load startup details', err);
@@ -71,19 +71,19 @@ const StartupDetail = ({ route, navigation }: any) => {
 
     const { user, details } = data;
 
-    console.log('StartupDetail details:', {
-        _id: details?._id,
-        companyName: details?.companyName,
-        meta: details?.meta,
-        likesCount: details?.likesCount,
-        fundingRaised: details?.fundingRaised,
-        fundingNeeded: details?.fundingNeeded,
-        financialProfile: details?.financialProfile,
-        likedByCurrentUser: details?.likedByCurrentUser,
-        crownedByCurrentUser: details?.crownedByCurrentUser,
-        isFollowing: details?.isFollowing,
-        isSaved: details?.isSaved
-    });
+    // console.log('StartupDetail details:', {
+    //     _id: details?._id,
+    //     companyName: details?.companyName,
+    //     meta: details?.meta,
+    //     likesCount: details?.likesCount,
+    //     fundingRaised: details?.fundingRaised,
+    //     fundingNeeded: details?.fundingNeeded,
+    //     financialProfile: details?.financialProfile,
+    //     likedByCurrentUser: details?.likedByCurrentUser,
+    //     crownedByCurrentUser: details?.crownedByCurrentUser,
+    //     isFollowing: details?.isFollowing,
+    //     isSaved: details?.isSaved
+    // });
 
     // Extract funding data with fallbacks
     const fundingRaised = details?.fundingRaised ||

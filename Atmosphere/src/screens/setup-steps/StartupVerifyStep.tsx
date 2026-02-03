@@ -19,7 +19,7 @@ export default function StartupVerifyStep({ onBack, onDone, onNavigateToTrade }:
         (async () => {
             try {
                 const profile = await getProfile();
-                console.log(profile);
+                // console.log(profile);
                 const roles = profile?.user?.roles || ['personal'];
                 const acct = roles[0] || 'personal';
                 setUserRole(acct);
@@ -52,7 +52,7 @@ export default function StartupVerifyStep({ onBack, onDone, onNavigateToTrade }:
     }
 
     if (showPortfolio) {
-        console.log(userRole);
+        // console.log(userRole);
         if (userRole === 'investor') {
             return (
                 <InvestorPortfolioStep

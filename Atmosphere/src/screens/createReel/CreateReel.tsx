@@ -123,7 +123,7 @@ const CreateReel = ({ onClose, onSuccess }: CreateReelProps) => {
                     console.warn(`Thumbnail gen failed frame ${i}`, e);
                 }
             }
-            console.log(`Generated ${newThumbnails.length} thumbnails`);
+            // console.log(`Generated ${newThumbnails.length} thumbnails`);
             setThumbnails(newThumbnails);
         } catch (error) {
             console.error('Error generating thumbnails:', error);
@@ -178,7 +178,7 @@ const CreateReel = ({ onClose, onSuccess }: CreateReelProps) => {
             if (!coverUriToUpload && selectedVideo.duration) {
                 try {
                     const cleanUri = getCleanUri(selectedVideo.uri);
-                    console.log('Generating cover from video at', seekTime, 'URI:', cleanUri);
+                    // console.log('Generating cover from video at', seekTime, 'URI:', cleanUri);
                     const thumb = await createThumbnail({
                         url: cleanUri,
                         timeStamp: Math.floor(seekTime * 1000),
@@ -186,7 +186,7 @@ const CreateReel = ({ onClose, onSuccess }: CreateReelProps) => {
                         cacheName: `cover_${Date.now()}`
                     });
                     coverUriToUpload = getDisplayUri(thumb.path);
-                    console.log('Generated Cover URI:', coverUriToUpload);
+                    // console.log('Generated Cover URI:', coverUriToUpload);
                 } catch (e) {
                     console.warn('Failed to generate cover at seek time, using default', e);
                 }
@@ -195,7 +195,7 @@ const CreateReel = ({ onClose, onSuccess }: CreateReelProps) => {
             if (coverUriToUpload) {
                 try {
                     setUploadStatus('Uploading cover...');
-                    console.log('Uploading cover:', coverUriToUpload);
+                    // console.log('Uploading cover:', coverUriToUpload);
                     const uploadedUrl = await uploadDocument(
                         coverUriToUpload,
                         'cover.jpg',
@@ -247,7 +247,7 @@ const CreateReel = ({ onClose, onSuccess }: CreateReelProps) => {
                         playInBackground={false}
                         playWhenInactive={false}
                         onLoad={(data) => {
-                            console.log('Step 1 Video Loaded:', data.duration);
+                            // console.log('Step 1 Video Loaded:', data.duration);
                             setSelectedVideo(prev => prev ? ({ ...prev, duration: data.duration }) : null);
                             setVideoError(null);
                         }}
@@ -330,7 +330,7 @@ const CreateReel = ({ onClose, onSuccess }: CreateReelProps) => {
                             paused={true}
                             onLoad={(data) => {
                                 if (!selectedVideo.duration || thumbnails.length === 0) {
-                                    console.log('Step 2 Video Loaded (Failsafe)', data.duration);
+                                    // console.log('Step 2 Video Loaded (Failsafe)', data.duration);
                                     setSelectedVideo(prev => prev ? ({ ...prev, duration: data.duration }) : null);
                                     generateThumbnails(selectedVideo.uri, data.duration);
                                 }

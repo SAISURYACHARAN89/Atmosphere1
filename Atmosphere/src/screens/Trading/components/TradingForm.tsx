@@ -159,7 +159,7 @@ export const TradingForm: React.FC<TradingFormProps> = ({
                                         borderColor: '#444'
                                     }}
                                     onPress={() => {
-                                        console.log('[TradingForm] Selected round:', round);
+                                        // console.log('[TradingForm] Selected round:', round);
                                         setSelectedRound?.(round);
                                         setShowRoundPicker(false);
                                     }}

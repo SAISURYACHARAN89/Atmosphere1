@@ -118,20 +118,20 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
         (async () => {
             try {
                 const profile = await getProfile();
-                console.log('getProfile() response:', profile);
+                // console.log('getProfile() response:', profile);
                 const userId = profile?.user?._id;
-                console.log('Fetched userId:', userId);
+                // console.log('Fetched userId:', userId);
                 if (!userId) {
-                    console.log('No userId found in profile');
+                    // console.log('No userId found in profile');
                     return;
                 }
                 try {
                     const res = await getStartupProfile(userId);
-                    console.log('Fetched startup profile response:', res);
+                    // console.log('Fetched startup profile response:', res);
                     // API may return { details: {...} } or { startupDetails: {...} }
                     const data = res?.details || res?.startupDetails || res;
                     if (data) {
-                        console.log('Fetched startup data:', data);
+                        // console.log('Fetched startup data:', data);
                         setCompanyProfile(data.companyName || '');
                         setAbout(data.about || '');
                         setLocation(data.location || '');
@@ -196,17 +196,17 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
                             setVideoName(parts[parts.length - 1] || 'Video uploaded');
                         }
                     } else {
-                        console.log('No startup data found for user');
+                        // console.log('No startup data found for user');
                     }
                 } catch (err: any) {
                     if (err?.message && err.message.toLowerCase().includes('not found')) {
-                        console.log('No startup profile found yet');
+                        // console.log('No startup profile found yet');
                     } else {
-                        console.log('Error fetching startup profile:', err?.message || err);
+                        // console.log('Error fetching startup profile:', err?.message || err);
                     }
                 }
             } catch (err: any) {
-                console.log('Error fetching user profile:', err?.message || err);
+                // console.log('Error fetching user profile:', err?.message || err);
             }
         })();
     }, []);
@@ -343,7 +343,7 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
                 setUserSearchResults(results || []);
             }
         } catch (err) {
-            console.log('User search error:', err);
+            // console.log('User search error:', err);
             setUserSearchResults([]);
         }
     };
@@ -690,7 +690,7 @@ export default function StartupPortfolioStep({ onBack, onDone, onNavigateToTrade
                     <TouchableOpacity
                         style={styles.tradeButton}
                         onPress={() => {
-                            console.log('Trade button pressed, onNavigateToTrade:', !!onNavigateToTrade);
+                            // console.log('Trade button pressed, onNavigateToTrade:', !!onNavigateToTrade);
                             // Navigate to Trading section with Sell tab
                             if (onNavigateToTrade) {
                                 onNavigateToTrade();

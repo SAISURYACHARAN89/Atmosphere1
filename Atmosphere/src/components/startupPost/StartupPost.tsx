@@ -63,7 +63,6 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: StartupPos
     const contentId = getContentId(companyData);
     const fundingPercent = getFundingPercent(companyData.fundingRaised || 0, companyData.fundingNeeded || 0);
     const revenueType = (companyData as any)?.financialProfile?.revenueType || (companyData as any)?.revenueType || '';
-    console.log("data", companyData)
     const latestFundingRound = (() => {
         const rounds = (companyData as any)?.fundingRounds;
         if (!Array.isArray(rounds) || rounds.length === 0) return '';

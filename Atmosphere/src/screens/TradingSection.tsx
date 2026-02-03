@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator, Dimensions, Animated, ScrollView, Image as RNImage, FlatList, RefreshControl, LayoutAnimation, UIManager, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator, Dimensions, Animated, ScrollView, Image as RNImage, FlatList, RefreshControl, LayoutAnimation, UIManager, Platform, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createTrade, getMyTrades, getAllTrades, updateTrade, deleteTrade, uploadImage, uploadVideo, getProfile, toggleTradeSave, getSavedTrades, createOrFindChat, sendMessage, shareContent, saveStartupProfile, searchUsers, getStartupProfile } from '../lib/api';
 import { BOTTOM_NAV_HEIGHT } from '../lib/layout';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconFA from 'react-native-vector-icons/FontAwesome';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Video from 'react-native-video';
 
@@ -49,9 +50,10 @@ interface ActiveTrade {
 interface TradingProps {
     initialTab?: 'Buy' | 'Sell';
     onTabChange?: () => void;
+    onChatSelect?: (chatId: string) => void;
 }
 
-const Trading = ({ initialTab, onTabChange }: TradingProps) => {
+const Trading = ({ initialTab, onTabChange, onChatSelect }: TradingProps) => {
     // Data State
     const [refreshing, setRefreshing] = useState(false);
     const { showAlert } = useAlert();
@@ -66,6 +68,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
     const [buyTrades, setBuyTrades] = useState<any[]>([]);
     const [buyLoading, setBuyLoading] = useState(false);
     const [investors, setInvestors] = useState<InvestorPortfolio[]>([]);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [investorsLoading, setInvestorsLoading] = useState<boolean>(true);
     const [expandedPortfolios, setExpandedPortfolios] = useState<Set<string>>(new Set());
     const pagerRef = useRef<any>(null);
@@ -84,7 +87,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                         setTimeout(() => pagerRef.current?.scrollTo({ x: screenW, animated: false }), 50);
                     }
                 } catch (e) {
-                    console.log('Error loading last tab', e);
+                    // console.log('Error loading last tab', e);
                 }
             }
         };
@@ -173,7 +176,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
     // Auto-switch to Sell tab when initialTab is set (coming from Raise a Round)
     useEffect(() => {
         if (initialTab === 'Sell') {
-            console.log('[TradingSection] Auto-switching to Sell tab (from Raise a Round)');
+            // console.log('[TradingSection] Auto-switching to Sell tab (from Raise a Round)');
             setActiveTab('Sell');
             // Scroll pager to Sell tab position after a brief delay
             setTimeout(() => {
@@ -306,6 +309,23 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
         setBuyInitialLoadDone(true);
     }, []);
 
+    // Ensure we always have current user id for ownership checks
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const profileData = await getProfile();
+                if (mounted && profileData) {
+                    const userId = profileData.user?._id || profileData._id;
+                    setCurrentUserId(userId);
+                }
+            } catch (e) {
+                // ignore
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
+
     // Fetch Current User's Holdings (Sell Tab)
     useEffect(() => {
         let mounted = true;
@@ -318,8 +338,8 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                         || profileData.user?.accountType
                         || profileData.accountType
                         || 'personal';
-                    console.log('[TradingSection] User roles:', profileData.user?.roles);
-                    console.log('[TradingSection] Detected accountType:', userAccountType);
+                    // console.log('[TradingSection] User roles:', profileData.user?.roles);
+                    // console.log('[TradingSection] Detected accountType:', userAccountType);
                     setAccountType(userAccountType);
 
                     // Only load holdings for investor accounts
@@ -328,6 +348,8 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                         const investorDetails = profileData.investorDetails || profileData.details;
                         const holdings = investorDetails?.previousInvestments || [];
                         const userId = profileData.user?._id || profileData._id;
+                        // store current user id for ownership checks
+                        setCurrentUserId(userId);
                         const displayName = profileData.user?.displayName || profileData.displayName || 'You';
 
                         // Create a single investor entry for the current user
@@ -365,7 +387,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                             setExpandedCompany(cardKey);
 
                             // Auto-populate form fields from startup profile data
-                            console.log('[TradingSection] startupDetails for auto-populate:', JSON.stringify(startupDetails, null, 2));
+                            // console.log('[TradingSection] startupDetails for auto-populate:', JSON.stringify(startupDetails, null, 2));
 
                             // Description from 'about' field
                             if (startupDetails.about) {
@@ -398,7 +420,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                                 setStartupUsername(`@${profileData.user.username}`);
                             }
 
-                            console.log('[TradingSection] Auto-populated form fields from startup profile');
+                            // console.log('[TradingSection] Auto-populated form fields from startup profile');
                         } else {
                             setInvestors([]);
                         }
@@ -561,12 +583,12 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
             try {
                 // Search for user (strip @ if present)
                 const cleanUsername = startupUsername.replace(/^@/, '');
-                console.log('[Autofill] Searching for:', cleanUsername);
+                // console.log('[Autofill] Searching for:', cleanUsername);
                 const users = await searchUsers(cleanUsername, undefined, 5); // Fetch top 5 results
-                console.log('[Autofill] Results found:', users?.length);
+                // console.log('[Autofill] Results found:', users?.length);
                 setSearchResults(users || []);
             } catch (err) {
-                console.log('Autofill error:', err);
+                // console.log('Autofill error:', err);
                 setSearchResults([]);
             }
         };
@@ -635,10 +657,10 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                     setFundingTarget(details.fundingNeeded.toString());
                 }
 
-                console.log('[TradingSection] Auto-populated form fields from selection');
+                // console.log('[TradingSection] Auto-populated form fields from selection');
             }
         } catch (err) {
-            console.log('Selection autofill error:', err);
+            // console.log('Selection autofill error:', err);
         }
     };
 
@@ -756,7 +778,7 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                                 profileUpdate.stage = selectedRound;
                             }
                             await saveStartupProfile(profileUpdate);
-                            console.log('[TradingSection] Updated startup profile with funding info:', profileUpdate);
+                            // console.log('[TradingSection] Updated startup profile with funding info:', profileUpdate);
                         } catch (profileError) {
                             console.warn('Failed to update startup profile with funding info:', profileError);
                             // Don't show alert - trade was still created successfully
@@ -844,6 +866,19 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
         );
     };
 
+    const getTradeOwnerId = (trade: ActiveTrade) => {
+        const user = (trade as any).user;
+        return (
+            user?._id ||
+            user?.id ||
+            (typeof trade.user === 'string' ? trade.user : undefined) ||
+            (trade as any).userId ||
+            (trade as any).ownerId ||
+            (trade as any).createdBy ||
+            (trade as any).startupId
+        );
+    };
+
     const toggleSaveItem = async (itemId: string) => {
         const isCurrentlySaved = savedItems.includes(itemId);
         const newSavedState = !isCurrentlySaved;
@@ -872,11 +907,17 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
     const handleExpressInterest = async (trade: ActiveTrade) => {
         try {
             // @ts-ignore - Assuming trade.user or trade.startupUsername is available
-            const ownerId = trade.user?._id || trade.user;
+            const ownerId = getTradeOwnerId(trade);
             const ownerName = trade.companyName || 'the company';
 
             if (!ownerId) {
                 showAlert('Error', 'Contact information not available for this trade.');
+                return;
+            }
+
+            // Prevent interacting with your own post
+            if (currentUserId && String(ownerId) === String(currentUserId)) {
+                showAlert('Notice', "This is your post — you can't express interest in your own listing.");
                 return;
             }
 
@@ -904,7 +945,54 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
             }
         } catch (error) {
             console.error('Express interest error:', error);
-            showAlert('Error', 'Failed to send interest message.');
+            const msg = (error && (error as Error).message) || '';
+            if (msg.includes('Cannot create chat with yourself')) {
+                showAlert('Notice', "This is your post — you can't express interest in your own listing.");
+            } else {
+                showAlert('Error', 'Failed to send interest message.');
+            }
+        }
+    };
+
+    const handleChatWithOwner = async (trade: ActiveTrade) => {
+        try {
+            // @ts-ignore - Assuming trade.user or trade.startupUsername is available
+            const ownerId = getTradeOwnerId(trade);
+            const ownerName = trade.companyName || 'the company';
+
+            if (!ownerId) {
+                showAlert('Error', 'Contact information not available for this trade.');
+                return;
+            }
+
+            // Prevent starting a chat with yourself
+            if (currentUserId && String(ownerId) === String(currentUserId)) {
+                showAlert('Notice', "This is your post — you can't start a chat with yourself.");
+                return;
+            }
+
+            const response = await createOrFindChat(ownerId);
+            const chat = response?.chat || response;
+
+            if (chat && (chat._id || chat.id)) {
+                const chatId = chat._id || chat.id;
+                if (onChatSelect) {
+                    onChatSelect(chatId);
+                } else {
+                    showAlert('Success', `Chat ready with ${ownerName}.`);
+                }
+            } else {
+                console.warn('Chat creation response mismatch:', response);
+                showAlert('Error', 'Failed to start chat with the owner.');
+            }
+        } catch (error) {
+            console.error('Chat creation error:', error);
+            const msg = (error && (error as Error).message) || '';
+            if (msg.includes('Cannot create chat with yourself')) {
+                showAlert('Notice', "This is your post — you can't start a chat with yourself.");
+            } else {
+                showAlert('Error', 'Failed to start chat with the owner.');
+            }
         }
     };
 
@@ -1316,44 +1404,22 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Filter Button */}
-                <TouchableOpacity
-                    style={styles.filterButton}
-                    onPress={toggleFilterWithAnimation}
-                >
-                    <MaterialCommunityIcons name="tune" size={20} color="#fff" />
-                    <Text style={styles.filterButtonText}>Filters</Text>
-                    <MaterialCommunityIcons
-                        name={isFilterOpen ? "chevron-up" : "chevron-down"}
-                        size={22}
-                        color="#bfbfbf"
-                    />
-                </TouchableOpacity>
-
-                {/* Category Filters - Animated container */}
-                <Animated.View style={filterContainerStyle}>
-                    <ScrollView nestedScrollEnabled={true} style={{ maxHeight: 100 }}>
-                        <View style={styles.categoriesContainer}>
-                            {categories.map(category => (
-                                <TouchableOpacity
-                                    key={category}
-                                    onPress={() => handleCategoryClick(category)}
-                                    style={[
-                                        styles.categoryChip,
-                                        selectedCategories.includes(category) && styles.categoryChipActive
-                                    ]}
-                                >
-                                    <Text style={[
-                                        styles.categoryChipText,
-                                        selectedCategories.includes(category) && styles.categoryChipTextActive
-                                    ]}>
-                                        {category}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </ScrollView>
-                </Animated.View>
+                {/* Entries count + Filter Button */}
+                <View style={styles.filtersRow}>
+                    <Text style={styles.filtersCount}>{data.length} trades</Text>
+                    <TouchableOpacity
+                        style={styles.filterButtonSmall}
+                        onPress={toggleFilterWithAnimation}
+                    >
+                        <IconFA name="filter" size={16} color="#fff" />
+                        <Text style={styles.filterButtonTextSmall}>Filters</Text>
+                        <MaterialCommunityIcons
+                            name={isFilterOpen ? "chevron-up" : "chevron-down"}
+                            size={18}
+                            color="#bfbfbf"
+                        />
+                    </TouchableOpacity>
+                </View>
                 {/* Suggested for you heading */}
                 <Text style={styles.suggestedHeading}>Suggested for you</Text>
                 {/* Inline loading indicator for filter changes (after first load) */}
@@ -1375,46 +1441,93 @@ const Trading = ({ initialTab, onTabChange }: TradingProps) => {
         }
 
         return (
-            <FlatList
-                data={data}
-                style={{ backgroundColor: '#070707' }}
-                keyExtractor={(item, index) => `${String(item._id || item.id)}_${index}`}
-                contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
-                renderItem={({ item }) => {
-                    const tradeId = item._id || item.id;
-                    if (!tradeId) return null;
-                    const isExpanded = expandedBuyTradeId === tradeId;
-                    const isSaved = savedItems.includes(String(tradeId));
+            <View style={{ flex: 1 }}>
+                <FlatList
+                    data={data}
+                    style={{ backgroundColor: '#070707' }}
+                    keyExtractor={(item, index) => `${String(item._id || item.id)}_${index}`}
+                    contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
+                    renderItem={({ item }) => {
+                        const tradeId = item._id || item.id;
+                        if (!tradeId) return null;
+                        const isExpanded = expandedBuyTradeId === tradeId;
+                        const isSaved = savedItems.includes(String(tradeId));
 
-                    return (
-                        <TradeCard
-                            trade={item}
-                            isExpanded={isExpanded}
-                            isSaved={isSaved}
-                            currentPhotoIndex={currentPhotoIndex[String(tradeId)] || 0}
-                            onToggleExpand={() => {
-                                setExpandedBuyTradeId(isExpanded ? null : (tradeId as string | number));
-                            }}
-                            onToggleSave={() => toggleSaveItem(String(tradeId))}
-                            onPhotoIndexChange={(index) => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: index }))}
-                            onExpressInterest={() => handleExpressInterest(item)}
+                        return (
+                            <TradeCard
+                                trade={item}
+                                isExpanded={isExpanded}
+                                isSaved={isSaved}
+                                currentPhotoIndex={currentPhotoIndex[String(tradeId)] || 0}
+                                onToggleExpand={() => {
+                                    setExpandedBuyTradeId(isExpanded ? null : (tradeId as string | number));
+                                }}
+                                onToggleSave={() => toggleSaveItem(String(tradeId))}
+                                onPhotoIndexChange={(index) => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: index }))}
+                                onExpressInterest={() => handleExpressInterest(item)}
+                                onChatWithOwner={() => handleChatWithOwner(item)}
+                            />
+                        );
+                    }}
+                    ListHeaderComponent={ListHeader}
+                    onEndReached={handleLoadMoreBuy}
+                    onEndReachedThreshold={0.5}
+                    ListFooterComponent={() => buyLoading && data.length > 0 ? <ActivityIndicator size="small" color="#1a73e8" style={footerLoaderStyle} /> : null}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor="#1a73e8"
+                            title="Release to refresh"
+                            titleColor="#888"
                         />
-                    );
-                }}
-                ListHeaderComponent={ListHeader}
-                onEndReached={handleLoadMoreBuy}
-                onEndReachedThreshold={0.5}
-                ListFooterComponent={() => buyLoading && data.length > 0 ? <ActivityIndicator size="small" color="#1a73e8" style={footerLoaderStyle} /> : null}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor="#1a73e8"
-                        title="Release to refresh"
-                        titleColor="#888"
-                    />
-                }
-            />
+                    }
+                />
+                <Modal
+                    visible={isFilterOpen}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={toggleFilterWithAnimation}
+                >
+                    <TouchableOpacity
+                        style={styles.filterModalBackdrop}
+                        activeOpacity={1}
+                        onPress={toggleFilterWithAnimation}
+                    >
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            onPress={() => { }}
+                            style={styles.filterModalCard}
+                        >
+                            <View style={styles.filterModalHeader}>
+                                <Text style={styles.filterModalTitle}>Filters</Text>
+                                <TouchableOpacity onPress={toggleFilterWithAnimation} style={styles.filterModalClose}>
+                                    <MaterialCommunityIcons name="close" size={18} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.categoriesContainer}>
+                                {categories.map(category => (
+                                    <TouchableOpacity
+                                        key={category}
+                                        onPress={() => handleCategoryClick(category)}
+                                        style={[
+                                            styles.categoryChip,
+                                            selectedCategories.includes(category) && styles.categoryChipActive
+                                        ]}
+                                    >
+                                        <Text style={[
+                                            styles.categoryChipText,
+                                            selectedCategories.includes(category) && styles.categoryChipTextActive
+                                        ]}>
+                                            {category}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                </Modal>
+            </View>
         );
     };
 

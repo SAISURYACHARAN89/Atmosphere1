@@ -9,6 +9,7 @@
     "start": "react-native start",
     "test": "jest",
     "fetch-fonts": "node ./scripts/fetch-fonts.js",
+    "copy-fonts": "node ./scripts/copy-vector-fonts.js",
     "postinstall": "node ./scripts/fetch-fonts.js"
   },
   "dependencies": {

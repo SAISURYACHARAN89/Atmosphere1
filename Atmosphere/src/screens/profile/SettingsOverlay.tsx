@@ -281,11 +281,11 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
             if (editModal.field === 'Username') payload.username = editModal.value;
             if (editModal.field === 'Phone') payload.phone = editModal.value;
 
-            console.log('saveField - field:', editModal.field, 'value:', editModal.value);
-            console.log('saveField - payload:', JSON.stringify(payload));
+            // console.log('saveField - field:', editModal.field, 'value:', editModal.value);
+            // console.log('saveField - payload:', JSON.stringify(payload));
 
             const result = await updateSettings(payload);
-            console.log('saveField - API result:', JSON.stringify(result));
+            // console.log('saveField - API result:', JSON.stringify(result));
 
             if (result?.settings) {
                 setSettings(prev => ({
@@ -297,7 +297,7 @@ export default function SettingsOverlay({ src, theme, accountType = 'personal', 
             }
             setEditModal({ visible: false, field: '', value: '' });
         } catch (err: any) {
-            console.log('saveField - error:', err?.message || err);
+            // console.log('saveField - error:', err?.message || err);
             showAlert('Error', err.message || 'Failed to update');
         } finally {
             setSaving(false);

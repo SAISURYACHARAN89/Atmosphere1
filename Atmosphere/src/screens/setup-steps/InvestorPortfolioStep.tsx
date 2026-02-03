@@ -108,14 +108,14 @@ export default function InvestorPortfolioStep({ onBack, onDone }: { onBack: () =
         let mounted = true;
         (async () => {
             try {
-                console.log('InvestorPortfolioStep - fetching profile...');
+                // console.log('InvestorPortfolioStep - fetching profile...');
                 const profile = await getProfile();
-                console.log('InvestorPortfolioStep - profile response:', JSON.stringify(profile));
+                // console.log('InvestorPortfolioStep - profile response:', JSON.stringify(profile));
                 const details = profile?.details;
-                console.log('InvestorPortfolioStep - details:', JSON.stringify(details));
+                // console.log('InvestorPortfolioStep - details:', JSON.stringify(details));
                 if (!mounted) return;
                 if (details) {
-                    console.log('InvestorPortfolioStep - setting fields from details');
+                    // console.log('InvestorPortfolioStep - setting fields from details');
                     setAbout(details.about || '');
                     setLocation(details.location || '');
                     setSelectedFocus(Array.isArray(details.investmentFocus) ? details.investmentFocus : (details.investmentFocus ? details.investmentFocus.split(',').map((s: string) => s.trim()) : []));
@@ -137,7 +137,7 @@ export default function InvestorPortfolioStep({ onBack, onDone }: { onBack: () =
                         setHoldings(mapped);
                     }
                 } else {
-                    console.log('InvestorPortfolioStep - no details found in profile');
+                    // console.log('InvestorPortfolioStep - no details found in profile');
                 }
             } catch (err: any) {
                 console.warn('Could not load profile for investor step', err && err.message);

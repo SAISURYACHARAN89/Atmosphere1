@@ -15,7 +15,7 @@ export const CACHE_KEYS = {
 export async function clearCache(cacheKey: string) {
     try {
         await AsyncStorage.removeItem(cacheKey);
-        console.log(`[Cache] Cleared ${cacheKey}`);
+        // console.log(`[Cache] Cleared ${cacheKey}`);
     } catch (e) {
         console.error(`[Cache] Failed to clear ${cacheKey}:`, e);
     }
@@ -31,7 +31,7 @@ export async function clearStartupCaches() {
             clearCache(CACHE_KEYS.HOME_FEED),
             clearCache(CACHE_KEYS.SAVED_POSTS),
         ]);
-        console.log('[Cache] Cleared all startup-related caches');
+        // console.log('[Cache] Cleared all startup-related caches');
     } catch (e) {
         console.error('[Cache] Failed to clear startup caches:', e);
     }

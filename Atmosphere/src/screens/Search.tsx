@@ -96,14 +96,14 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
                 const reelId = item._id || item.id;
                 setPlayedReelIds(prev => new Set([...prev, reelId]));
                 setActiveReelId(reelId);
-                console.log('Auto-playing next reel:', reelId, 'Played so far:', playedReelIds.size + 1);
+                // console.log('Auto-playing next reel:', reelId, 'Played so far:', playedReelIds.size + 1);
             } else if (allReels.length > 0) {
                 // All reels played, reset and start from first reel
                 const firstReel = allReels[0];
                 const firstReelId = firstReel._id || firstReel.id;
                 setPlayedReelIds(new Set([firstReelId]));
                 setActiveReelId(firstReelId);
-                console.log('All reels played! Looping back to first reel:', firstReelId);
+                // console.log('All reels played! Looping back to first reel:', firstReelId);
             }
         }, 7000); // Change every 7 seconds
 
@@ -261,7 +261,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
             // Mark this reel as played
             setPlayedReelIds(prev => new Set([...prev, reelId]));
             setActiveReelId(reelId);
-            console.log('Playing reel:', reelId, 'videoUrl:', itemData.videoUrl, 'Played so far:', playedReelIds.size + 1);
+            // console.log('Playing reel:', reelId, 'videoUrl:', itemData.videoUrl, 'Played so far:', playedReelIds.size + 1);
         } else {
             // No unplayed reel visible, stop playing
             setActiveReelId(null);
@@ -341,9 +341,9 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
                                 muted={true}
                                 progressUpdateInterval={500}
                                 useNativeControls={false}
-                                onLoad={() => console.log('Video loaded:', item._id)}
-                                onError={(e) => console.warn('Video error for', item._id, ':', e)}
-                                onBuffer={() => console.log('Video buffering:', item._id)}
+                                // onLoad={() => console.log('Video loaded:', item._id)}
+                                // onError={(e) => console.warn('Video error for', item._id, ':', e)}
+                                // onBuffer={() => console.log('Video buffering:', item._id)}
                                 rate={1.0}
                             />
                         ) : (
@@ -369,7 +369,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
         // Accounts (User List)
         const displayName = item.displayName || item.fullName || item.username || 'User';
         const avatarUrl = item.avatarUrl || item.avatar || item.profileImage;
-        console.log('Search avatar debug:', { username: item.username, avatarUrl, rawItem: JSON.stringify(item).slice(0, 200) });
+        // console.log('Search avatar debug:', { username: item.username, avatarUrl, rawItem: JSON.stringify(item).slice(0, 200) });
         const typeLabel = getUserTypeLabel(item);
         const verified = isUserVerified(item);
 

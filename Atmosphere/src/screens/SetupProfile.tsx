@@ -93,14 +93,14 @@ export default function SetupProfile({ onDone, onClose, onNavigateToTrade }: { o
                     // Get KYC status
                     setKycCompleted(profile.user.kycCompleted || false);
                     // Debug log
-                    console.log('[SetupProfile] Loaded user state:', {
-                        roles: profile.user.roles,
-                        primaryRole,
-                        profileSetupComplete: profile.user.profileSetupComplete,
-                        isEditMode: !!profile.user.profileSetupComplete,
-                        kycCompleted: profile.user.kycCompleted,
-                        portfolioComplete: profile.user.portfolioComplete
-                    });
+                    // console.log('[SetupProfile] Loaded user state:', {
+                    //     roles: profile.user.roles,
+                    //     primaryRole,
+                    //     profileSetupComplete: profile.user.profileSetupComplete,
+                    //     isEditMode: !!profile.user.profileSetupComplete,
+                    //     kycCompleted: profile.user.kycCompleted,
+                    //     portfolioComplete: profile.user.portfolioComplete
+                    // });
                 }
             } catch {
                 // ignore

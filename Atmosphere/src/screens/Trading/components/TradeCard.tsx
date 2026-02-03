@@ -19,6 +19,7 @@ interface TradeCardProps {
     onToggleSave: () => void;
     onPhotoIndexChange: (index: number) => void;
     onExpressInterest: () => void;
+    onChatWithOwner?: () => void;
 }
 
 export const TradeCard: React.FC<TradeCardProps> = ({
@@ -30,7 +31,14 @@ export const TradeCard: React.FC<TradeCardProps> = ({
     onToggleSave,
     onPhotoIndexChange,
     onExpressInterest,
+    onChatWithOwner,
 }) => {
+    const ownerDisplayName =
+        trade.user?.displayName ||
+        (trade.user?.username ? `@${trade.user.username}` : '') ||
+        trade.startupUsername ||
+        '';
+
     // Animation value for opacity (uses native driver for smoothness)
     const opacityAnim = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
 
@@ -92,6 +100,9 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                 {/* Company Info - Name and Description stacked */}
                 <View style={styles.collapsedCompanyInfo}>
                     <Text style={styles.collapsedCompanyName}>{trade.companyName}</Text>
+                    {!!ownerDisplayName && (
+                        <Text style={styles.collapsedOwnerName}>{ownerDisplayName}</Text>
+                    )}
                     {!isExpanded && (
                         <Text style={styles.collapsedDescription} numberOfLines={1}>
                             {trade.description || 'No description provided'}
@@ -100,9 +111,9 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                 </View>
 
                 {/* Action Button - Bookmark only */}
-                <View style={styles.collapsedActions}>
+                <View style={[styles.collapsedActions, styles.collapsedActionsColumn]}>
                     <TouchableOpacity
-                        style={styles.collapsedActionBtn}
+                        style={[styles.collapsedActionBtn, styles.buyCardActionBtn]}
                         onPress={(e) => {
                             e.stopPropagation();
                             onToggleSave();
@@ -110,10 +121,21 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                     >
                         <MaterialCommunityIcons
                             name={isSaved ? "bookmark" : "bookmark-outline"}
-                            size={16}
+                            size={18}
                             color={isSaved ? "#fff" : "#999"}
                         />
                     </TouchableOpacity>
+                    {onChatWithOwner && (
+                        <TouchableOpacity
+                            style={[styles.collapsedActionBtn, styles.buyCardActionBtn, styles.collapsedChatBtn]}
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                onChatWithOwner();
+                            }}
+                        >
+                            <MaterialCommunityIcons name="chat-outline" size={18} color="#999" />
+                        </TouchableOpacity>
+                    )}
                 </View>
             </TouchableOpacity>
 
@@ -239,10 +261,21 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                         </View>
                     )}
 
-                    {/* Express Interest Button */}
-                    <TouchableOpacity style={styles.expressInterestButton} onPress={onExpressInterest}>
-                        <Text style={styles.expressInterestText}>Express Interest</Text>
-                    </TouchableOpacity>
+                    {/* Action Buttons */}
+                    {onChatWithOwner ? (
+                        <View style={styles.tradeActionRow}>
+                            <TouchableOpacity style={styles.chatOwnerButton} onPress={onChatWithOwner}>
+                                <Text style={styles.chatOwnerText}>Chat</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.expressInterestButton} onPress={onExpressInterest}>
+                                <Text style={styles.expressInterestText}>Express Interest</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity style={styles.expressInterestButton} onPress={onExpressInterest}>
+                            <Text style={styles.expressInterestText}>Express Interest</Text>
+                        </TouchableOpacity>
+                    )}
                 </Animated.View>
             )}
         </View>
