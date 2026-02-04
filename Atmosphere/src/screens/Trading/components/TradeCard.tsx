@@ -20,6 +20,8 @@ interface TradeCardProps {
     onPhotoIndexChange: (index: number) => void;
     onExpressInterest: () => void;
     onChatWithOwner?: () => void;
+    onOpenStartupProfile?: (id: string) => void;
+    onOpenInvestorProfile?: (id: string) => void;
 }
 
 export const TradeCard: React.FC<TradeCardProps> = ({
@@ -32,13 +34,9 @@ export const TradeCard: React.FC<TradeCardProps> = ({
     onPhotoIndexChange,
     onExpressInterest,
     onChatWithOwner,
+    onOpenStartupProfile,
+    onOpenInvestorProfile,
 }) => {
-    const ownerDisplayName =
-        trade.user?.displayName ||
-        (trade.user?.username ? `@${trade.user.username}` : '') ||
-        trade.startupUsername ||
-        '';
-
     // Animation value for opacity (uses native driver for smoothness)
     const opacityAnim = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
 
@@ -77,55 +75,85 @@ export const TradeCard: React.FC<TradeCardProps> = ({
 
     return (
         <View style={styles.professionalTradeCard}>
-            {/* ... (existing collapsed view) */}
+            {/* Header Row - Startup info on left, Investor info on right (when expanded) */}
             <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={onToggleExpand}
                 style={[styles.collapsedCardRow, isExpanded && styles.expandedCardHeader]}
             >
-                {/* Avatar */}
-                {trade.imageUrls && trade.imageUrls.length > 0 && trade.imageUrls[0] ? (
-                    <RNImage
-                        source={{ uri: trade.imageUrls[0] }}
-                        style={styles.collapsedAvatar}
-                    />
-                ) : (
-                    <View style={styles.collapsedAvatar}>
-                        <Text style={styles.collapsedAvatarText}>
-                            {trade.companyName[0]}
-                        </Text>
-                    </View>
-                )}
-
-                {/* Company Info - Name and Description stacked */}
-                <View style={styles.collapsedCompanyInfo}>
-                    <Text style={styles.collapsedCompanyName}>{trade.companyName}</Text>
-                    {!!ownerDisplayName && (
-                        <Text style={styles.collapsedOwnerName}>{ownerDisplayName}</Text>
-                    )}
-                    {!isExpanded && (
-                        <Text style={styles.collapsedDescription} numberOfLines={1}>
-                            {trade.description || 'No description provided'}
-                        </Text>
-                    )}
-                </View>
-
-                {/* Action Button - Bookmark only */}
-                <View style={[styles.collapsedActions, styles.collapsedActionsColumn]}>
+                {/* Startup Info - Avatar is clickable for navigation, rest expands card */}
+                <View style={styles.startupInfoTouchable}>
+                    {/* Avatar - Only this is clickable for profile navigation */}
                     <TouchableOpacity
-                        style={[styles.collapsedActionBtn, styles.buyCardActionBtn]}
                         onPress={(e) => {
                             e.stopPropagation();
-                            onToggleSave();
+                            // Only navigate if expanded AND companyId is a valid MongoDB ObjectId (24 hex chars)
+                            const isValidMongoId = trade.companyId && /^[0-9a-fA-F]{24}$/.test(trade.companyId);
+                            if (isExpanded && onOpenStartupProfile && isValidMongoId) {
+                                onOpenStartupProfile(trade.companyId);
+                            } else {
+                                onToggleExpand();
+                            }
                         }}
+                        activeOpacity={0.7}
                     >
-                        <MaterialCommunityIcons
-                            name={isSaved ? "bookmark" : "bookmark-outline"}
-                            size={18}
-                            color={isSaved ? "#fff" : "#999"}
-                        />
+                        {trade.imageUrls && trade.imageUrls.length > 0 && trade.imageUrls[0] ? (
+                            <RNImage
+                                source={{ uri: trade.imageUrls[0] }}
+                                style={styles.collapsedAvatar}
+                            />
+                        ) : (
+                            <View style={styles.collapsedAvatar}>
+                                <Text style={styles.collapsedAvatarText}>
+                                    {trade.companyName[0]}
+                                </Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
+
+                    {/* Company Info - Name and Description stacked (not clickable for navigation) */}
+                    <View style={styles.collapsedCompanyInfo}>
+                        <Text style={styles.collapsedCompanyName}>{trade.companyName}</Text>
+                        {!isExpanded && (
+                            <Text style={styles.collapsedDescription} numberOfLines={1}>
+                                {trade.description || 'No description provided'}
+                            </Text>
+                        )}
+                    </View>
                 </View>
+
+                {/* Investor Info - Top Right (only when expanded, hide only if user is a startup account) */}
+                {isExpanded && trade.user && (trade.user.displayName || trade.user.username) &&
+                    !((trade.user as any).roles?.includes('startup') || (trade.user as any).accountType === 'startup') && (
+                        <View style={styles.investorInfoContainer}>
+                            <Text style={styles.investorName} numberOfLines={1}>
+                                {trade.user.displayName || `@${trade.user.username}`}
+                            </Text>
+                            {/* Investor Avatar - Only this is clickable for profile navigation */}
+                            <TouchableOpacity
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    if (onOpenInvestorProfile && trade.user?._id) {
+                                        onOpenInvestorProfile(trade.user._id);
+                                    }
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                {trade.user.avatarUrl ? (
+                                    <RNImage
+                                        source={{ uri: trade.user.avatarUrl }}
+                                        style={styles.investorAvatar}
+                                    />
+                                ) : (
+                                    <View style={[styles.investorAvatar, { alignItems: 'center', justifyContent: 'center' }]}>
+                                        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>
+                                            {(trade.user.displayName || trade.user.username || 'I')[0].toUpperCase()}
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
             </TouchableOpacity>
 
             {/* Expanded Content - LayoutAnimation handles smooth transition */}
@@ -211,27 +239,25 @@ export const TradeCard: React.FC<TradeCardProps> = ({
 
                     {/* Info Grid */}
                     <View style={styles.professionalInfoGrid}>
-                        {/* Funding Target */}
-                        {trade.fundingTarget ? (
-                            <View style={styles.professionalInfoItem}>
-                                <Text style={styles.professionalInfoLabel}>Funding Target</Text>
-                                <Text style={styles.professionalInfoValue}>
-                                    ${trade.fundingTarget.toLocaleString()}
-                                </Text>
-                            </View>
-                        ) : null}
-
                         <View style={styles.professionalInfoItem}>
                             <Text style={styles.professionalInfoLabel}>Revenue</Text>
                             <Text style={styles.professionalInfoValue}>
                                 {trade.revenueStatus === 'revenue-generating' ? 'Revenue Generating' : 'Pre Revenue'}
                             </Text>
                         </View>
+                        {trade.fundingTarget ? (
+                            <View style={styles.professionalInfoItem}>
+                                <Text style={styles.professionalInfoLabel}>Valuation</Text>
+                                <Text style={styles.professionalInfoValue}>
+                                    ${trade.fundingTarget.toLocaleString()}
+                                </Text>
+                            </View>
+                        ) : null}
                         <View style={styles.professionalInfoItem}>
                             <Text style={styles.professionalInfoLabel}>Age</Text>
                             <Text style={styles.professionalInfoValue}>{trade.companyAge || 'N/A'}</Text>
                         </View>
-                        <View style={styles.professionalInfoItem}>
+                        <View style={[styles.professionalInfoItem, styles.professionalInfoItemLast]}>
                             <Text style={styles.professionalInfoLabel}>Range</Text>
                             <Text style={styles.professionalInfoValue}>
                                 {trade.sellingRangeMin}% - {trade.sellingRangeMax}%
@@ -250,10 +276,23 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                         </View>
                     )}
 
-                    {/* Action Buttons */}
-                    <TouchableOpacity style={styles.expressInterestButton} onPress={onExpressInterest}>
-                        <Text style={styles.expressInterestText}>Express Interest</Text>
-                    </TouchableOpacity>
+                    {/* Action Buttons - Express Interest + Save side by side */}
+                    <View style={styles.actionButtonsRow}>
+                        <TouchableOpacity style={styles.expressInterestButton} onPress={onExpressInterest}>
+                            <Text style={styles.expressInterestText}>Express Interest</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.saveButtonOutline, isSaved && { backgroundColor: '#4a4a4a' }]}
+                            onPress={onToggleSave}
+                        >
+                            <MaterialCommunityIcons
+                                name={isSaved ? "bookmark" : "bookmark-outline"}
+                                size={20}
+                                color="#fff"
+                            />
+                            <Text style={styles.saveButtonText}>Save</Text>
+                        </TouchableOpacity>
+                    </View>
                 </Animated.View>
             )}
         </View>

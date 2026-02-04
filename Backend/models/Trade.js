@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const TradeSchema = new Schema(
     {
         user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-        companyId: { type: String, required: true },
+        companyId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
         companyName: { type: String, required: true },
         companyType: [String],
         companyAge: String,

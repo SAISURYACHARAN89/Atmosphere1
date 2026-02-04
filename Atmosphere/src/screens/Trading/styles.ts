@@ -536,8 +536,8 @@ export const styles = StyleSheet.create({
     },
     collapsedCompanyName: {
         color: '#fff',
-        fontSize: 16,
-        fontWeight: '700',
+        fontSize: 18,
+        fontWeight: '600',
     },
     collapsedOwnerName: {
         color: '#bfbfbf',
@@ -603,6 +603,29 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#333', // Matching tradeCard border
         marginHorizontal: 16, // Added margin to increase side padding
+    },
+    startupInfoTouchable: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    investorInfoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    investorName: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+        textAlign: 'right',
+    },
+    investorAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#2a2a2a',
     },
     professionalCardHeader: {
         flexDirection: 'row',
@@ -706,19 +729,29 @@ export const styles = StyleSheet.create({
     professionalInfoGrid: {
         flexDirection: 'row',
         marginBottom: 16,
-        gap: 12,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 12,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#2a2a2a',
     },
     professionalInfoItem: {
         flex: 1,
+        borderRightWidth: 1,
+        borderRightColor: '#333',
+        paddingHorizontal: 8,
+    },
+    professionalInfoItemLast: {
+        borderRightWidth: 0,
     },
     professionalInfoLabel: {
-        color: '#999',
+        color: '#888',
         fontSize: 12,
         marginBottom: 4,
     },
     professionalInfoValue: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
     },
     professionalTags: {
@@ -771,6 +804,29 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     expressInterestText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    // Action buttons row - Express Interest + Save side by side
+    actionButtonsRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 8,
+    },
+    saveButtonOutline: {
+        flex: 0.6,
+        backgroundColor: 'transparent',
+        paddingVertical: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+        borderWidth: 1,
+        borderColor: '#4a4a4a',
+    },
+    saveButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',

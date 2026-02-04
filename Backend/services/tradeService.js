@@ -105,7 +105,7 @@ exports.createTrade = async (req, res, next) => {
         } = req.body;
 
         // Validation
-        if (!companyId || !companyName || !revenueStatus || sellingRangeMin == null || sellingRangeMax == null) {
+        if (!companyName || !revenueStatus || sellingRangeMin == null || sellingRangeMax == null) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -205,7 +205,7 @@ exports.getAllTrades = async (req, res, next) => {
         }
 
         const trades = await Trade.find(filter)
-            .populate('user', 'username displayName avatarUrl')
+            .populate('user', 'username displayName avatarUrl accountType roles')
             .sort({ createdAt: -1 })
             .limit(parseInt(limit))
             .skip(parseInt(skip))
@@ -223,7 +223,7 @@ exports.getAllTrades = async (req, res, next) => {
 exports.getTradeById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const trade = await Trade.findById(id).populate('user', 'username displayName avatarUrl').lean();
+        const trade = await Trade.findById(id).populate('user', 'username displayName avatarUrl accountType roles').lean();
 
         if (!trade) {
             return res.status(404).json({ error: 'Trade not found' });
@@ -392,7 +392,7 @@ exports.getSavedTrades = async (req, res, next) => {
 
         const userId = req.user._id;
         const trades = await Trade.find({ savedByUsers: userId })
-            .populate('user', 'displayName username avatarUrl')
+            .populate('user', 'displayName username avatarUrl accountType roles')
             .sort({ createdAt: -1 })
             .lean();
 

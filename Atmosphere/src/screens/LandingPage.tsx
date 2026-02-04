@@ -338,6 +338,7 @@ const LandingPage = ({ initialDeepLink, onDeepLinkHandled }: LandingPageProps) =
                         initialTab={tradeInitialTab}
                         onTabChange={() => setTradeInitialTab(undefined)}
                         onChatSelect={handleChatSelect}
+                        onOpenProfile={(id: string) => { setSelectedProfileId(id); navigateTo('profile', false); }}
                     />
                 );
             case 'jobs':

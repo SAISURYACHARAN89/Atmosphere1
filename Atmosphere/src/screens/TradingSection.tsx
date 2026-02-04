@@ -51,9 +51,10 @@ interface TradingProps {
     initialTab?: 'Buy' | 'Sell';
     onTabChange?: () => void;
     onChatSelect?: (chatId: string) => void;
+    onOpenProfile?: (userId: string) => void;
 }
 
-const Trading = ({ initialTab, onTabChange, onChatSelect }: TradingProps) => {
+const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: TradingProps) => {
     // Data State
     const [refreshing, setRefreshing] = useState(false);
     const { showAlert } = useAlert();
@@ -153,6 +154,7 @@ const Trading = ({ initialTab, onTabChange, onChatSelect }: TradingProps) => {
     const [editingTradeId, setEditingTradeId] = useState<string | null>(null);
     const [fundingTarget, setFundingTarget] = useState<string>('');
     const [selectedRound, setSelectedRound] = useState<string>('');
+    const [selectedStartupUserId, setSelectedStartupUserId] = useState<string | null>(null); // Actual startup user ID for navigation
     const [searchResults, setSearchResults] = useState<any[]>([]);
 
     // Active trades
@@ -725,7 +727,8 @@ const Trading = ({ initialTab, onTabChange, onChatSelect }: TradingProps) => {
             }
 
             const tradeData = {
-                companyId: expandedCompany,
+                // Use selectedStartupUserId if available and valid (ObjectId), otherwise null (for manual entries)
+                companyId: selectedStartupUserId && /^[0-9a-fA-F]{24}$/.test(selectedStartupUserId) ? selectedStartupUserId : null,
                 companyName: finalCompanyName,
                 companyType,
                 companyAge: finalCompanyAge,
@@ -1068,10 +1071,17 @@ const Trading = ({ initialTab, onTabChange, onChatSelect }: TradingProps) => {
                                     togglePortfolio(cardKey);
                                     if (isExpanded) {
                                         setExpandedCompany(null);
+                                        setSelectedStartupUserId(null); // Reset startup ID
                                         setSelectedCompanyName('');
                                         setSelectedCompanyAge('');
                                     } else {
                                         setExpandedCompany(cardKey);
+                                        // Check if item has a valid startup ID (companyId which is an ObjectId)
+                                        // If not found, check if companyId itself is the ID
+                                        const potentialId = item.companyId;
+                                        const isValidId = potentialId && /^[0-9a-fA-F]{24}$/.test(potentialId);
+                                        setSelectedStartupUserId(isValidId ? potentialId : null);
+
                                         setSelectedCompanyName(item.companyName);
                                         setSelectedCompanyAge(yearsText);
                                     }
@@ -1460,6 +1470,12 @@ const Trading = ({ initialTab, onTabChange, onChatSelect }: TradingProps) => {
                                 onPhotoIndexChange={(index) => setCurrentPhotoIndex(prev => ({ ...prev, [tradeId]: index }))}
                                 onExpressInterest={() => handleExpressInterest(item)}
                                 onChatWithOwner={() => handleChatWithOwner(item)}
+                                onOpenStartupProfile={(companyId) => {
+                                    if (onOpenProfile && companyId) onOpenProfile(companyId);
+                                }}
+                                onOpenInvestorProfile={(userId) => {
+                                    if (onOpenProfile && userId) onOpenProfile(userId);
+                                }}
                             />
                         );
                     }}
