@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import Video from 'react-native-video';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { NavigationContext } from '@react-navigation/native';
 import { followUser, unfollowUser, likePost, unlikePost, likeStartup, unlikeStartup, savePost, unsavePost, crownStartup, uncrownStartup } from '../../lib/api';
@@ -7,14 +8,14 @@ import { getImageSource } from '../../lib/image';
 import CommentsOverlay from '../CommentsOverlay';
 import { useAlert } from '../CustomAlert';
 import ShareModal from '../ShareModal';
-import { Heart, Crown, MessageCircle, Bookmark } from 'lucide-react-native';
+import { Heart, Crown, MessageCircle, Bookmark, Play } from 'lucide-react-native';
 import ShareIcon from '../icons/ShareIcon';
 
 import { StartupPostProps, AlertConfig } from './types';
 import { styles } from './styles';
 import { formatCurrency, getFundingPercent, getContentId, checkIsInvestor, isStartupCard } from './utils';
 
-const StartupPost = ({ post, company, currentUserId, onOpenProfile }: StartupPostProps) => {
+const StartupPost = ({ post, company, currentUserId, onOpenProfile, isVisible = false }: StartupPostProps) => {
     const { showAlert } = useAlert();
     const companyData = post || company;
     useContext(ThemeContext);
@@ -37,6 +38,15 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: StartupPos
     const [saveLoading, setSaveLoading] = useState(false);
 
     const [shareModalVisible, setShareModalVisible] = useState(false);
+    const [manuallyPaused, setManuallyPaused] = useState(false);
+
+    // Video plays only when visible AND not manually paused
+    const videoPaused = !isVisible || manuallyPaused;
+
+    // Debug log
+    if ((companyData as any).video) {
+        console.log('[StartupPost Video]', companyData.name, '| isVisible:', isVisible, '| manuallyPaused:', manuallyPaused, '| videoPaused:', videoPaused);
+    }
 
     const navigation = useContext(NavigationContext) as any | undefined;
 
@@ -239,12 +249,50 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile }: StartupPos
                     onCommentDeleted={(newCount?: number) => setCommentsCount(c => typeof newCount === 'number' ? newCount : Math.max(0, c - 1))}
                 />
 
-                <TouchableOpacity style={styles.imageWrap} activeOpacity={0.9} onPress={handleDoubleTap}>
-                    <Image source={getImageSource(companyData.profileImage)} style={styles.mainImage} resizeMode="cover" />
+                <View style={styles.imageWrap}>
+                    {(companyData as any).video ? (
+                        <>
+                            <Video
+                                source={{ uri: (companyData as any).video }}
+                                style={styles.mainImage}
+                                resizeMode="cover"
+                                repeat
+                                paused={videoPaused}
+                                muted={false}
+                                controls={false}
+                                onError={(e: any) => console.log('Video error', e)}
+                                bufferConfig={{
+                                    minBufferMs: 15000,
+                                    maxBufferMs: 50000,
+                                    bufferForPlaybackMs: 2500,
+                                    bufferForPlaybackAfterRebufferMs: 5000,
+                                }}
+                            />
+                            {/* Touch overlay to capture taps on video */}
+                            <TouchableOpacity
+                                style={StyleSheet.flatten([StyleSheet.absoluteFillObject, { zIndex: 10 }])}
+                                activeOpacity={1}
+                                onPress={() => {
+                                    console.log('[Video Tap] Toggling pause for:', companyData?.name);
+                                    setManuallyPaused(!manuallyPaused);
+                                }}
+                            >
+                                {manuallyPaused && (
+                                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                                        <Play size={50} color="#fff" fill="#fff" />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </>
+                    ) : (
+                        <TouchableOpacity activeOpacity={0.9} onPress={handleDoubleTap} style={{ flex: 1 }}>
+                            <Image source={getImageSource(companyData.profileImage)} style={styles.mainImage} resizeMode="cover" />
+                        </TouchableOpacity>
+                    )}
                     <Animated.View style={[styles.doubleTapHeart, { opacity: heartOpacity, transform: [{ scale: heartScale }] }]} pointerEvents="none">
-                        <Heart size={70} color="#fff" fill="#fff" strokeWidth={0} />
+                        <Heart size={50} color="#fff" fill="#fff" strokeWidth={0} />
                     </Animated.View>
-                </TouchableOpacity>
+                </View>
 
                 <View style={styles.actionsRow}>
                     <View style={styles.statItemRow}>

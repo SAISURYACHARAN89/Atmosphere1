@@ -451,7 +451,7 @@ const CommentsOverlay = ({ startupId, visible, onClose, onCommentAdded, onCommen
                     </View>
 
                     {/* Comments title */}
-                    <Text style={styles.title}>Comments</Text>
+                    {/* <Text style={styles.title}>Comments</Text> */}
 
                     {/* Scrollable comments list - takes remaining space */}
                     <View style={{ flex: 1, overflow: 'hidden' }} {...contentPanResponder.panHandlers}>

@@ -290,7 +290,8 @@ exports.listStartupCards = async (req, res, next) => {
                 fundingRaisedFromRound,
                 finalFundingRaised,
                 storedRounds: startup.rounds,
-                storedFundingRaised: startup.fundingRaised
+                storedFundingRaised: startup.fundingRaised,
+                video: startup.video || 'NO VIDEO'
             });
 
             return {
@@ -300,6 +301,7 @@ exports.listStartupCards = async (req, res, next) => {
                 displayName: startup.user ? startup.user.displayName : '',
                 verified: startup.verified || (startup.user && startup.user.verified) || false,
                 profileImage: startup.profileImage,
+                video: startup.video || null,
                 description: startup.about,
                 stage: startup.stage,
                 currentRound: currentRound,

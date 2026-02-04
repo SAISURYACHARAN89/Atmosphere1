@@ -5,7 +5,7 @@ const TeamMemberSchema = new Schema({
     name: String,
     username: String,
     role: String,
-    userId: String, // Optional string - allows empty values when user is not selected from search
+    userId: String,
 });
 
 const FundingRoundSchema = new Schema({

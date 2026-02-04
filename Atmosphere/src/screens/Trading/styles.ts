@@ -57,7 +57,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: 12,
+        marginTop: 6,
         marginHorizontal: 20,
     },
     filtersCount: {
@@ -499,7 +499,7 @@ export const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18,
         fontWeight: '700',
-        marginTop: 20,
+        marginTop: 14,
         marginBottom: 16,
         paddingHorizontal: 16,
     },

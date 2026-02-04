@@ -169,6 +169,25 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
     }, [currentUserId, fetchUnreadCount]);
 
     const flatListRef = useRef<FlatList>(null);
+    const [visibleItemId, setVisibleItemId] = useState<string | null>(null);
+
+    // Viewability config for tracking which item is currently visible
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 60, // Item must be 60% visible
+        minimumViewTime: 100, // Must be visible for 100ms
+    }).current;
+
+    const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: any[] }) => {
+        if (viewableItems.length > 0) {
+            // Get the first (most visible) item with a video
+            const firstVisible = viewableItems[0]?.item;
+            if (firstVisible?.id) {
+                setVisibleItemId(firstVisible.id);
+            }
+        } else {
+            setVisibleItemId(null);
+        }
+    }).current;
 
     useEffect(() => {
         const scrollToTopSub = DeviceEventEmitter.addListener('scrollToTop_Home', () => {
@@ -238,6 +257,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
                 displayName: String(p.displayName || ''),
                 verified: Boolean(p.verified || false),
                 profileImage: p.profileImage || 'https://via.placeholder.com/400x240.png?text=Startup',
+                video: p.video || null,
                 description: String(p.description || p.about || ''),
                 stage: String(p.stage || 'unknown'),
                 currentRound: String(currentRound || ''),
@@ -377,7 +397,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
                 contentContainerStyle={[styles.listContent]}
                 renderItem={({ item, index }) => (
                     <View>
-                        <StartupPost post={item} currentUserId={currentUserId} onOpenProfile={onOpenProfile} />
+                        <StartupPost post={item} currentUserId={currentUserId} onOpenProfile={onOpenProfile} isVisible={item.id === visibleItemId} />
                         {/* Separator line between cards */}
                         {index < posts.length - 1 && <View style={styles.separator} />}
                     </View>
@@ -388,6 +408,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate, onChatSelect: _onChatSelect, on
                 showsVerticalScrollIndicator={false}
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
                 refreshControl={
                     <ThemedRefreshControl
                         refreshing={refreshing}

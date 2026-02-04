@@ -35,6 +35,7 @@ export interface StartupPostProps {
     company?: StartupCard;
     currentUserId?: string | null;
     onOpenProfile?: (id: string) => void;
+    isVisible?: boolean;
 }
 
 export interface AlertConfig {
