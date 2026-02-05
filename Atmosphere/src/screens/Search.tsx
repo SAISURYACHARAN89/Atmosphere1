@@ -7,7 +7,7 @@ import { fetchExplorePosts, searchEntities, searchUsers } from '../lib/api';
 import ThemedRefreshControl from '../components/ThemedRefreshControl';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ReelsIcon from '../components/icons/ReelsIcon';
-import { Image as ImageIcon } from 'lucide-react-native';
+import { Image as ImageIcon, Search } from 'lucide-react-native';
 import Video from 'react-native-video';
 
 const { width } = Dimensions.get('window');
@@ -415,7 +415,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
             {/* Search Bar */}
             <View style={styles.searchBarContainer}>
                 <View style={[styles.searchBar, { backgroundColor: '#1a1a1a', borderColor: '#333' }]}>
-                    <MaterialIcons name="search" size={22} color="#888" style={styles.searchIcon} />
+                    <Search size={22} color="#888" style={styles.searchIcon} />
                     <TextInput
                         style={[styles.input, { color: theme.text }]}
                         placeholder="Search accounts, reels, posts..."

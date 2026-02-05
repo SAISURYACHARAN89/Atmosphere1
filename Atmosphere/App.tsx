@@ -12,6 +12,7 @@ import {
   useSafeAreaInsets
 } from 'react-native-safe-area-context';
 import LandingPage from './src/screens/LandingPage';
+import SplashScreen from './src/components/SplashScreen';
 import SignIn from './src/screens/SignIn';
 import SignUp from './src/screens/SignUp';
 import ForgotPassword from './src/screens/ForgotPassword';
@@ -24,6 +25,7 @@ function AppContent() {
   const insets = useSafeAreaInsets();
   const [route, setRoute] = useState<'signin' | 'signup' | 'home' | 'forgotpw'>('signin');
   const [initialDeepLink, setInitialDeepLink] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
 
   // Handle deep links
   useEffect(() => {
@@ -84,6 +86,8 @@ function AppContent() {
   return (
     <View style={viewStyle}>
       <StatusBar barStyle="light-content" />
+      {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+
       {route === 'signin' && (
         <SignIn
           onSignUp={() => setRoute('signup')}

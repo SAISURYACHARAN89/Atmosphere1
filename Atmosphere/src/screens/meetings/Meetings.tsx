@@ -9,6 +9,7 @@ import {
     RefreshControl,
     Alert,
 } from 'react-native';
+import { Search } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
@@ -180,7 +181,7 @@ const Meetings = ({ onJoinMeeting }: MeetingsProps) => {
                     {showSearchBar ? (
                         <MaterialIcons name="close" size={20} color="#888" />
                     ) : (
-                        <MaterialIcons name="search" size={20} color="#888" />
+                        <Search size={20} color="#888" />
                     )}
                 </TouchableOpacity>
             </View>

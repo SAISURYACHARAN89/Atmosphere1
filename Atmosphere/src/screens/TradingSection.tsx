@@ -7,6 +7,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import IconFA from 'react-native-vector-icons/FontAwesome';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Video from 'react-native-video';
+import { Search } from 'lucide-react-native';
 
 // Import modular files
 import { categories, Investment, InvestorPortfolio } from './Trading/types';
@@ -1196,7 +1197,7 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
                                         <View style={styles.collapsedCompanyInfo}>
                                             <Text style={styles.collapsedCompanyName}>{trade.companyName}</Text>
                                             {!isExpanded && (
-                                                <Text style={styles.collapsedDescription} numberOfLines={1}>
+                                                <Text style={styles.collapsedDescription} numberOfLines={2}>
                                                     {trade.description || 'No description provided'}
                                                 </Text>
                                             )}
@@ -1269,6 +1270,17 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
                                                 <Text style={styles.expandedDescription}>
                                                     {trade.description || 'No description provided'}
                                                 </Text>
+
+                                                {/* Industry Tags - Now below description */}
+                                                {trade.selectedIndustries && trade.selectedIndustries.length > 0 && (
+                                                    <View style={styles.professionalTags}>
+                                                        {trade.selectedIndustries.map((industry, idx) => (
+                                                            <View key={idx} style={styles.professionalTag}>
+                                                                <Text style={styles.professionalTagText}>{industry}</Text>
+                                                            </View>
+                                                        ))}
+                                                    </View>
+                                                )}
 
                                                 {/* Media Carousel */}
                                                 {totalMediaCount > 0 && (
@@ -1345,20 +1357,11 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
                                                     </View>
                                                 </View>
 
-                                                {/* Industry Tags */}
-                                                {trade.selectedIndustries && trade.selectedIndustries.length > 0 && (
-                                                    <View style={styles.professionalTags}>
-                                                        {trade.selectedIndustries.map((industry, idx) => (
-                                                            <View key={idx} style={styles.professionalTag}>
-                                                                <Text style={styles.professionalTagText}>{industry}</Text>
-                                                            </View>
-                                                        ))}
-                                                    </View>
-                                                )}
+
 
                                                 {/* Views & Saves */}
                                                 <View style={styles.tradeStats}>
-                                                    <Text style={styles.tradeStatText}>Views: {trade.views}</Text>
+
                                                     <Text style={styles.tradeStatText}>Saves: {trade.saves}</Text>
                                                 </View>
                                             </>
@@ -1388,7 +1391,7 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
                 {/* Search and Filter - now inside scrollable content */}
                 <View style={styles.searchRow}>
                     <View style={styles.searchBox}>
-                        <MaterialCommunityIcons name="magnify" size={20} color="#bfbfbf" />
+                        <Search size={20} color="#bfbfbf" />
                         <TextInput
                             placeholder="Search companies..."
                             placeholderTextColor="#bfbfbf"
