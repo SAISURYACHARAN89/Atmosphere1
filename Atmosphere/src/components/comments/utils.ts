@@ -6,15 +6,17 @@ export const timeAgo = (dateLike: any): string => {
         const d = new Date(dateLike);
         if (Number.isNaN(d.getTime())) return '';
         const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-        if (sec < 10) return 'just now';
-        if (sec < 60) return `${sec}s`;
+        if (sec < 60) return 'now';
         const min = Math.floor(sec / 60);
         if (min < 60) return `${min}m`;
         const hr = Math.floor(min / 60);
         if (hr < 24) return `${hr}h`;
         const day = Math.floor(hr / 24);
         if (day < 7) return `${day}d`;
-        return d.toLocaleDateString();
+        const week = Math.floor(day / 7);
+        if (week < 52) return `${week}w`;
+        const year = Math.floor(week / 52);
+        return `${year}y`;
     } catch {
         return '';
     }

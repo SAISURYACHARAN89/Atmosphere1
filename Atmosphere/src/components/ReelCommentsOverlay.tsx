@@ -407,7 +407,7 @@ const ReelCommentsOverlay = ({ reelId, visible, onClose, onCommentAdded, onComme
                     </View>
 
                     {/* Comments title */}
-                    <Text style={styles.title}>Comments</Text>
+                    {/* <Text style={styles.title}>Comments</Text> */}
 
                     {/* Scrollable comments list - takes remaining space */}
                     <View style={{ flex: 1, overflow: 'hidden' }} {...contentPanResponder.panHandlers}>

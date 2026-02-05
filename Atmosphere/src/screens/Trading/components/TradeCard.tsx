@@ -1,3 +1,4 @@
+import Slider from '@react-native-community/slider';
 import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image as RNImage, Animated, LayoutAnimation, UIManager, Platform } from 'react-native';
 import Video from 'react-native-video';
@@ -35,264 +36,272 @@ export const TradeCard: React.FC<TradeCardProps> = ({
     onExpressInterest,
     onChatWithOwner,
     onOpenStartupProfile,
-    onOpenInvestorProfile,
+    onOpenInvestorProfile
 }) => {
-    // Animation value for opacity (uses native driver for smoothness)
-    const opacityAnim = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+    // Animation state
+    const opacityAnim = useRef(new Animated.Value(0)).current;
 
-    // Video play/pause state - default to playing when expanded
-    const [isVideoPaused, setIsVideoPaused] = useState(false);
+    // Video controls state
+    const videoRef = useRef<any>(null);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [isMuted, setIsMuted] = useState(false);
+    const [isSeeking, setIsSeeking] = useState(false);
+    const [isVideoPaused, setIsVideoPaused] = useState(true); // Default paused
 
-    // Reset video state when collapsed
+    // Derived state
+    const hasVideo = !!trade.videoUrl;
+    // Construct media array: Video first if exists, then images
+    const mediaItems = hasVideo
+        ? [(trade.videoUrl || ''), ...trade.imageUrls]
+        : trade.imageUrls;
+
+    const totalMediaCount = mediaItems.length;
+    const isCurrentItemVideo = hasVideo && currentPhotoIndex === 0;
+
     useEffect(() => {
-        if (!isExpanded) setIsVideoPaused(false);
-    }, [isExpanded]);
-
-    // Animate when isExpanded changes
-    useEffect(() => {
-        // ... (existing animation code)
-        LayoutAnimation.configureNext({
-            duration: 200,
-            update: { type: LayoutAnimation.Types.easeInEaseOut },
-            create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-            delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-        });
-
-        // Smooth opacity fade
-        Animated.timing(opacityAnim, {
-            toValue: isExpanded ? 1 : 0,
-            duration: 200,
-            useNativeDriver: true, // Native driver for smooth animation
-        }).start();
+        if (isExpanded) {
+            Animated.timing(opacityAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            opacityAnim.setValue(0);
+            setIsVideoPaused(true); // Pause when collapsed
+        }
     }, [isExpanded, opacityAnim]);
 
-    // Combine images and video into one media array - video is last
-    // ... (existing media count logic)
-    const imageCount = trade.imageUrls?.length || 0;
-    const hasVideo = !!trade.videoUrl;
-    const totalMediaCount = imageCount + (hasVideo ? 1 : 0);
-    const isCurrentItemVideo = hasVideo && currentPhotoIndex === imageCount;
+    const handleNextMedia = () => {
+        if (currentPhotoIndex < totalMediaCount - 1) {
+            onPhotoIndexChange(currentPhotoIndex + 1);
+        }
+    };
+
+    const handlePrevMedia = () => {
+        if (currentPhotoIndex > 0) {
+            onPhotoIndexChange(currentPhotoIndex - 1);
+        }
+    };
+
+    const onSeek = (value: number) => {
+        videoRef.current?.seek(value);
+        setCurrentTime(value);
+    };
+
+    const getAvatarInitials = (name: string) => {
+        return name ? name.substring(0, 2).toUpperCase() : 'ST';
+    };
 
     return (
         <View style={styles.professionalTradeCard}>
-            {/* Header Row - Startup info on left, Investor info on right (when expanded) */}
-            <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={onToggleExpand}
-                style={[styles.collapsedCardRow, isExpanded && styles.expandedCardHeader]}
-            >
-                {/* Startup Info - Avatar is clickable for navigation, rest expands card */}
-                <View style={styles.startupInfoTouchable}>
-                    {/* Avatar - Only this is clickable for profile navigation */}
-                    <TouchableOpacity
-                        onPress={(e) => {
-                            e.stopPropagation();
-                            // Only navigate if expanded AND companyId is a valid MongoDB ObjectId (24 hex chars)
-                            const isValidMongoId = trade.companyId && /^[0-9a-fA-F]{24}$/.test(trade.companyId);
-                            if (isExpanded && onOpenStartupProfile && isValidMongoId) {
-                                onOpenStartupProfile(trade.companyId);
-                            } else {
-                                onToggleExpand();
-                            }
-                        }}
-                        activeOpacity={0.7}
-                    >
-                        {trade.imageUrls && trade.imageUrls.length > 0 && trade.imageUrls[0] ? (
-                            <RNImage
-                                source={{ uri: trade.imageUrls[0] }}
-                                style={styles.collapsedAvatar}
-                            />
-                        ) : (
-                            <View style={styles.collapsedAvatar}>
-                                <Text style={styles.collapsedAvatarText}>
-                                    {trade.companyName[0]}
-                                </Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-
-                    {/* Company Info - Name and Description stacked (not clickable for navigation) */}
-                    <View style={styles.collapsedCompanyInfo}>
-                        <Text style={styles.collapsedCompanyName}>{trade.companyName}</Text>
-                        {!isExpanded && (
-                            <Text style={styles.collapsedDescription} numberOfLines={1}>
-                                {trade.description || 'No description provided'}
-                            </Text>
-                        )}
-                    </View>
-                </View>
-
-                {/* Investor Info - Top Right (only when expanded, hide only if user is a startup account) */}
-                {isExpanded && trade.user && (trade.user.displayName || trade.user.username) &&
-                    !((trade.user as any).roles?.includes('startup') || (trade.user as any).accountType === 'startup') && (
-                        <View style={styles.investorInfoContainer}>
-                            <Text style={styles.investorName} numberOfLines={1}>
-                                {trade.user.displayName || `@${trade.user.username}`}
-                            </Text>
-                            {/* Investor Avatar - Only this is clickable for profile navigation */}
-                            <TouchableOpacity
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    if (onOpenInvestorProfile && trade.user?._id) {
-                                        onOpenInvestorProfile(trade.user._id);
-                                    }
-                                }}
-                                activeOpacity={0.7}
-                            >
-                                {trade.user.avatarUrl ? (
-                                    <RNImage
-                                        source={{ uri: trade.user.avatarUrl }}
-                                        style={styles.investorAvatar}
-                                    />
-                                ) : (
-                                    <View style={[styles.investorAvatar, { alignItems: 'center', justifyContent: 'center' }]}>
-                                        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>
-                                            {(trade.user.displayName || trade.user.username || 'I')[0].toUpperCase()}
-                                        </Text>
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        </View>
+            {/* Header Section */}
+            <View style={styles.professionalCardHeader}>
+                <TouchableOpacity
+                    onPress={() => onOpenStartupProfile?.(trade.companyId)}
+                    style={styles.professionalAvatar}
+                >
+                    {trade.user?.avatarUrl ? (
+                        <RNImage source={{ uri: trade.user.avatarUrl }} style={{ width: '100%', height: '100%', borderRadius: 22 }} />
+                    ) : (
+                        <Text style={styles.professionalAvatarText}>{getAvatarInitials(trade.companyName)}</Text>
                     )}
-            </TouchableOpacity>
+                </TouchableOpacity>
 
-            {/* Expanded Content - LayoutAnimation handles smooth transition */}
+                <TouchableOpacity
+                    style={styles.professionalCompanyInfo}
+                    onPress={onToggleExpand}
+                >
+                    <Text style={styles.professionalCompanyName}>{trade.companyName}</Text>
+                    <Text style={styles.professionalUsername}>@{trade.startupUsername || 'startup'}</Text>
+                </TouchableOpacity>
+
+                <View style={styles.professionalActions}>
+                    <TouchableOpacity onPress={onToggleSave} style={styles.professionalActionBtn}>
+                        <MaterialCommunityIcons
+                            name={isSaved ? "bookmark" : "bookmark-outline"}
+                            size={24}
+                            color={isSaved ? "#fff" : "#999"}
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={onToggleExpand} style={styles.professionalActionBtn}>
+                        <MaterialCommunityIcons
+                            name={isExpanded ? "chevron-up" : "chevron-down"}
+                            size={24}
+                            color="#999"
+                        />
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Expanded Content */}
             {isExpanded && (
                 <Animated.View style={{ opacity: opacityAnim }}>
-                    {/* Description Below Profile Pic (Full Size) */}
-                    <Text style={styles.expandedDescription}>
-                        {trade.description || 'No description provided'}
+                    <Text style={styles.professionalDescription} numberOfLines={isExpanded ? undefined : 3}>
+                        {trade.description}
                     </Text>
 
-                    {/* Media Carousel (Images + Video at end) */}
+                    {/* Media Carousel */}
                     {totalMediaCount > 0 && (
                         <View style={styles.professionalImageContainer}>
                             {isCurrentItemVideo ? (
-                                // Show Video Player - Tap to toggle play/pause
-                                <TouchableOpacity
-                                    activeOpacity={1}
-                                    onPress={() => setIsVideoPaused(!isVideoPaused)}
-                                    style={{ width: '100%', height: '100%' }}
-                                >
-                                    <Video
-                                        source={{ uri: trade.videoUrl }}
-                                        style={styles.professionalImage}
-                                        controls={false}
-                                        resizeMode="cover"
-                                        repeat={true}
-                                        paused={!isExpanded || isVideoPaused}
-                                    />
-                                    {/* Optional: Add play icon overlay when paused manually */}
-                                    {isVideoPaused && (
-                                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-                                            <MaterialCommunityIcons name="play-circle" size={50} color="rgba(255,255,255,0.8)" />
+                                <View style={{ width: '100%', height: '100%' }}>
+                                    <TouchableOpacity
+                                        activeOpacity={1}
+                                        onPress={() => setIsVideoPaused(!isVideoPaused)}
+                                        style={{ width: '100%', height: '100%' }}
+                                    >
+                                        <Video
+                                            ref={videoRef}
+                                            source={{ uri: mediaItems[currentPhotoIndex] }}
+                                            style={styles.professionalImage}
+                                            controls={false}
+                                            resizeMode="cover"
+                                            repeat={true}
+                                            paused={!isExpanded || isVideoPaused || isSeeking}
+                                            muted={isMuted}
+                                            onLoad={(data) => setDuration(data.duration)}
+                                            onProgress={(data) => {
+                                                if (!isSeeking) setCurrentTime(data.currentTime);
+                                            }}
+                                        />
+
+                                        {/* Play Overlay */}
+                                        {isVideoPaused && (
+                                            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                                                <MaterialCommunityIcons name="play-circle" size={50} color="rgba(255,255,255,0.8)" />
+                                            </View>
+                                        )}
+
+                                        {/* Mute Button - Top Right */}
+                                        <TouchableOpacity
+                                            style={{ position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: 4 }}
+                                            onPress={() => setIsMuted(!isMuted)}
+                                        >
+                                            <MaterialCommunityIcons name={isMuted ? "volume-off" : "volume-high"} size={14} color="#fff" />
+                                        </TouchableOpacity>
+
+                                        {/* Progress Bar - Bottom */}
+                                        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center', paddingHorizontal: 0 }}>
+                                            <Slider
+                                                style={{ width: '100%', height: 40 }}
+                                                minimumValue={0}
+                                                maximumValue={duration}
+                                                value={currentTime}
+                                                minimumTrackTintColor="#fff"
+                                                maximumTrackTintColor="rgba(255,255,255,0.3)"
+                                                thumbTintColor="transparent"
+                                                onSlidingStart={() => setIsSeeking(true)}
+                                                onSlidingComplete={(val) => {
+                                                    setIsSeeking(false);
+                                                    onSeek(val);
+                                                }}
+                                                onValueChange={(val) => setCurrentTime(val)}
+                                            />
                                         </View>
-                                    )}
-                                </TouchableOpacity>
+                                    </TouchableOpacity>
+                                </View>
                             ) : (
-                                // Show Image
                                 <RNImage
-                                    source={{ uri: trade.imageUrls?.[currentPhotoIndex] }}
+                                    source={{ uri: mediaItems[currentPhotoIndex] }}
                                     style={styles.professionalImage}
+                                    resizeMode="cover"
                                 />
                             )}
 
-                            {/* Navigation Arrows */}
+                            {/* Carousel Arrows */}
+                            {currentPhotoIndex > 0 && (
+                                <TouchableOpacity
+                                    style={[styles.professionalArrow, styles.professionalArrowLeft]}
+                                    onPress={handlePrevMedia}
+                                >
+                                    <MaterialCommunityIcons name="chevron-left" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            )}
+                            {currentPhotoIndex < totalMediaCount - 1 && (
+                                <TouchableOpacity
+                                    style={[styles.professionalArrow, styles.professionalArrowRight]}
+                                    onPress={handleNextMedia}
+                                >
+                                    <MaterialCommunityIcons name="chevron-right" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            )}
+
+                            {/* Carousel Dots */}
                             {totalMediaCount > 1 && (
-                                <>
-                                    {/* Left Arrow */}
-                                    {currentPhotoIndex > 0 && (
-                                        <TouchableOpacity
-                                            style={[styles.professionalArrow, styles.professionalArrowLeft]}
-                                            onPress={() => onPhotoIndexChange(currentPhotoIndex - 1)}
-                                        >
-                                            <MaterialCommunityIcons name="chevron-left" size={22} color="#fff" />
-                                        </TouchableOpacity>
-                                    )}
-
-                                    {/* Right Arrow */}
-                                    {currentPhotoIndex < totalMediaCount - 1 && (
-                                        <TouchableOpacity
-                                            style={[styles.professionalArrow, styles.professionalArrowRight]}
-                                            onPress={() => onPhotoIndexChange(currentPhotoIndex + 1)}
-                                        >
-                                            <MaterialCommunityIcons name="chevron-right" size={22} color="#fff" />
-                                        </TouchableOpacity>
-                                    )}
-
-                                    {/* Media Indicators (Dots) */}
-                                    <View style={styles.professionalIndicators}>
-                                        {Array.from({ length: totalMediaCount }).map((_, idx) => (
-                                            <View
-                                                key={idx}
-                                                style={[
-                                                    styles.professionalDot,
-                                                    idx === currentPhotoIndex && styles.professionalDotActive
-                                                ]}
-                                            />
-                                        ))}
-                                    </View>
-                                </>
+                                <View style={styles.professionalIndicators}>
+                                    {mediaItems.map((_, index) => (
+                                        <View
+                                            key={index}
+                                            style={[
+                                                styles.professionalDot,
+                                                currentPhotoIndex === index && styles.professionalDotActive
+                                            ]}
+                                        />
+                                    ))}
+                                </View>
                             )}
                         </View>
                     )}
 
-                    {/* Info Grid */}
+                    {/* Stats Grid */}
                     <View style={styles.professionalInfoGrid}>
                         <View style={styles.professionalInfoItem}>
-                            <Text style={styles.professionalInfoLabel}>Revenue</Text>
+                            <Text style={styles.professionalInfoLabel}>Revenue Status</Text>
                             <Text style={styles.professionalInfoValue}>
-                                {trade.revenueStatus === 'revenue-generating' ? 'Revenue Generating' : 'Pre Revenue'}
+                                {trade.revenueStatus === 'revenue-generating' ? 'Generating' : 'Pre-Revenue'}
                             </Text>
                         </View>
-                        {trade.fundingTarget ? (
-                            <View style={styles.professionalInfoItem}>
-                                <Text style={styles.professionalInfoLabel}>Valuation</Text>
-                                <Text style={styles.professionalInfoValue}>
-                                    ${trade.fundingTarget.toLocaleString()}
-                                </Text>
-                            </View>
-                        ) : null}
-                        <View style={styles.professionalInfoItem}>
-                            <Text style={styles.professionalInfoLabel}>Age</Text>
-                            <Text style={styles.professionalInfoValue}>{trade.companyAge || 'N/A'}</Text>
-                        </View>
                         <View style={[styles.professionalInfoItem, styles.professionalInfoItemLast]}>
-                            <Text style={styles.professionalInfoLabel}>Range</Text>
+                            <Text style={styles.professionalInfoLabel}>Funding Target</Text>
                             <Text style={styles.professionalInfoValue}>
-                                {trade.sellingRangeMin}% - {trade.sellingRangeMax}%
+                                {trade.fundingTarget ? `$${trade.fundingTarget.toLocaleString()}` : 'N/A'}
                             </Text>
                         </View>
                     </View>
 
-                    {/* Industry Tags */}
+                    {/* Tags */}
                     {trade.selectedIndustries && trade.selectedIndustries.length > 0 && (
                         <View style={styles.professionalTags}>
-                            {trade.selectedIndustries.map((industry, idx) => (
+                            {trade.selectedIndustries.slice(0, 3).map((tag, idx) => (
                                 <View key={idx} style={styles.professionalTag}>
-                                    <Text style={styles.professionalTagText}>{industry}</Text>
+                                    <Text style={styles.professionalTagText}>{tag}</Text>
                                 </View>
                             ))}
                         </View>
                     )}
 
-                    {/* Action Buttons - Express Interest + Save side by side */}
-                    <View style={styles.actionButtonsRow}>
-                        <TouchableOpacity style={styles.expressInterestButton} onPress={onExpressInterest}>
-                            <Text style={styles.expressInterestText}>Express Interest</Text>
+                    {/* Action Buttons */}
+                    <View style={styles.tradeActionRow}>
+                        <TouchableOpacity style={styles.chatOwnerButton} onPress={onChatWithOwner}>
+                            <Text style={styles.chatOwnerText}>Chat with Owner</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.saveButtonOutline, isSaved && { backgroundColor: '#4a4a4a' }]}
-                            onPress={onToggleSave}
-                        >
-                            <MaterialCommunityIcons
-                                name={isSaved ? "bookmark" : "bookmark-outline"}
-                                size={20}
-                                color="#fff"
-                            />
-                            <Text style={styles.saveButtonText}>Save</Text>
+                        <TouchableOpacity style={[styles.expressInterestButton, { backgroundColor: '#fff' }]} onPress={onExpressInterest}>
+                            <Text style={[styles.expressInterestText, { color: '#000' }]}>Express Interest</Text>
                         </TouchableOpacity>
                     </View>
+
+                    {/* More info (Investor/User) */}
+                    {trade.user && (
+                        <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: '#333', paddingTop: 12 }}>
+                            <TouchableOpacity
+                                onPress={() => onOpenInvestorProfile?.(trade.user._id)}
+                                style={styles.investorInfoContainer}
+                            >
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ color: '#666', fontSize: 12, textAlign: 'right' }}>Listed by</Text>
+                                    <Text style={styles.investorName}>{trade.user.displayName || trade.user.username}</Text>
+                                </View>
+                                {trade.user.avatarUrl ? (
+                                    <RNImage source={{ uri: trade.user.avatarUrl }} style={[styles.investorAvatar, { width: 32, height: 32, borderRadius: 16 }]} />
+                                ) : (
+                                    <View style={[styles.investorAvatar, { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }]}>
+                                        <Text style={{ color: '#fff', fontSize: 12 }}>{getAvatarInitials(trade.user.displayName)}</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </Animated.View>
             )}
         </View>

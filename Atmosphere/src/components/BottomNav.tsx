@@ -148,7 +148,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
               style={[styles.tab]}
               activeOpacity={0.8}
             >
-              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: active && tab.id === 'home' ? '#111' : 'transparent' }}>
+              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
                 {tab.id === 'home' ? (
                   active ? (
                     <HomeFilled color="#fff" size={24} />
@@ -158,7 +158,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
                 ) : tab.id === 'launch' ? (
                   // Launch can appear in the first slice when `appMode` is 'right'
                   active ? (
-                      <IconIon name="rocket" size={24} color="#fff" solid={true} />
+                    <IconIon name="rocket" size={24} color="#fff" solid={true} />
                   ) : (
                     <IconIon name='rocket-outline' size={24} color="#fff" />
                   )
@@ -198,7 +198,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
                     style={[styles.avatarIcon, active && styles.avatarIconActive]}
                   />
                 ) : (
-                  <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? '#111' : 'transparent' }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
                     <User
                       color="#fff"
                       size={22}
@@ -220,7 +220,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
                 style={[styles.tab]}
                 activeOpacity={0.8}
               >
-                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? '#111' : 'transparent' }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
                   {active ? (
                     <IconFA name="suitcase" size={24} color="#fff" />
                   ) : (
@@ -244,7 +244,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
                 style={[styles.tab]}
                 activeOpacity={0.8}
               >
-                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? '#111' : 'transparent' }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
                   {active ? (
                     <IconFA5 name="rocket" size={24} color="#fff" solid={true} />
                   ) : (
@@ -264,7 +264,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
                 style={[styles.tab]}
                 activeOpacity={0.8}
               >
-                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? '#111' : 'transparent' }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
                   <IconIon
                     name={active ? 'calendar' : 'calendar-outline'}
                     size={24}
@@ -283,7 +283,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onRouteChange, activeRoute }) => 
               style={[styles.tab]}
               activeOpacity={0.8}
             >
-              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: active ? '#111' : 'transparent' }}>
+              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
                 {tab.id === 'reels' ? (
                   active ? (
                     <ReelsIcon color="#fff" size={24} />
