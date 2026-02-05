@@ -46,7 +46,18 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile, isVisible = 
     const [isMuted, setIsMuted] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [showControls, setShowControls] = useState(false);
     const videoRef = useRef<any>(null);
+    const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Auto-hide controls after 1.5 seconds
+    const showControlsTemporarily = () => {
+        setShowControls(true);
+        if (controlsTimer.current) clearTimeout(controlsTimer.current);
+        controlsTimer.current = setTimeout(() => {
+            setShowControls(false);
+        }, 1500);
+    };
 
     // Video plays only when visible AND not manually paused
     const videoPaused = !isVisible || manuallyPaused;
@@ -286,22 +297,26 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile, isVisible = 
                                 onPress={() => {
                                     console.log('[Video Tap] Toggling pause for:', companyData?.name);
                                     setManuallyPaused(!manuallyPaused);
+                                    showControlsTemporarily();
                                 }}
                             >
-                                {manuallyPaused && (
+                                {/* Play overlay - only show when controls are visible and paused */}
+                                {showControls && manuallyPaused && (
                                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
                                         <Play size={50} color="#fff" fill="#fff" />
                                     </View>
                                 )}
                             </TouchableOpacity>
 
-                            {/* Mute Button - Bottom Right */}
-                            <TouchableOpacity
-                                style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6, zIndex: 20 }}
-                                onPress={() => setIsMuted(!isMuted)}
-                            >
-                                <MaterialCommunityIcons name={isMuted ? "volume-off" : "volume-high"} size={18} color="#fff" />
-                            </TouchableOpacity>
+                            {/* Mute Button - Bottom Right (only show when controls visible) */}
+                            {showControls && (
+                                <TouchableOpacity
+                                    style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6, zIndex: 20 }}
+                                    onPress={() => setIsMuted(!isMuted)}
+                                >
+                                    <MaterialCommunityIcons name={isMuted ? "volume-off" : "volume-high"} size={18} color="#fff" />
+                                </TouchableOpacity>
+                            )}
 
                             {/* Progress Bar - Bottom */}
                             <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center', zIndex: 20 }}>

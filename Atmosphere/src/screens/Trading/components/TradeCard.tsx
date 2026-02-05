@@ -46,11 +46,25 @@ export const TradeCard: React.FC<TradeCardProps> = ({
     const [isMuted, setIsMuted] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [showControls, setShowControls] = useState(false);
     const videoRef = useRef<any>(null);
+    const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Auto-hide controls after 1.5 seconds
+    const showControlsTemporarily = () => {
+        setShowControls(true);
+        if (controlsTimer.current) clearTimeout(controlsTimer.current);
+        controlsTimer.current = setTimeout(() => {
+            setShowControls(false);
+        }, 1500);
+    };
 
     // Reset video state when collapsed
     useEffect(() => {
-        if (!isExpanded) setIsVideoPaused(false);
+        if (!isExpanded) {
+            setIsVideoPaused(false);
+            setShowControls(false);
+        }
     }, [isExpanded]);
 
     // Animate when isExpanded changes
@@ -175,38 +189,49 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                             {isCurrentItemVideo ? (
                                 // Show Video Player - Tap to toggle play/pause
                                 <View style={{ width: '100%', height: '100%' }}>
+                                    <Video
+                                        ref={videoRef}
+                                        source={{ uri: trade.videoUrl }}
+                                        style={styles.professionalImage}
+                                        controls={false}
+                                        resizeMode="cover"
+                                        repeat={true}
+                                        paused={!isExpanded || isVideoPaused}
+                                        muted={isMuted}
+                                        onLoad={(data: any) => {
+                                            setDuration(data.duration);
+                                            // Show controls initially for 2 seconds
+                                            showControlsTemporarily();
+                                        }}
+                                        onProgress={(data: any) => setCurrentTime(data.currentTime)}
+                                    />
+                                    {/* Touch overlay on top of video */}
                                     <TouchableOpacity
                                         activeOpacity={1}
-                                        onPress={() => setIsVideoPaused(!isVideoPaused)}
-                                        style={{ width: '100%', height: '100%' }}
+                                        onPress={() => {
+                                            console.log('[TradeCard Video] Tap detected');
+                                            setIsVideoPaused(!isVideoPaused);
+                                            showControlsTemporarily();
+                                        }}
+                                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10 }}
                                     >
-                                        <Video
-                                            ref={videoRef}
-                                            source={{ uri: trade.videoUrl }}
-                                            style={styles.professionalImage}
-                                            controls={false}
-                                            resizeMode="cover"
-                                            repeat={true}
-                                            paused={!isExpanded || isVideoPaused}
-                                            muted={isMuted}
-                                            onLoad={(data: any) => setDuration(data.duration)}
-                                            onProgress={(data: any) => setCurrentTime(data.currentTime)}
-                                        />
-                                        {/* Play icon overlay when paused */}
-                                        {isVideoPaused && (
-                                            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                                        {/* Play icon overlay when paused (only when controls visible) */}
+                                        {showControls && isVideoPaused && (
+                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
                                                 <MaterialCommunityIcons name="play-circle" size={50} color="rgba(255,255,255,0.8)" />
                                             </View>
                                         )}
                                     </TouchableOpacity>
 
-                                    {/* Mute Button - Bottom Right */}
-                                    <TouchableOpacity
-                                        style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6 }}
-                                        onPress={() => setIsMuted(!isMuted)}
-                                    >
-                                        <MaterialCommunityIcons name={isMuted ? "volume-off" : "volume-high"} size={18} color="#fff" />
-                                    </TouchableOpacity>
+                                    {/* Mute Button - Bottom Right (only when controls visible) */}
+                                    {showControls && (
+                                        <TouchableOpacity
+                                            style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6, zIndex: 20 }}
+                                            onPress={() => setIsMuted(!isMuted)}
+                                        >
+                                            <MaterialCommunityIcons name={isMuted ? "volume-off" : "volume-high"} size={18} color="#fff" />
+                                        </TouchableOpacity>
+                                    )}
 
                                     {/* Progress Bar - Bottom */}
                                     <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center' }}>

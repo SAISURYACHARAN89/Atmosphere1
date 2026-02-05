@@ -4,7 +4,7 @@ import { View, Text, ScrollView, Image, TouchableOpacity, Modal, TextInput, Acti
 import { Play, Video, Heart, Crown, MessageCircle, Send, Building2, Calendar, Globe, Users } from 'lucide-react-native';
 import CommentsOverlay from '../../components/CommentsOverlay';
 import ShareModal from '../../components/ShareModal';
-import { getContentId } from '../../components/startupPost/utils';
+import { getContentId, checkIsInvestor } from '../../components/startupPost/utils';
 import { likeStartup, unlikeStartup, crownStartup, uncrownStartup } from '../../lib/api';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,44 +19,82 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 const StartupVideoPlayer = ({ videoUrl }: { videoUrl: string }) => {
     const VideoPlayer = require('react-native-video').default;
-    const [paused, setPaused] = React.useState(true);
+    const [paused, setPaused] = React.useState(false); // Auto-play
     const [muted, setMuted] = React.useState(false);
     const [currentTime, setCurrentTime] = React.useState(0);
     const [duration, setDuration] = React.useState(0);
+    const [showControls, setShowControls] = React.useState(true); // Show initially
     const videoRef = React.useRef<any>(null);
+    const controlsTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Auto-hide controls after 2 seconds on mount
+    React.useEffect(() => {
+        controlsTimer.current = setTimeout(() => {
+            setShowControls(false);
+        }, 2000);
+        return () => {
+            if (controlsTimer.current) clearTimeout(controlsTimer.current);
+        };
+    }, []);
+
+    // Show controls temporarily
+    const showControlsTemporarily = () => {
+        setShowControls(true);
+        if (controlsTimer.current) clearTimeout(controlsTimer.current);
+        controlsTimer.current = setTimeout(() => {
+            setShowControls(false);
+        }, 1500);
+    };
+
+    const handleVideoPress = () => {
+        console.log('[VideoPlayer] Tap detected, toggling pause');
+        setPaused(!paused);
+        showControlsTemporarily();
+    };
 
     return (
         <View style={{ flex: 1 }}>
-            <TouchableOpacity activeOpacity={1} onPress={() => setPaused(!paused)} style={{ flex: 1 }}>
-                <VideoPlayer
-                    ref={videoRef}
-                    source={{ uri: videoUrl }}
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="contain"
-                    paused={paused}
-                    muted={muted}
-                    controls={false}
-                    onLoad={(data: any) => setDuration(data.duration)}
-                    onProgress={(data: any) => setCurrentTime(data.currentTime)}
-                    onError={(e: any) => console.log('Video error', e)}
-                />
-                {paused && (
-                    <View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-                        <Play size={40} color="#fff" fill="#fff" />
+            {/* Video Player */}
+            <VideoPlayer
+                ref={videoRef}
+                source={{ uri: videoUrl }}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="contain"
+                paused={paused}
+                muted={muted}
+                repeat={true}
+                controls={false}
+                onLoad={(data: any) => setDuration(data.duration)}
+                onProgress={(data: any) => setCurrentTime(data.currentTime)}
+                onError={(e: any) => console.log('Video error', e)}
+            />
+
+            {/* Touch overlay on top of video */}
+            <TouchableOpacity
+                activeOpacity={1}
+                onPress={handleVideoPress}
+                style={{ ...StyleSheet.absoluteFillObject, zIndex: 10 }}
+            >
+                {/* Play icon overlay - only when controls visible and paused */}
+                {showControls && paused && (
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                        <Play size={50} color="#fff" fill="#fff" />
                     </View>
                 )}
             </TouchableOpacity>
 
-            {/* Mute Button - Bottom Right */}
-            <TouchableOpacity
-                style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6 }}
-                onPress={() => setMuted(!muted)}
-            >
-                <MaterialCommunityIcons name={muted ? "volume-off" : "volume-high"} size={18} color="#fff" />
-            </TouchableOpacity>
+            {/* Mute Button - Bottom Right (only when controls visible) */}
+            {showControls && (
+                <TouchableOpacity
+                    style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6, zIndex: 20 }}
+                    onPress={() => setMuted(!muted)}
+                >
+                    <MaterialCommunityIcons name={muted ? "volume-off" : "volume-high"} size={18} color="#fff" />
+                </TouchableOpacity>
+            )}
 
-            {/* Progress Bar - Bottom */}
-            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center' }}>
+            {/* Progress Bar - Bottom (always visible) */}
+            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center', zIndex: 20 }}>
                 <Slider
                     style={{ width: '100%', height: 40 }}
                     minimumValue={0}
@@ -106,7 +144,10 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
     React.useEffect(() => {
         checkOwner();
         checkPitchStatus();
+        checkIsInvestor().then(setIsInvestor);
     }, [details, profileData]);
+
+    const [isInvestor, setIsInvestor] = React.useState(false);
 
     const checkOwner = async () => {
         let uid = await EncryptedStorage.getItem('user_id');
@@ -384,6 +425,10 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
     };
 
     const toggleCrown = async () => {
+        if (!isInvestor) {
+            Alert.alert('Investors Only', 'Only investors can crown startups.');
+            return;
+        }
         if (crownLoading) return;
         setCrownLoading(true);
         const prev = crowned;
@@ -423,9 +468,8 @@ export default function StartupExpand({ rawProfileData, profileData, screenW }: 
 
     return (
         <View style={{ width: '100%', padding: 0, paddingTop: 10 }}>
-            {/* 1. Video Section */}
-            {/* Added paddingTop to prevent overlap with header */}
-            <View style={{ width: screenW, height: 250, backgroundColor: '#000', marginBottom: 16, paddingTop: 60 }}>
+            {/* 1. Video Section - matching paddingHorizontal with stats below */}
+            <View style={{ marginHorizontal: 16, height: 280, backgroundColor: '#000', marginBottom: 16, borderRadius: 12, overflow: 'hidden' }}>
                 {videoUrl ? (
                     <StartupVideoPlayer videoUrl={videoUrl} />
                 ) : (

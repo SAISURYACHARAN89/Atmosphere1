@@ -10,6 +10,8 @@ import {
     Animated,
     Dimensions,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchReels, likeReel, unlikeReel, checkReelShared, followUser, unfollowUser, getReel, getUserReels, saveReel, unsaveReel } from '../../lib/api';
 import { Video as VideoIcon, Heart } from 'lucide-react-native';
@@ -56,6 +58,24 @@ const Reels = ({ userId, initialReelId, onBack, onOpenProfile }: ReelsProps) => 
     // Double-tap to like animation refs (per-reel)
     const doubleTapLastTap = useRef<Record<string, number>>({});
     const heartAnimations = useRef<Record<string, { scale: Animated.Value; opacity: Animated.Value }>>({});
+
+    // Video controls state
+    const [isPaused, setIsPaused] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const [showControls, setShowControls] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const videoRef = useRef<any>(null);
+    const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Auto-hide controls after 1.5 seconds
+    const showControlsTemporarily = () => {
+        setShowControls(true);
+        if (controlsTimer.current) clearTimeout(controlsTimer.current);
+        controlsTimer.current = setTimeout(() => {
+            setShowControls(false);
+        }, 1500);
+    };
 
     const getHeartAnimation = (reelId: string) => {
         if (!heartAnimations.current[reelId]) {
@@ -320,23 +340,76 @@ const Reels = ({ userId, initialReelId, onBack, onOpenProfile }: ReelsProps) => 
                     {/* Video/Image layer */}
                     {isActive && item.videoUrl ? (
                         <Video
+                            ref={videoRef}
                             source={{ uri: item.videoUrl }}
                             style={styles.video}
                             resizeMode="cover"
                             repeat
-                            paused={false}
-                            muted={false}
+                            paused={isPaused}
+                            muted={isMuted}
                             bufferConfig={{ minBufferMs: 2000, maxBufferMs: 5000, bufferForPlaybackMs: 1000, bufferForPlaybackAfterRebufferMs: 2000 }}
+                            onLoad={(data: any) => setDuration(data.duration)}
+                            onProgress={(data: any) => setCurrentTime(data.currentTime)}
                             onError={(e) => console.log('Video error:', e)}
                         />
                     ) : (
                         <Image source={{ uri: item.thumbnailUrl || item.videoUrl }} style={styles.video} resizeMode="cover" />
                     )}
 
-                    {/* Transparent touch overlay for double-tap */}
-                    <TouchableWithoutFeedback onPress={() => handleDoubleTap(item._id)}>
+                    {/* Touch overlay - single tap: pause/play, double tap: like */}
+                    <TouchableWithoutFeedback
+                        onPress={() => {
+                            // Check for double tap first
+                            const now = Date.now();
+                            const lastTap = doubleTapLastTap.current[item._id] || 0;
+                            if (now - lastTap < 300) {
+                                // Double tap - like
+                                handleDoubleTap(item._id);
+                            } else {
+                                // Single tap - toggle pause and show controls
+                                setIsPaused(!isPaused);
+                                showControlsTemporarily();
+                            }
+                            doubleTapLastTap.current[item._id] = now;
+                        }}
+                    >
                         <View style={styles.touchOverlay} />
                     </TouchableWithoutFeedback>
+
+                    {/* Play/Pause overlay with mute button below (only when controls visible) */}
+                    {showControls && isActive && (
+                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', pointerEvents: 'box-none' }}>
+                            {isPaused && (
+                                <MaterialCommunityIcons name="play-circle" size={70} color="rgba(255,255,255,0.8)" />
+                            )}
+                            {/* Mute button - below play icon */}
+                            <TouchableOpacity
+                                style={{ marginTop: isPaused ? 20 : 0, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: 8 }}
+                                onPress={() => setIsMuted(!isMuted)}
+                            >
+                                <MaterialCommunityIcons name={isMuted ? "volume-off" : "volume-high"} size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* Progress Bar - Bottom (always visible when active) */}
+                    {isActive && (
+                        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center', zIndex: 20 }}>
+                            <Slider
+                                style={{ width: '100%', height: 40 }}
+                                minimumValue={0}
+                                maximumValue={duration || 1}
+                                value={currentTime}
+                                minimumTrackTintColor="#fff"
+                                maximumTrackTintColor="rgba(255,255,255,0.3)"
+                                thumbTintColor="transparent"
+                                onSlidingComplete={(val: number) => {
+                                    videoRef.current?.seek(val);
+                                    setCurrentTime(val);
+                                }}
+                            />
+                        </View>
+                    )}
 
                     {/* Double-tap heart animation - white heart like Instagram */}
                     <Animated.View style={[styles.doubleTapHeart, { opacity: getHeartAnimation(item._id).opacity, transform: [{ scale: getHeartAnimation(item._id).scale }] }]} pointerEvents="none">
@@ -393,7 +466,7 @@ const Reels = ({ userId, initialReelId, onBack, onOpenProfile }: ReelsProps) => 
                         />
                     </View>
                 </View>
-            </View>
+            </View >
         );
     };
 
