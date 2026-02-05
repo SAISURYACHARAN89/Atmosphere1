@@ -134,7 +134,7 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                     <View style={styles.collapsedCompanyInfo}>
                         <Text style={styles.collapsedCompanyName}>{trade.companyName}</Text>
                         {!isExpanded && (
-                            <Text style={styles.collapsedDescription} numberOfLines={1}>
+                            <Text style={styles.collapsedDescription} numberOfLines={2}>
                                 {trade.description || 'No description provided'}
                             </Text>
                         )}
@@ -182,6 +182,17 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                     <Text style={styles.expandedDescription}>
                         {trade.description || 'No description provided'}
                     </Text>
+
+                    {/* Industry Tags - Now below description */}
+                    {trade.selectedIndustries && trade.selectedIndustries.length > 0 && (
+                        <View style={styles.professionalTags}>
+                            {trade.selectedIndustries.map((industry, idx) => (
+                                <View key={idx} style={styles.professionalTag}>
+                                    <Text style={styles.professionalTagText}>{industry}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    )}
 
                     {/* Media Carousel (Images + Video at end) */}
                     {totalMediaCount > 0 && (
@@ -325,17 +336,6 @@ export const TradeCard: React.FC<TradeCardProps> = ({
                             </Text>
                         </View>
                     </View>
-
-                    {/* Industry Tags */}
-                    {trade.selectedIndustries && trade.selectedIndustries.length > 0 && (
-                        <View style={styles.professionalTags}>
-                            {trade.selectedIndustries.map((industry, idx) => (
-                                <View key={idx} style={styles.professionalTag}>
-                                    <Text style={styles.professionalTagText}>{industry}</Text>
-                                </View>
-                            ))}
-                        </View>
-                    )}
 
                     {/* Action Buttons - Express Interest + Save side by side */}
                     <View style={styles.actionButtonsRow}>

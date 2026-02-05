@@ -728,7 +728,8 @@ export const styles = StyleSheet.create({
     },
     professionalInfoGrid: {
         flexDirection: 'row',
-        marginBottom: 16,
+        marginBottom: 14,
+        marginTop: 4,
         backgroundColor: '#1a1a1a',
         borderRadius: 12,
         padding: 12,
@@ -758,7 +759,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-        marginBottom: 20,
+        marginBottom: 14,
     },
     professionalTag: {
         backgroundColor: '#1a1a1a',
@@ -774,8 +775,8 @@ export const styles = StyleSheet.create({
         color: '#e0e0e0',
         fontSize: 14,
         lineHeight: 20,
-        marginBottom: 16,
-        marginTop: 12,
+        marginTop: 10,
+        marginBottom: 10,
     },
     tradeActionRow: {
         flexDirection: 'row',
@@ -812,7 +813,7 @@ export const styles = StyleSheet.create({
     actionButtonsRow: {
         flexDirection: 'row',
         gap: 12,
-        marginTop: 12,
+        marginTop: 0,
     },
     saveButtonOutline: {
         flex: 0.6,
