@@ -14,27 +14,67 @@ import { searchUsers } from '../../lib/api/users';
 import { getImageSource } from '../../lib/image';
 
 // Video Player Component
+import Slider from '@react-native-community/slider';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 const StartupVideoPlayer = ({ videoUrl }: { videoUrl: string }) => {
     const VideoPlayer = require('react-native-video').default;
     const [paused, setPaused] = React.useState(true);
+    const [muted, setMuted] = React.useState(false);
+    const [currentTime, setCurrentTime] = React.useState(0);
+    const [duration, setDuration] = React.useState(0);
+    const videoRef = React.useRef<any>(null);
+
     return (
-        <TouchableOpacity activeOpacity={1} onPress={() => setPaused(!paused)} style={{ flex: 1 }}>
-            <VideoPlayer
-                source={{ uri: videoUrl }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="contain"
-                paused={paused}
-                controls={false}
-                onError={(e: any) => console.log('Video error', e)}
-            />
-            {paused && (
-                <View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
-                    <Play size={40} color="#fff" fill="#fff" />
-                </View>
-            )}
-        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+            <TouchableOpacity activeOpacity={1} onPress={() => setPaused(!paused)} style={{ flex: 1 }}>
+                <VideoPlayer
+                    ref={videoRef}
+                    source={{ uri: videoUrl }}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="contain"
+                    paused={paused}
+                    muted={muted}
+                    controls={false}
+                    onLoad={(data: any) => setDuration(data.duration)}
+                    onProgress={(data: any) => setCurrentTime(data.currentTime)}
+                    onError={(e: any) => console.log('Video error', e)}
+                />
+                {paused && (
+                    <View style={{ ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                        <Play size={40} color="#fff" fill="#fff" />
+                    </View>
+                )}
+            </TouchableOpacity>
+
+            {/* Mute Button - Bottom Right */}
+            <TouchableOpacity
+                style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6 }}
+                onPress={() => setMuted(!muted)}
+            >
+                <MaterialCommunityIcons name={muted ? "volume-off" : "volume-high"} size={18} color="#fff" />
+            </TouchableOpacity>
+
+            {/* Progress Bar - Bottom */}
+            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center' }}>
+                <Slider
+                    style={{ width: '100%', height: 40 }}
+                    minimumValue={0}
+                    maximumValue={duration || 1}
+                    value={currentTime}
+                    minimumTrackTintColor="#fff"
+                    maximumTrackTintColor="rgba(255,255,255,0.3)"
+                    thumbTintColor="transparent"
+                    onSlidingComplete={(val: number) => {
+                        videoRef.current?.seek(val);
+                        setCurrentTime(val);
+                    }}
+                />
+            </View>
+        </View>
     );
 };
+
 
 type Props = {
     rawProfileData: any;

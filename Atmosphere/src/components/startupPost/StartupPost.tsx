@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { View, Text, Image, TouchableOpacity, Animated, StyleSheet } from 'react-native';
 import Video from 'react-native-video';
+import Slider from '@react-native-community/slider';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { NavigationContext } from '@react-navigation/native';
 import { followUser, unfollowUser, likePost, unlikePost, likeStartup, unlikeStartup, savePost, unsavePost, crownStartup, uncrownStartup } from '../../lib/api';
@@ -39,6 +41,12 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile, isVisible = 
 
     const [shareModalVisible, setShareModalVisible] = useState(false);
     const [manuallyPaused, setManuallyPaused] = useState(false);
+
+    // Video controls state
+    const [isMuted, setIsMuted] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const videoRef = useRef<any>(null);
 
     // Video plays only when visible AND not manually paused
     const videoPaused = !isVisible || manuallyPaused;
@@ -253,13 +261,16 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile, isVisible = 
                     {(companyData as any).video ? (
                         <>
                             <Video
+                                ref={videoRef}
                                 source={{ uri: (companyData as any).video }}
                                 style={styles.mainImage}
                                 resizeMode="cover"
                                 repeat
                                 paused={videoPaused}
-                                muted={false}
+                                muted={isMuted}
                                 controls={false}
+                                onLoad={(data: any) => setDuration(data.duration)}
+                                onProgress={(data: any) => setCurrentTime(data.currentTime)}
                                 onError={(e: any) => console.log('Video error', e)}
                                 bufferConfig={{
                                     minBufferMs: 15000,
@@ -283,6 +294,31 @@ const StartupPost = ({ post, company, currentUserId, onOpenProfile, isVisible = 
                                     </View>
                                 )}
                             </TouchableOpacity>
+
+                            {/* Mute Button - Bottom Right */}
+                            <TouchableOpacity
+                                style={{ position: 'absolute', bottom: 30, right: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 15, padding: 6, zIndex: 20 }}
+                                onPress={() => setIsMuted(!isMuted)}
+                            >
+                                <MaterialCommunityIcons name={isMuted ? "volume-off" : "volume-high"} size={18} color="#fff" />
+                            </TouchableOpacity>
+
+                            {/* Progress Bar - Bottom */}
+                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, justifyContent: 'center', zIndex: 20 }}>
+                                <Slider
+                                    style={{ width: '100%', height: 40 }}
+                                    minimumValue={0}
+                                    maximumValue={duration || 1}
+                                    value={currentTime}
+                                    minimumTrackTintColor="#fff"
+                                    maximumTrackTintColor="rgba(255,255,255,0.3)"
+                                    thumbTintColor="transparent"
+                                    onSlidingComplete={(val: number) => {
+                                        videoRef.current?.seek(val);
+                                        setCurrentTime(val);
+                                    }}
+                                />
+                            </View>
                         </>
                     ) : (
                         <TouchableOpacity activeOpacity={0.9} onPress={handleDoubleTap} style={{ flex: 1 }}>

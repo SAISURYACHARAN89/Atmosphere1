@@ -209,14 +209,20 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
     const isGrid = !query.trim() || activeTab === 'posts';
 
     // Handle viewable items change for simultaneous random video playback per row
+    // Use a ref to track which rows already have a selected reel (to avoid re-randomizing)
+    const selectedReelByRow = useRef<{ [rowIndex: number]: string }>({});
+
     const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
         if (!isGrid) return;
 
         // Group visible items by row
         const rows: { [key: number]: any[] } = {};
+        const visibleRowIndices = new Set<number>();
+
         viewableItems.forEach(viewToken => {
             if (viewToken.index !== null) {
                 const rowIndex = Math.floor(viewToken.index / 3);
+                visibleRowIndices.add(rowIndex);
                 if (!rows[rowIndex]) rows[rowIndex] = [];
                 rows[rowIndex].push(currentData[viewToken.index]);
             }
@@ -224,19 +230,37 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
 
         const newActiveReelIds = new Set<string>();
 
-        // For each visible row, randomly select one reel to play
-        Object.keys(rows).forEach(rowIndex => {
-            const itemsInRow = rows[Number(rowIndex)];
+        // For each visible row, select one reel (preserve existing selection if still in row)
+        visibleRowIndices.forEach(rowIndex => {
+            const itemsInRow = rows[rowIndex] || [];
             const reelsInRow = itemsInRow.filter(item =>
-                item && (item.type === 'reel' || item.meta?.postType === 'reel')
+                item && (item.type === 'reel' || item.meta?.postType === 'reel') && item.videoUrl
             );
 
             if (reelsInRow.length > 0) {
-                // Randomly pick one reel from this row
-                const randomIndex = Math.floor(Math.random() * reelsInRow.length);
-                const selectedReel = reelsInRow[randomIndex];
-                const reelId = selectedReel._id || selectedReel.id;
-                newActiveReelIds.add(reelId);
+                // Check if we already selected a reel for this row
+                const existingSelection = selectedReelByRow.current[rowIndex];
+                const existingReelStillInRow = reelsInRow.find(r => (r._id || r.id) === existingSelection);
+
+                let selectedReelId: string;
+                if (existingReelStillInRow) {
+                    // Keep existing selection
+                    selectedReelId = existingSelection;
+                } else {
+                    // Randomly pick one reel from this row
+                    const randomIndex = Math.floor(Math.random() * reelsInRow.length);
+                    const selectedReel = reelsInRow[randomIndex];
+                    selectedReelId = selectedReel._id || selectedReel.id;
+                    selectedReelByRow.current[rowIndex] = selectedReelId;
+                }
+                newActiveReelIds.add(selectedReelId);
+            }
+        });
+
+        // Clean up rows that are no longer visible
+        Object.keys(selectedReelByRow.current).forEach(rowKey => {
+            if (!visibleRowIndices.has(Number(rowKey))) {
+                delete selectedReelByRow.current[Number(rowKey)];
             }
         });
 
