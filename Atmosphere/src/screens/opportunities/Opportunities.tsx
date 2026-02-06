@@ -145,65 +145,20 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         });
     }, [team, filters.teamSector, filters.teamLocation, filters.teamRemote, filters.teamEmployment]);
 
-    // Initial Load - SIMPLE: Cache-first, then fetch if needed
+    // Initial Load - ALL TABS IN PARALLEL (fast)
     useEffect(() => {
         let mounted = true;
 
-        const init = async () => {
-            // Load role from cache
-            const roleCache = await AsyncStorage.getItem('role');
-            if (mounted && roleCache) setUserRole(roleCache);
-
-            // Fetch role in background
-            api.fetchAndStoreUserRole().then((role: string) => {
-                if (mounted && role) setUserRole(role);
-            }).catch(() => { });
-
-            // GRANTS: Cache-first
-            const grantsCache = await AsyncStorage.getItem('ATMOSPHERE_GRANTS_CACHE');
-            if (grantsCache) {
+        // Load GRANTS
+        const loadGrants = async () => {
+            const cache = await AsyncStorage.getItem('ATMOSPHERE_GRANTS_CACHE');
+            if (cache) {
                 try {
-                    setGrants(JSON.parse(grantsCache));
-                    setGrantsLoading(false);
-                } catch (e) {
-                    // Invalid cache, fetch fresh
-                    await fetchGrantsData();
-                }
-            } else {
-                await fetchGrantsData();
+                    if (mounted) { setGrants(JSON.parse(cache)); setGrantsLoading(false); }
+                    return; // Cache hit, done
+                } catch (e) { /* Invalid cache, fall through to fetch */ }
             }
-
-            // EVENTS: Cache-first
-            const eventsCache = await AsyncStorage.getItem('ATMOSPHERE_EVENTS_CACHE');
-            if (eventsCache) {
-                try {
-                    setEvents(JSON.parse(eventsCache));
-                    setEventsLoading(false);
-                } catch (e) {
-                    await fetchEventsData();
-                }
-            } else {
-                await fetchEventsData();
-            }
-
-            // JOBS: Cache-first
-            const teamCache = await AsyncStorage.getItem('ATMOSPHERE_TEAM_CACHE');
-            if (teamCache) {
-                try {
-                    setTeam(JSON.parse(teamCache));
-                    setTeamLoading(false);
-                } catch (e) {
-                    await fetchTeamData();
-                }
-            } else {
-                await fetchTeamData();
-            }
-
-            if (mounted) setInitialLoadDone(true);
-        };
-
-        // Helper functions to fetch data
-        const fetchGrantsData = async () => {
+            // Fetch fresh
             try {
                 const data = await api.fetchGrants(LIMIT, 0);
                 if (mounted) {
@@ -218,7 +173,15 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
             }
         };
 
-        const fetchEventsData = async () => {
+        // Load EVENTS
+        const loadEvents = async () => {
+            const cache = await AsyncStorage.getItem('ATMOSPHERE_EVENTS_CACHE');
+            if (cache) {
+                try {
+                    if (mounted) { setEvents(JSON.parse(cache)); setEventsLoading(false); }
+                    return;
+                } catch (e) { }
+            }
             try {
                 const data = await api.fetchEvents(LIMIT, 0);
                 if (mounted) {
@@ -233,7 +196,15 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
             }
         };
 
-        const fetchTeamData = async () => {
+        // Load JOBS
+        const loadJobs = async () => {
+            const cache = await AsyncStorage.getItem('ATMOSPHERE_TEAM_CACHE');
+            if (cache) {
+                try {
+                    if (mounted) { setTeam(JSON.parse(cache)); setTeamLoading(false); }
+                    return;
+                } catch (e) { }
+            }
             try {
                 const data = await api.fetchJobPostings(LIMIT, 0);
                 if (mounted) {
@@ -248,7 +219,15 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
             }
         };
 
-        init();
+        // Role loading (non-blocking)
+        AsyncStorage.getItem('role').then(r => { if (mounted && r) setUserRole(r); });
+        api.fetchAndStoreUserRole().then((r: string) => { if (mounted && r) setUserRole(r); }).catch(() => { });
+
+        // Run ALL THREE in parallel - page renders fast, data appears as it arrives
+        Promise.all([loadGrants(), loadEvents(), loadJobs()]).then(() => {
+            if (mounted) setInitialLoadDone(true);
+        });
+
         return () => { mounted = false; };
     }, []);
 

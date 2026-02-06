@@ -21,10 +21,6 @@ import TradeSkeleton from '../components/skeletons/TradeSkeleton';
 
 const { width: screenW } = Dimensions.get('window');
 
-// Constants and types now imported from Trading/types.ts
-
-// Investment and InvestorPortfolio interfaces now imported from Trading/types.ts
-
 interface ActiveTrade {
     _id?: string;
     id?: number;
@@ -76,6 +72,16 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
     const [expandedPortfolios, setExpandedPortfolios] = useState<Set<string>>(new Set());
     const pagerRef = useRef<any>(null);
     const scrollX = useRef(new Animated.Value(initialTab === 'Sell' ? screenW : 0)).current;
+
+    const dedupeById = (items: any[]) => {
+        const map = new Map<string, any>();
+        items.forEach(item => {
+            const id = String(item._id || item.id);
+            map.set(id, item);
+        });
+        return Array.from(map.values());
+    };
+
 
     // Persist active tab
     useEffect(() => {
@@ -257,16 +263,14 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
             const data = await getAllTrades(BUY_LIMIT, currentSkip, filters);
 
             if (reset) {
-                setBuyTrades(data);
-                setIsFirstLoad(false); // Mark first load complete so subsequent filter changes don't show full loader
-                // Update Cache only on fresh load 
-                AsyncStorage.setItem('ATMOSPHERE_TRADES_BUY_CACHE', JSON.stringify(data)).catch(() => { });
+                setBuyTrades(dedupeById(data));
+                setBuySkip(data.length);
             } else {
-                setBuyTrades(prev => [...prev, ...data]);
+                setBuyTrades(prev => dedupeById([...prev, ...data]));
+                setBuySkip(prev => prev + data.length);
             }
 
             setBuyHasMore(data.length >= BUY_LIMIT);
-            setBuySkip(currentSkip + BUY_LIMIT);
         } catch (e) {
             console.warn('Failed to load buy trades', e);
         } finally {
@@ -321,20 +325,28 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
         if (hasBuyInitRef.current) return;
         hasBuyInitRef.current = true;
 
+        let mounted = true;
         const initBuyTrades = async () => {
             const cached = await AsyncStorage.getItem('ATMOSPHERE_TRADES_BUY_CACHE');
-            if (cached) {
+            if (cached && mounted) {
                 try {
-                    setBuyTrades(JSON.parse(cached));
+                    const parsed = JSON.parse(cached);
+                    setBuyTrades(dedupeById(parsed));
+                    setBuySkip(parsed.length);
+                    setIsFirstLoad(false);
                     setBuyLoading(false);
-                } catch (e) { }
+                } catch (e) {
+                    fetchBuyTrades(true);
+                }
             } else {
-                // No cache, fetch from backend - AWAIT so buyInitialLoadDone is set AFTER
-                await fetchBuyTrades(true);
+                fetchBuyTrades(true);
             }
-            setBuyInitialLoadDone(true);
+
+            if (mounted) setBuyInitialLoadDone(true);
         };
+
         initBuyTrades();
+        return () => { mounted = false; };
     }, []);
 
     // Consolidated profile data load - ONE getProfile call on mount with StrictMode guard
@@ -462,6 +474,7 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
     // Filter/search changes handled via explicit user action, not automatic useEffect
 
     const handleLoadMoreBuy = () => {
+        if (!buyInitialLoadDone) return;
         if (!buyHasMore || buyLoading) return;
         fetchBuyTrades(false);
     };
@@ -1435,7 +1448,7 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
                 <FlatList
                     data={data}
                     style={{ backgroundColor: '#070707' }}
-                    keyExtractor={(item, index) => `${String(item._id || item.id)}_${index}`}
+                    keyExtractor={(item) => String(item._id || item.id)}
                     contentContainerStyle={{ paddingBottom: BOTTOM_NAV_HEIGHT + 24 }}
                     renderItem={({ item }) => {
                         const tradeId = item._id || item.id;
