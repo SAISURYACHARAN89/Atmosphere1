@@ -112,14 +112,13 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
                     AsyncStorage.setItem(EXPLORE_CACHE_KEY, JSON.stringify(deduped)).catch(() => { });
                 }
             } else {
-                // Prevent duplicates - compute newItems from previous state inside updater to avoid race
-                setExplorePosts(prev => {
-                    const existingIds = new Set(prev.map(item => String(item._id || item.id)));
-                    const newItems = data.filter((item: any) => !existingIds.has(String(item._id || item.id)));
-                    // update skip based on deduped items
+                // Prevent duplicates - compute newItems BEFORE setState to avoid closure issues
+                const existingIds = new Set(explorePosts.map(item => String(item._id || item.id)));
+                const newItems = data.filter((item: any) => !existingIds.has(String(item._id || item.id)));
+                if (newItems.length > 0) {
+                    setExplorePosts(prev => [...prev, ...newItems]);
                     setExploreSkip(s => s + newItems.length);
-                    return [...prev, ...newItems];
-                });
+                }
             }
 
             setExploreHasMore(data.length >= PAGE_SIZE);
@@ -158,13 +157,13 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ onPostPress, onUserPress, o
                 setSearchResults(deduped);
                 setSearchSkip(deduped.length);
             } else {
-                // Prevent duplicates - compute newItems from previous state inside updater to avoid race
-                setSearchResults(prev => {
-                    const existingIds = new Set(prev.map(item => String(item._id || item.id)));
-                    const newItems = data.filter((item: any) => !existingIds.has(String(item._id || item.id)));
+                // Prevent duplicates - compute newItems BEFORE setState to avoid closure issues
+                const existingIds = new Set(searchResults.map(item => String(item._id || item.id)));
+                const newItems = data.filter((item: any) => !existingIds.has(String(item._id || item.id)));
+                if (newItems.length > 0) {
+                    setSearchResults(prev => [...prev, ...newItems]);
                     setSearchSkip(s => s + newItems.length);
-                    return [...prev, ...newItems];
-                });
+                }
             }
             setSearchHasMore(data.length >= PAGE_SIZE);
 

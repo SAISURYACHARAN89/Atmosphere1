@@ -65,11 +65,11 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
     const [activeTab, setActiveTab] = useState<'Data' | 'Buy' | 'Sell' | 'Leaderboard'>(initialTab || 'Buy');
     const [searchValue, setSearchValue] = useState('');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [accountType, setAccountType] = useState<string>('personal'); // Track if user is investor
+    const [accountType, setAccountType] = useState<string | null>(null); // null = loading, show tabs by default
 
     // Buy/Sell specific states
     const [buyTrades, setBuyTrades] = useState<any[]>([]);
-    const [buyLoading, setBuyLoading] = useState(true);
+    const [buyLoading, setBuyLoading] = useState(false);
     const [investors, setInvestors] = useState<InvestorPortfolio[]>([]);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [investorsLoading, setInvestorsLoading] = useState<boolean>(true);
@@ -102,6 +102,13 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
             AsyncStorage.setItem('lastTradingTab', activeTab).catch(e => console.log(e));
         }
     }, [activeTab]);
+
+    // Initialize account type from cache to prevent layout shift
+    useEffect(() => {
+        AsyncStorage.getItem('role').then(role => {
+            if (role) setAccountType(role);
+        });
+    }, []);
 
     // Memoized style objects to avoid inline styles in JSX (reduces eslint warnings)
     const centeredLoaderStyle = useMemo(() => ({ flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const }), []);
@@ -475,8 +482,8 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
     // Trigger fetch on initial load or filter change
     useEffect(() => {
         if (!buyInitialLoadDone) return;
-        // Prevent fetching if already loading
-        if (buyLoading) return;
+        // Don't block initial fetch - only block if we're already loading on subsequent fetches
+        if (buyLoading && !isFirstLoad) return;
 
         // Debounce only if searching
         if (searchValue) {
@@ -1561,8 +1568,8 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
         <SafeAreaView style={styles.container}>
             {/* Fixed header */}
             <View style={styles.headerContainer}>
-                {/* Swipeable tabs with underline indicator - Show for investors and startups */}
-                {(accountType === 'investor' || accountType === 'startup') && (
+                {/* Swipeable tabs with underline indicator - Show unless personal account */}
+                {accountType !== 'personal' && (
                     <View style={styles.tabsRow}>
                         <TouchableOpacity
                             style={styles.tabItem}
@@ -1608,7 +1615,7 @@ const Trading = ({ initialTab, onTabChange, onChatSelect, onOpenProfile }: Tradi
                 }}
                 onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                    { useNativeDriver: false }
+                    { useNativeDriver: true }
                 )}
                 scrollEventThrottle={16}
                 style={flexOneStyle}

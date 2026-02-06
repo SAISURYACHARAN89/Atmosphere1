@@ -14,6 +14,7 @@ import {
     RefreshControl,
     ScrollView,
     Animated,
+    InteractionManager,
 } from 'react-native';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -36,17 +37,22 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
     const [grants, setGrants] = useState<any[]>([]);
     const [grantsSkip, setGrantsSkip] = useState(0);
     const [grantsHasMore, setGrantsHasMore] = useState(true);
-    const [grantsLoading, setGrantsLoading] = useState(true);
+    const [grantsLoading, setGrantsLoading] = useState(false);
 
     const [events, setEvents] = useState<any[]>([]);
     const [eventsSkip, setEventsSkip] = useState(0);
     const [eventsHasMore, setEventsHasMore] = useState(true);
-    const [eventsLoading, setEventsLoading] = useState(true);
+    const [eventsLoading, setEventsLoading] = useState(false);
 
     const [team, setTeam] = useState<any[]>([]);
     const [teamSkip, setTeamSkip] = useState(0);
     const [teamHasMore, setTeamHasMore] = useState(true);
-    const [teamLoading, setTeamLoading] = useState(true);
+    const [teamLoading, setTeamLoading] = useState(false);
+
+    // Use refs for loading guards to prevent concurrent fetches
+    const grantsLoadingRef = React.useRef(false);
+    const eventsLoadingRef = React.useRef(false);
+    const teamLoadingRef = React.useRef(false);
 
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [userRole, setUserRole] = useState('');
@@ -139,38 +145,59 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         });
     }, [team, filters.teamSector, filters.teamLocation, filters.teamRemote, filters.teamEmployment]);
 
-    // Initial Load
+    // Initial Load - Fast cache load without delays
     useEffect(() => {
         let mounted = true;
-        (async () => {
+
+        const loadInitialData = async () => {
             try {
-                const [[cachedGrants, cachedEvents, cachedTeam], role] = await Promise.all([
-                    Promise.all([
-                        AsyncStorage.getItem('ATMOSPHERE_GRANTS_CACHE'),
-                        AsyncStorage.getItem('ATMOSPHERE_EVENTS_CACHE'),
-                        AsyncStorage.getItem('ATMOSPHERE_TEAM_CACHE'),
-                    ]),
-                    api.fetchAndStoreUserRole().catch(() => AsyncStorage.getItem('role')),
+                // Load all caches in parallel - fast and non-blocking
+                const [grantsCache, eventsCache, teamCache, roleCache] = await Promise.all([
+                    AsyncStorage.getItem('ATMOSPHERE_GRANTS_CACHE'),
+                    AsyncStorage.getItem('ATMOSPHERE_EVENTS_CACHE'),
+                    AsyncStorage.getItem('ATMOSPHERE_TEAM_CACHE'),
+                    AsyncStorage.getItem('role')
                 ]);
 
                 if (mounted) {
-                    if (role) setUserRole(role);
-                    if (cachedGrants) setGrants(JSON.parse(cachedGrants));
-                    if (cachedEvents) setEvents(JSON.parse(cachedEvents));
-                    if (cachedTeam) setTeam(JSON.parse(cachedTeam));
+                    // Parse and set cached data
+                    if (grantsCache) {
+                        try { setGrants(JSON.parse(grantsCache)); } catch (e) { }
+                    }
+                    if (eventsCache) {
+                        try { setEvents(JSON.parse(eventsCache)); } catch (e) { }
+                    }
+                    if (teamCache) {
+                        try { setTeam(JSON.parse(teamCache)); } catch (e) { }
+                    }
+                    if (roleCache) setUserRole(roleCache);
+
+                    // Mark as done immediately
+                    setInitialLoadDone(true);
                 }
+
+                // Fetch user role in background
+                api.fetchAndStoreUserRole().then((role: string) => {
+                    if (mounted && role) setUserRole(role);
+                }).catch(() => { });
+
             } catch (e) {
                 console.warn('Initialization error', e);
-            } finally {
                 if (mounted) setInitialLoadDone(true);
             }
-        })();
+        };
+
+        loadInitialData();
+
         return () => { mounted = false; };
     }, []);
 
-    // Load functions
+    // Load functions - use empty deps to prevent infinite loops
+    // Use refs for loading guards since state can't be read reliably in async callbacks
     const loadGrants = useCallback(async (skip = 0) => {
-        if (grantsLoading && skip > 0) return;
+        // Guard against concurrent fetches using ref
+        if (grantsLoadingRef.current && skip > 0) return;
+        grantsLoadingRef.current = true;
         setGrantsLoading(true);
         try {
             const data = await api.fetchGrants(LIMIT, skip);
@@ -190,12 +217,14 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         } catch (e) {
             console.warn('Grants load fail', e);
         } finally {
+            grantsLoadingRef.current = false;
             setGrantsLoading(false);
         }
-    }, [grantsLoading]);
+    }, []);
 
     const loadEvents = useCallback(async (skip = 0) => {
-        if (eventsLoading && skip > 0) return;
+        if (eventsLoadingRef.current && skip > 0) return;
+        eventsLoadingRef.current = true;
         setEventsLoading(true);
         try {
             const data = await api.fetchEvents(LIMIT, skip);
@@ -215,12 +244,14 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         } catch (e) {
             console.warn('Events load fail', e);
         } finally {
+            eventsLoadingRef.current = false;
             setEventsLoading(false);
         }
-    }, [eventsLoading]);
+    }, []);
 
     const loadTeam = useCallback(async (skip = 0) => {
-        if (teamLoading && skip > 0) return;
+        if (teamLoadingRef.current && skip > 0) return;
+        teamLoadingRef.current = true;
         setTeamLoading(true);
         try {
             const data = await api.fetchJobs(LIMIT, skip);
@@ -240,9 +271,10 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         } catch (e) {
             console.warn('Team load fail', e);
         } finally {
+            teamLoadingRef.current = false;
             setTeamLoading(false);
         }
-    }, [teamLoading]);
+    }, []);
 
     // Trigger fetches based on active tab
     useEffect(() => {
@@ -456,11 +488,13 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
 
         // Show skeleton in ListEmptyComponent instead of early return
         // This ensures headers are always visible
+        // Only show data if we have it OR if initial load is done and not loading
+        const shouldShowData = data.length > 0 && (!loading || !initialLoadDone);
 
         return (
             <View style={{ width }}>
                 <FlatList
-                    data={loading ? [] : data}
+                    data={shouldShowData ? data : []}
                     keyExtractor={(item) => String(item._id || item.id)}
                     contentContainerStyle={styles.listContent}
                     renderItem={({ item }) => {
@@ -571,15 +605,18 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                         }
                         return null;
                     }}
-                    ListEmptyComponent={() => (
-                        loading ? (
-                            <OpportunitySkeleton />
-                        ) : (
+                    ListEmptyComponent={() => {
+                        // Show skeleton during initial load or when actively loading with no data
+                        if (!initialLoadDone || (loading && data.length === 0)) {
+                            return <OpportunitySkeleton />;
+                        }
+                        // Show empty message only when done loading and truly no data
+                        return (
                             <View style={{ paddingTop: 40, alignItems: 'center' }}>
                                 <Text style={styles.emptyText}>No {tabName.toLowerCase()} found.</Text>
                             </View>
-                        )
-                    )}
+                        );
+                    }}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}

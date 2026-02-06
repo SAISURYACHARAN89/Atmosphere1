@@ -118,7 +118,15 @@ const styles = StyleSheet.create({
         marginBottom: ITEM_SPACING,
         marginRight: ITEM_SPACING,
         backgroundColor: '#111',
-    }
+        position: 'relative',
+    },
+    internalLines: {
+        position: 'absolute',
+        bottom: 6,
+        left: 6,
+        right: 6,
+        zIndex: 2,
+    },
 });
 
 export default ProfileSkeleton;
