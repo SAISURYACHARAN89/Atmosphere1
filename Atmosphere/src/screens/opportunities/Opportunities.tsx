@@ -14,7 +14,6 @@ import {
     RefreshControl,
     ScrollView,
     Animated,
-    InteractionManager,
 } from 'react-native';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,32 +26,26 @@ import GrantEventCard from './components/GrantEventCard';
 import RoleCard from './components/RoleCard';
 import FilterModal from './components/FilterModal';
 import styles from './Opportunities.styles';
-import OpportunitySkeleton from '../../components/skeletons/OpportunitySkeleton';
 
 const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void }) => {
     const { theme } = useContext(ThemeContext) as any;
     const [activeTab, setActiveTab] = useState('Grants');
 
-    // Data states - LOADING DEFAULTS TO TRUE so skeleton shows immediately
+    // Data states
     const [grants, setGrants] = useState<any[]>([]);
     const [grantsSkip, setGrantsSkip] = useState(0);
     const [grantsHasMore, setGrantsHasMore] = useState(true);
-    const [grantsLoading, setGrantsLoading] = useState(true); // Default TRUE
+    const [grantsLoading, setGrantsLoading] = useState(false);
 
     const [events, setEvents] = useState<any[]>([]);
     const [eventsSkip, setEventsSkip] = useState(0);
     const [eventsHasMore, setEventsHasMore] = useState(true);
-    const [eventsLoading, setEventsLoading] = useState(true); // Default TRUE
+    const [eventsLoading, setEventsLoading] = useState(false);
 
     const [team, setTeam] = useState<any[]>([]);
     const [teamSkip, setTeamSkip] = useState(0);
     const [teamHasMore, setTeamHasMore] = useState(true);
-    const [teamLoading, setTeamLoading] = useState(true); // Default TRUE
-
-    // Use refs for loading guards to prevent concurrent fetches
-    const grantsLoadingRef = React.useRef(false);
-    const eventsLoadingRef = React.useRef(false);
-    const teamLoadingRef = React.useRef(false);
+    const [teamLoading, setTeamLoading] = useState(false);
 
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [userRole, setUserRole] = useState('');
@@ -145,98 +138,38 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         });
     }, [team, filters.teamSector, filters.teamLocation, filters.teamRemote, filters.teamEmployment]);
 
-    // Initial Load - ALL TABS IN PARALLEL (fast)
+    // Initial Load
     useEffect(() => {
         let mounted = true;
-
-        // Load GRANTS
-        const loadGrants = async () => {
-            const cache = await AsyncStorage.getItem('ATMOSPHERE_GRANTS_CACHE');
-            if (cache) {
-                try {
-                    if (mounted) { setGrants(JSON.parse(cache)); setGrantsLoading(false); }
-                    return; // Cache hit, done
-                } catch (e) { /* Invalid cache, fall through to fetch */ }
-            }
-            // Fetch fresh
+        (async () => {
             try {
-                const data = await api.fetchGrants(LIMIT, 0);
+                const [[cachedGrants, cachedEvents, cachedTeam], role] = await Promise.all([
+                    Promise.all([
+                        AsyncStorage.getItem('ATMOSPHERE_GRANTS_CACHE'),
+                        AsyncStorage.getItem('ATMOSPHERE_EVENTS_CACHE'),
+                        AsyncStorage.getItem('ATMOSPHERE_TEAM_CACHE'),
+                    ]),
+                    api.fetchAndStoreUserRole().catch(() => AsyncStorage.getItem('role')),
+                ]);
+
                 if (mounted) {
-                    setGrants(data);
-                    setGrantsSkip(LIMIT);
-                    setGrantsHasMore(data.length >= LIMIT);
-                    setGrantsLoading(false);
-                    AsyncStorage.setItem('ATMOSPHERE_GRANTS_CACHE', JSON.stringify(data)).catch(() => { });
+                    if (role) setUserRole(role);
+                    if (cachedGrants) setGrants(JSON.parse(cachedGrants));
+                    if (cachedEvents) setEvents(JSON.parse(cachedEvents));
+                    if (cachedTeam) setTeam(JSON.parse(cachedTeam));
                 }
             } catch (e) {
-                if (mounted) setGrantsLoading(false);
+                console.warn('Initialization error', e);
+            } finally {
+                if (mounted) setInitialLoadDone(true);
             }
-        };
-
-        // Load EVENTS
-        const loadEvents = async () => {
-            const cache = await AsyncStorage.getItem('ATMOSPHERE_EVENTS_CACHE');
-            if (cache) {
-                try {
-                    if (mounted) { setEvents(JSON.parse(cache)); setEventsLoading(false); }
-                    return;
-                } catch (e) { }
-            }
-            try {
-                const data = await api.fetchEvents(LIMIT, 0);
-                if (mounted) {
-                    setEvents(data);
-                    setEventsSkip(LIMIT);
-                    setEventsHasMore(data.length >= LIMIT);
-                    setEventsLoading(false);
-                    AsyncStorage.setItem('ATMOSPHERE_EVENTS_CACHE', JSON.stringify(data)).catch(() => { });
-                }
-            } catch (e) {
-                if (mounted) setEventsLoading(false);
-            }
-        };
-
-        // Load JOBS
-        const loadJobs = async () => {
-            const cache = await AsyncStorage.getItem('ATMOSPHERE_TEAM_CACHE');
-            if (cache) {
-                try {
-                    if (mounted) { setTeam(JSON.parse(cache)); setTeamLoading(false); }
-                    return;
-                } catch (e) { }
-            }
-            try {
-                const data = await api.fetchJobPostings(LIMIT, 0);
-                if (mounted) {
-                    setTeam(data);
-                    setTeamSkip(LIMIT);
-                    setTeamHasMore(data.length >= LIMIT);
-                    setTeamLoading(false);
-                    AsyncStorage.setItem('ATMOSPHERE_TEAM_CACHE', JSON.stringify(data)).catch(() => { });
-                }
-            } catch (e) {
-                if (mounted) setTeamLoading(false);
-            }
-        };
-
-        // Role loading (non-blocking)
-        AsyncStorage.getItem('role').then(r => { if (mounted && r) setUserRole(r); });
-        api.fetchAndStoreUserRole().then((r: string) => { if (mounted && r) setUserRole(r); }).catch(() => { });
-
-        // Run ALL THREE in parallel - page renders fast, data appears as it arrives
-        Promise.all([loadGrants(), loadEvents(), loadJobs()]).then(() => {
-            if (mounted) setInitialLoadDone(true);
-        });
-
+        })();
         return () => { mounted = false; };
     }, []);
 
-    // Load functions - use empty deps to prevent infinite loops
-    // Use refs for loading guards since state can't be read reliably in async callbacks
+    // Load functions
     const loadGrants = useCallback(async (skip = 0) => {
-        // Guard against concurrent fetches using ref
-        if (grantsLoadingRef.current && skip > 0) return;
-        grantsLoadingRef.current = true;
+        if (grantsLoading && skip > 0) return;
         setGrantsLoading(true);
         try {
             const data = await api.fetchGrants(LIMIT, skip);
@@ -256,14 +189,12 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         } catch (e) {
             console.warn('Grants load fail', e);
         } finally {
-            grantsLoadingRef.current = false;
             setGrantsLoading(false);
         }
-    }, []);
+    }, [grantsLoading]);
 
     const loadEvents = useCallback(async (skip = 0) => {
-        if (eventsLoadingRef.current && skip > 0) return;
-        eventsLoadingRef.current = true;
+        if (eventsLoading && skip > 0) return;
         setEventsLoading(true);
         try {
             const data = await api.fetchEvents(LIMIT, skip);
@@ -283,14 +214,12 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         } catch (e) {
             console.warn('Events load fail', e);
         } finally {
-            eventsLoadingRef.current = false;
             setEventsLoading(false);
         }
-    }, []);
+    }, [eventsLoading]);
 
     const loadTeam = useCallback(async (skip = 0) => {
-        if (teamLoadingRef.current && skip > 0) return;
-        teamLoadingRef.current = true;
+        if (teamLoading && skip > 0) return;
         setTeamLoading(true);
         try {
             const data = await api.fetchJobs(LIMIT, skip);
@@ -310,12 +239,22 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
         } catch (e) {
             console.warn('Team load fail', e);
         } finally {
-            teamLoadingRef.current = false;
             setTeamLoading(false);
         }
-    }, []);
+    }, [teamLoading]);
 
-    // Removed redundant useEffect - init() now handles cache-first logic
+    // Trigger fetches based on active tab
+    useEffect(() => {
+        if (!initialLoadDone) return;
+
+        if (activeTab === 'Grants' && !grantsRefreshed) {
+            loadGrants(0);
+        } else if (activeTab === 'Events' && !eventsRefreshed) {
+            loadEvents(0);
+        } else if (activeTab === 'Jobs' && !teamRefreshed) {
+            loadTeam(0);
+        }
+    }, [initialLoadDone, activeTab, grantsRefreshed, eventsRefreshed, teamRefreshed, loadGrants, loadEvents, loadTeam]);
 
     const handleFormChange = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
 
@@ -514,11 +453,6 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
             }
         }
 
-        // Simple logic:
-        // - Show data if data.length > 0
-        // - Show skeleton if data.length === 0 AND loading === true
-        // - Show empty message if data.length === 0 AND loading === false
-
         return (
             <View style={{ width }}>
                 <FlatList
@@ -565,6 +499,17 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                             />
                         );
                     }}
+                    onEndReached={loadMore}
+                    onEndReachedThreshold={0.5}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={theme.primary}
+                            title="Release to refresh"
+                            titleColor={theme.text}
+                        />
+                    }
                     ListHeaderComponent={() => (
                         <View>
                             {tabName === 'Jobs' && (
@@ -615,8 +560,8 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                             <View style={styles.listHeader}>
                                 <Text style={styles.resultCount}>
                                     {tabName === 'Jobs'
-                                        ? loading ? 'Loading positions...' : `${data.length} position${data.length !== 1 ? 's' : ''} available`
-                                        : loading ? `Loading ${tabName.toLowerCase()}...` : `${data.length} ${tabName.toLowerCase()} available`}
+                                        ? `${data.length} position${data.length !== 1 ? 's' : ''} available`
+                                        : `Total ${tabName.toLowerCase()}: ${data.length}`}
                                 </Text>
                                 <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={styles.filterIconBtn}>
                                     <IconFA name="filter" size={18} color="#fff" />
@@ -633,29 +578,15 @@ const Opportunities = ({ onNavigate }: { onNavigate?: (route: string) => void })
                         }
                         return null;
                     }}
-                    ListEmptyComponent={() => {
-                        // Show skeleton only if data is empty AND loading
-                        if (loading) {
-                            return <OpportunitySkeleton />;
-                        }
-                        // Show empty message if data is empty AND not loading
-                        return (
-                            <View style={{ paddingTop: 40, alignItems: 'center' }}>
+                    ListEmptyComponent={() => (
+                        <View style={{ paddingTop: 40, alignItems: 'center' }}>
+                            {loading ? (
+                                <ActivityIndicator size="large" color={theme.primary} />
+                            ) : (
                                 <Text style={styles.emptyText}>No {tabName.toLowerCase()} found.</Text>
-                            </View>
-                        );
-                    }}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            tintColor={theme.primary}
-                            title="Release to refresh"
-                            titleColor={theme.text}
-                        />
-                    }
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.8}
+                            )}
+                        </View>
+                    )}
                 />
             </View>
         );
