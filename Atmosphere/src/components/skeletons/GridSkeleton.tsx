@@ -7,17 +7,22 @@ const ITEM_SPACING = 2;
 const NUM_COLUMNS = 3;
 const ITEM_WIDTH = (width - (ITEM_SPACING * (NUM_COLUMNS - 1))) / NUM_COLUMNS;
 
-const GridSkeleton = () => {
+const GridSkeleton = ({ containerWidth }: { containerWidth?: number }) => {
     // Render enough items to fill a screen or two
     const items = Array.from({ length: 18 });
 
+    // Use prop width or window width
+    const totalWidth = containerWidth || width;
+    // Use floor to ensure we don't exceed width due to sub-pixel rounding
+    const itemWidth = Math.floor((totalWidth - (ITEM_SPACING * (NUM_COLUMNS - 1))) / NUM_COLUMNS);
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { width: totalWidth }]}>
             {items.map((_, index) => {
                 // No right margin on last column of each row
                 const isLastColumn = (index + 1) % NUM_COLUMNS === 0;
                 return (
-                    <View key={index} style={[styles.itemContainer, isLastColumn && { marginRight: 0 }]}>
+                    <View key={index} style={[styles.itemContainer, { width: itemWidth }, isLastColumn && { marginRight: 0 }]}>
                         <View style={styles.itemBackground} />
                         <SkeletonItem width="100%" height="100%" borderRadius={2} style={styles.skeletonAbove} />
                         {/* Add internal lines for better visual */}

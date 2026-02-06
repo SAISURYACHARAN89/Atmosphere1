@@ -257,7 +257,7 @@ export default function ProfilePager({
                         <View onLayout={(e) => handleLayout('posts', e)} style={{ width: '100%' }}>
                             <View style={{ height: 12 }} />
                             {isLoading ? (
-                                <GridSkeleton />
+                                <GridSkeleton containerWidth={screenW} />
                             ) : combinedContent.length === 0 ? (
                                 <View style={styles.pagerEmpty}>
                                     <Text style={[styles.emptyTitle, { color: theme.text }]}>No posts yet</Text>

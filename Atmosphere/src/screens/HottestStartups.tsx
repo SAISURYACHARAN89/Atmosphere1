@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Platform, StatusBar } from 'react-native';
 import { Image } from 'react-native';
-import { Crown, Heart, Flame } from 'lucide-react-native';
+import { Crown, Heart, Flame, ChevronRight } from 'lucide-react-native';
 import * as api from '../lib/api';
 import { ThemeContext } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -27,6 +27,8 @@ const HottestStartups = ({ onOpenProfile }: HottestStartupsProps) => {
 
     const CACHE_KEY = 'ATMOSPHERE_HOTTEST_STARTUPS_CACHE';
 
+    const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
+
     // Month names for display
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -45,6 +47,13 @@ const HottestStartups = ({ onOpenProfile }: HottestStartupsProps) => {
                         setSelectedWeek(cachedData.weekInfo.selectedWeek || cachedData.weekInfo.currentWeek || 1);
                         setCurrentMonth(cachedData.weekInfo.month ?? new Date().getMonth());
                     }
+                    if (cachedData.startups) {
+                        const newFollowed = new Set<string>();
+                        cachedData.startups.forEach((s: any) => {
+                            if (s.isFollowing) newFollowed.add(String(s.user?._id || s.userId || s.user));
+                        });
+                        setFollowedIds(newFollowed);
+                    }
                     setLoading(false);
                 }
             } catch (e) { console.warn('HottestStartups: failed cache', e); }
@@ -62,6 +71,13 @@ const HottestStartups = ({ onOpenProfile }: HottestStartupsProps) => {
                     }
                     setCurrentMonth(result.weekInfo.month ?? new Date().getMonth());
                 }
+                const newFollowed = new Set<string>();
+                result.startups.forEach((s: any) => {
+                    const uid = String(s.user?._id || s.userId || s.user);
+                    if (s.isFollowing) newFollowed.add(uid);
+                });
+                setFollowedIds(newFollowed);
+
                 // Cache the result
                 AsyncStorage.setItem(CACHE_KEY, JSON.stringify(result)).catch(() => { });
             }
@@ -98,6 +114,31 @@ const HottestStartups = ({ onOpenProfile }: HottestStartupsProps) => {
         }
     };
 
+    const toggleFollow = async (userId: string) => {
+        if (!userId) return;
+        const isFollowing = followedIds.has(userId);
+
+        // Optimistic update
+        const next = new Set(followedIds);
+        if (isFollowing) next.delete(userId);
+        else next.add(userId);
+        setFollowedIds(next);
+
+        try {
+            if (isFollowing) await api.unfollowUser(userId);
+            else await api.followUser(userId);
+        } catch (e) {
+            console.warn('Failed to toggle follow', e);
+            // Revert on failure
+            setFollowedIds(prev => {
+                const corrected = new Set(prev);
+                if (isFollowing) corrected.add(userId);
+                else corrected.delete(userId);
+                return corrected;
+            });
+        }
+    };
+
     const shortOf = (s: any) => s?.about || s?.tagline || s?.shortDescription || s?.description || s?.details?.about || s?.details?.tagline || s?.details?.shortDescription || '';
 
     // Render week tabs
@@ -109,7 +150,10 @@ const HottestStartups = ({ onOpenProfile }: HottestStartupsProps) => {
 
         return (
             <View style={styles.weekTabsContainer}>
-                <Text style={[styles.monthLabel, { color: theme?.text }]}>{monthNames[currentMonth]} {'>'}</Text>
+                <View style={styles.monthContainer}>
+                    <Text style={[styles.monthLabel, { color: theme?.text }]}>{monthNames[currentMonth]}</Text>
+                    <ChevronRight size={22} color={theme?.placeholder || '#9CA3AF'} />
+                </View>
                 <View style={styles.weekTabs}>
                     {weeks.map((week) => (
                         <TouchableOpacity
@@ -139,6 +183,11 @@ const HottestStartups = ({ onOpenProfile }: HottestStartupsProps) => {
         const third = topList[2] || null;
         const initialsOf = (s: any) => s?.initials || (s?.name ? s.name.split(' ').map((p: string) => p.charAt(0)).slice(0, 2).join('').toUpperCase() : (s?.companyName ? s.companyName.charAt(0).toUpperCase() : ''));
         const avatarOf = (s: any) => s?.logo || s?.profileImage || s?.details?.profileImage || s?.user?.avatarUrl || s?.image || null;
+
+        // Helper for follow button on podium
+        // Note: Podium usually doesn't show follow button in this design, but if needed we can add.
+        // For now, keep card press logic.
+
         return (
             <View style={styles.podiumWrap}>
                 {/* 2nd */}
@@ -228,36 +277,55 @@ const HottestStartups = ({ onOpenProfile }: HottestStartupsProps) => {
         );
     };
 
-    const renderListItem = ({ item }: { item: any }) => (
-        <TouchableOpacity style={styles.listCard} onPress={() => handleCardPress(item)} activeOpacity={0.7}>
-            <View style={styles.listAvatar}>
-                {(item.logo || item.profileImage || item.details?.profileImage || item.user?.avatarUrl || item.image) ? (
-                    <Image source={{ uri: (item.logo || item.profileImage || item.details?.profileImage || item.user?.avatarUrl || item.image) }} style={styles.listImage} resizeMode="cover" />
-                ) : (
-                    <Text style={styles.listInitials}>{item.initials || (item.name ? item.name.charAt(0).toUpperCase() : (item.companyName ? item.companyName.charAt(0).toUpperCase() : '?'))}</Text>
-                )}
-            </View>
-            <View style={styles.listBody}>
-                <Text style={[styles.listName, { color: theme?.text }]} numberOfLines={1} ellipsizeMode="tail">{item.name || item.companyName || item.company?.name || '—'}</Text>
-                <Text style={[styles.listTag, { color: theme?.placeholder }]} numberOfLines={1} ellipsizeMode="tail">{shortOf(item)}</Text>
-                <View style={styles.likesRow}>
-                    <View style={styles.statPair}>
-                        <Crown size={14} color="#F59E0B" />
-                        <Text style={styles.likesText}>{item.weekCounts?.crowns ?? item.stats?.crowns ?? 0}</Text>
-                    </View>
-                    <View style={styles.statPair}>
-                        <Heart size={14} color="#F472B6" />
-                        <Text style={styles.likesText}>{item.weekCounts?.likes ?? item.stats?.likes ?? 0}</Text>
+    const renderListItem = ({ item }: { item: any }) => {
+        const userId = String(item.user?._id || item.userId || item.user);
+        const isFollowing = followedIds.has(userId);
+
+        return (
+            <TouchableOpacity style={styles.listCard} onPress={() => handleCardPress(item)} activeOpacity={0.7}>
+                <View style={styles.listAvatar}>
+                    {(item.logo || item.profileImage || item.details?.profileImage || item.user?.avatarUrl || item.image) ? (
+                        <Image source={{ uri: (item.logo || item.profileImage || item.details?.profileImage || item.user?.avatarUrl || item.image) }} style={styles.listImage} resizeMode="cover" />
+                    ) : (
+                        <Text style={styles.listInitials}>{item.initials || (item.name ? item.name.charAt(0).toUpperCase() : (item.companyName ? item.companyName.charAt(0).toUpperCase() : '?'))}</Text>
+                    )}
+                </View>
+                <View style={styles.listBody}>
+                    <Text style={[styles.listName, { color: theme?.text }]} numberOfLines={1} ellipsizeMode="tail">{item.name || item.companyName || item.company?.name || '—'}</Text>
+                    <Text style={[styles.listTag, { color: theme?.placeholder }]} numberOfLines={1} ellipsizeMode="tail">{shortOf(item)}</Text>
+                    <View style={styles.likesRow}>
+                        <View style={styles.statPair}>
+                            <Crown size={14} color="#F59E0B" />
+                            <Text style={styles.likesText}>{item.weekCounts?.crowns ?? item.stats?.crowns ?? 0}</Text>
+                        </View>
+                        <View style={styles.statPair}>
+                            <Heart size={14} color="#F472B6" />
+                            <Text style={styles.likesText}>{item.weekCounts?.likes ?? item.stats?.likes ?? 0}</Text>
+                        </View>
                     </View>
                 </View>
-            </View>
-            <View style={styles.actionsRight}>
-                <TouchableOpacity style={styles.viewBtn} onPress={(e) => { e.stopPropagation(); /* navigate to profile */ }}>
-                    <Text style={styles.viewBtnText}>View {'>'}</Text>
-                </TouchableOpacity>
-            </View>
-        </TouchableOpacity>
-    );
+                <View style={styles.actionsRight}>
+                    <TouchableOpacity
+                        style={[
+                            styles.followBtn,
+                            !isFollowing ? styles.followBtnPrimary : styles.followBtnOutline
+                        ]}
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            toggleFollow(userId);
+                        }}
+                    >
+                        <Text style={[
+                            styles.followBtnText,
+                            !isFollowing ? styles.followBtnTextPrimary : styles.followBtnTextOutline
+                        ]}>
+                            {isFollowing ? 'Unfollow' : 'Follow'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </TouchableOpacity>
+        );
+    };
 
     if (loading) {
         return <HottestSkeleton />;
@@ -309,10 +377,11 @@ const styles = StyleSheet.create({
     heading: { color: '#fff', fontSize: 20, fontWeight: '700', marginTop: 8 },
     sub: { color: '#9CA3AF', fontSize: 12, textAlign: 'center', marginTop: 6, maxWidth: width - 40 },
     // Week tabs styles
-    weekTabsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16, gap: 8 },
+    weekTabsContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, width: '100%', paddingHorizontal: 8 },
+    monthContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     monthLabel: { fontSize: 16, fontWeight: '600', color: '#fff' },
-    weekTabs: { flexDirection: 'row', gap: 8 },
-    weekTab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: 'transparent' },
+    weekTabs: { flexDirection: 'row', flex: 1, marginLeft: 16 },
+    weekTab: { marginRight: '15%', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: 'transparent' },
     weekTabActive: { backgroundColor: '#F59E0B' },
     weekTabText: { fontSize: 14, fontWeight: '600' },
     // Podium styles
@@ -364,6 +433,13 @@ const styles = StyleSheet.create({
     medalBronze: { borderWidth: 3, borderColor: '#CD7F32' },
     championGold: { borderColor: '#FBBF24', borderWidth: 4 },
     headerHeadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+    // Follow button styles
+    followBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 24, marginLeft: 8, minWidth: 90, alignItems: 'center', justifyContent: 'center' },
+    followBtnPrimary: { backgroundColor: '#ffffffff' },
+    followBtnOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#9CA3AF' },
+    followBtnText: { fontWeight: '600', fontSize: 13 },
+    followBtnTextPrimary: { color: '#000' },
+    followBtnTextOutline: { color: '#fff' },
 });
 
 export default HottestStartups;
