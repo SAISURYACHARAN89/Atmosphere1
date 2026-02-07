@@ -1,8 +1,25 @@
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 
-const sesClient = new SESClient({
-    region: process.env.AWS_REGION,
-});
+const getSESClient = () => {
+    const config = {
+        region: process.env.AWS_SES_REGION || process.env.AWS_REGION || 'ap-south-1',
+    };
+
+    // Use separate SES credentials if provided
+    if (process.env.AWS_SES_ACCESS_KEY_ID && process.env.AWS_SES_SECRET_ACCESS_KEY) {
+        config.credentials = {
+            accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
+        };
+        console.log('Using dedicated SES credentials');
+    } else {
+        console.log('Using default AWS credential chain for SES');
+    }
+
+    return new SESClient(config);
+};
+
+const sesClient = getSESClient();
 
 const sendEmail = async (to, subject, html) => {
     if (process.env.OTP_MODE === 'dev') {
