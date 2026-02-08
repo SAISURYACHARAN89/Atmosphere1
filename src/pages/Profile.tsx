@@ -41,7 +41,6 @@ const Profile = () => {
   const navigate = useNavigate();
   const { data: profileData } = useGetProfile();
   const { data: myPostsData } = useMyPosts();
-  console.log("Profile Data:", myPostsData);
   const isNewAccount = localStorage.getItem("newAccount") === "true";
   const profileSetupComplete =
     localStorage.getItem("profileSetupComplete") === "true";

@@ -56,12 +56,9 @@ export async function getPostLikes(postId: string) {
 
 export async function addComment(
   postId: string,
-  payload: { text: string; parent?: string }
+  payload: { text: string; parent?: string },
 ) {
-  return axiosClient.post(
-    COMMENT_ENDPOINTS.COMMENTS(postId),
-    payload
-  );
+  return axiosClient.post(COMMENT_ENDPOINTS.COMMENTS(postId), payload);
 }
 
 export async function getComments(postId: string) {
@@ -69,15 +66,11 @@ export async function getComments(postId: string) {
 }
 
 export async function deleteComment(commentId: string) {
-  return axiosClient.delete(
-    COMMENT_ENDPOINTS.DELETE_COMMENT(commentId)
-  );
+  return axiosClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT(commentId));
 }
 
 export async function getCommentReplies(commentId: string) {
-  return axiosClient.get(
-    COMMENT_ENDPOINTS.REPLIES(commentId)
-  );
+  return axiosClient.get(COMMENT_ENDPOINTS.REPLIES(commentId));
 }
 
 /* ---------------- CROWNS ---------------- */
@@ -104,23 +97,19 @@ export async function sharePost(payload: {
 }
 
 export async function checkPostShared(postId: string) {
-  return axiosClient.get(
-    SHARE_ENDPOINTS.CHECK_SHARE(postId)
-  );
+  return axiosClient.get(SHARE_ENDPOINTS.CHECK_SHARE(postId));
 }
 
 /* ---------------- SAVED POSTS ---------------- */
 
 export async function savePost(payload: { postId: string }) {
-  return axiosClient.post(SAVED_ENDPOINTS.SAVED, payload);
+  return axiosClient.post(SAVED_ENDPOINTS.SAVE, payload);
 }
 
 export async function fetchSavedPosts() {
-  return axiosClient.get(SAVED_ENDPOINTS.SAVED);
+  return axiosClient.get(SAVED_ENDPOINTS.SAVE);
 }
 
 export async function unsavePost(savedId: string) {
-  return axiosClient.delete(
-    SAVED_ENDPOINTS.DELETE_SAVED(savedId)
-  );
+  return axiosClient.delete(SAVED_ENDPOINTS.DELETE(savedId));
 }

@@ -11,9 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { toast } from "sonner";
 import { VerificationFlow } from "@/components/VerificationFlow";
+import { useGetProfile } from "@/hooks/profile/useGetProfile";
 
 const Settings = () => {
   const navigate = useNavigate();
+
+  const {data: userData}= useGetProfile();
+  console.log(userData)
   
   // Account Information Drawers
   const [nameDrawerOpen, setNameDrawerOpen] = useState(false);

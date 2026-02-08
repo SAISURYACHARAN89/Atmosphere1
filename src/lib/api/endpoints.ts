@@ -46,6 +46,23 @@ export const USER_ENDPOINTS = {
 };
 
 
+/* ================= Chat ================= */
+export const CHAT_ENDPOINTS = {
+  // Fetch chats / create chat
+  LIST: "/api/chats",
+
+  // Create group chat
+  CREATE_GROUP: "/api/chats/create-group",
+
+  // Chat details
+  DETAIL: (chatId: string) => `/api/chats/${chatId}`,
+
+  // Send messages
+  MESSAGES: (chatId: string) =>
+    `/api/messages/${chatId}`,
+};
+
+
 /* ================= POSTS ================= */
 
 export const POST_ENDPOINTS = {
@@ -54,6 +71,37 @@ export const POST_ENDPOINTS = {
   POST_BY_ID: (postId: string) =>
     `/api/posts/${encodeURIComponent(postId)}`,
 };
+
+/* ================= POSTS ================= */
+export const REEL_ENDPOINTS = {
+  LIST: "/api/reels",
+  DETAIL: (id: string) => `/api/reels/${id}`,
+  USER_REELS: (userId: string) =>
+    `/api/reels/user/${userId}`,
+
+  LIKE: (id: string) => `/api/reels/${id}/like`,
+
+  COMMENTS: (id: string) =>
+    `/api/reels/${id}/comments`,
+  COMMENT: (id: string) =>
+    `/api/reels/comments/${id}`,
+  REPLIES: (id: string) =>
+    `/api/reels/comments/${id}/replies`,
+
+  SHARE: (id: string) =>
+    `/api/reels/${id}/share`,
+  SHARE_CHECK: (id: string) =>
+    `/api/reels/${id}/share/check`,
+};
+
+/* ================= SAVED POSTS ================= */
+export const SAVED_ENDPOINTS = {
+  SAVE: "/api/saved",
+  DELETE: (id: string) => `/api/saved/${id}`,
+  CHECK: (id: string) =>
+    `/api/saved/check/${id}`,
+};
+
 
 
 /* ================= LIKES ================= */
@@ -90,15 +138,49 @@ export const CROWN_ENDPOINTS = {
 
 export const SHARE_ENDPOINTS = {
   SHARES: "/api/shares",
+  SEND: "/api/shares/send",
   CHECK_SHARE: (postId: string) =>
     `/api/shares/check/${encodeURIComponent(postId)}`,
 };
 
 
-/* ================= SAVED POSTS ================= */
-
-export const SAVED_ENDPOINTS = {
-  SAVED: "/api/saved",
-  DELETE_SAVED: (savedId: string) =>
-    `/api/saved/${encodeURIComponent(savedId)}`,
+export const NOTIFICATION_ENDPOINTS = {
+  LIST: "/api/notifications",
+  READ: (id: string) => `/api/notifications/${id}/read`,
+  READ_ALL: "/api/notifications/read-all",
 };
+
+export const SETTINGS_ENDPOINTS = {
+  SETTINGS: "/api/settings",
+  PASSWORD: "/api/settings/password",
+  KYC: "/api/settings/kyc",
+};
+
+export const JOB_ENDPOINTS = {
+  LIST: "/api/jobs",
+  DETAIL: (id: string) => `/api/jobs/${id}`,
+  APPLY: (id: string) => `/api/jobs/${id}/apply`,
+  MY_APPLIED: "/api/jobs/my-applied",
+  MY_POSTED: "/api/jobs/my-posted",
+  APPLICANTS: (id: string) => `/api/jobs/${id}/applicants`,
+  EXPORT_APPLICANTS: (id: string) =>
+    `/api/jobs/${id}/applicants/export`,
+};
+
+export const MISC_ENDPOINTS = {
+  GRANTS: "/api/grants",
+  EVENTS: "/api/events",
+  SEARCH: "/api/search",
+};
+
+export const TEAM_ENDPOINTS = {
+  LIST: "/api/my-team",
+  MEMBER: (id: string) => `/api/my-team/${id}`,
+};
+
+export const UPLOAD_ENDPOINTS = {
+  IMAGE: "/api/upload",
+  DOCUMENT: "/api/upload/document",
+  VIDEO: "/api/upload/video",
+};
+

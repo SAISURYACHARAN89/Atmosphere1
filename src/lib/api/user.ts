@@ -29,7 +29,7 @@ async function fetchAndStoreUser() {
 }
 
 
-async function updateProfile(payload: any) {
+async function updateProfile(payload: unknown) {
   return axiosClient.put(USER_ENDPOINTS.PROFILE, payload);
 }
 
