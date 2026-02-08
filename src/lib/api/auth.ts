@@ -5,6 +5,7 @@
 import { ZLoginResponse, ZUserSchema } from "@/types/auth";
 import axiosClient from "./axiosClient";
 import { AUTH_ENDPOINTS, USER_ENDPOINTS } from "./endpoints";
+import Cookies from "js-cookie";
 
 /**
  * Login
@@ -16,7 +17,11 @@ export async function login(email: string, password: string) {
   });
 
   if (data?.token) {
-    localStorage.setItem("token", data.token);
+    Cookies.set("token", data.token, {
+      expires: 7,
+      secure: true,
+      sameSite: "strict",
+    });
   }
 
   return data.user;

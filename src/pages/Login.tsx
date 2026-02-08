@@ -23,7 +23,6 @@ const Login = () => {
           navigate("/");
         },
         onError: (err: Error) => {
-          console.log("Login error:", err);
           toast.error(err.message);
         },
       },

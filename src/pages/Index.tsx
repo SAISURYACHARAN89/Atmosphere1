@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import StartupPost from "@/components/StartupPost";
 // import Stories from "@/components/Stories";
 import { Separator } from "@/components/ui/separator";
+import Cookies from "js-cookie";
 
 const mockStartups = [
   {
@@ -128,12 +129,12 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      navigate("/login");
-    }
-  }, [navigate]);
+  const token = Cookies.get("token");
+
+  if (!token) {
+    navigate("/login");
+  }
+}, [navigate]);
 
   return (
     <div className="min-h-screen bg-background-subtle">
