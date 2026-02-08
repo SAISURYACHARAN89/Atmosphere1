@@ -94,20 +94,3 @@ export async function verifyEmail(code: string, email?: string) {
 export async function resendOtp(email: string) {
   return axiosClient.post(AUTH_ENDPOINTS.RESEND_OTP, { email });
 }
-
-/**
- * Fetch & store user role
- */
-export async function fetchAndStoreUserRole() {
-  const data = await axiosClient.get(USER_ENDPOINTS.PROFILE);
-
-  let role = "";
-
-  if (Array.isArray(data?.user?.roles)) role = data.user.roles[0] || "";
-  else if (Array.isArray(data?.roles)) role = data.roles[0] || "";
-  else role = data?.user?.roles || data?.roles || "";
-
-  if (role) localStorage.setItem("role", role);
-
-  return role;
-}

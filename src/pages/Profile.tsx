@@ -1,48 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TopBar from "@/components/TopBar";
 import BottomNav from "@/components/BottomNav";
 import CreatePost from "@/components/CreatePost";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   Menu,
-  MapPin,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
+  MapPin, DollarSign,
   Target,
-  Activity,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  Wallet,
-  CheckCircle2,
-  XCircle,
-  Plus,
-  ChevronLeft,
+  Activity, CheckCircle2, Plus,
+  ChevronLeft
 } from "lucide-react";
-import { FaBeer } from "react-icons/fa";
 import { GrDocumentVerified } from "react-icons/gr";
+import { useGetProfile } from "@/hooks/profile/useGetProfile";
+import { ZUserSchema } from "@/types/auth";
+import { formatUserData } from "@/utils/formatUserData";
 
-// ----------------- NEW PROFILE PLACEHOLDER -----------------
-const placeholderProfile = (username: string) => ({
-  name: "New User",
-  username: `@${username}`,
-  avatar: "",
-  bio: "Add a short bio",
-  location: "Add location",
-  stats: {
-    followers: 0,
-    following: 0,
-    posts: 0,
-    postsSaved: 0,
-    profileViews: 0,
-  },
-});
 
 // -----------------------------------------------------------
 // -------------------- INVESTMENT INTERFACE ------------------
@@ -63,10 +38,7 @@ interface Investment {
 
 const Profile = () => {
   const navigate = useNavigate();
-
-  const userName = localStorage.getItem("userName") || "John";
-  const userId = localStorage.getItem("userId") || "john";
-  const username = localStorage.getItem("signupUsername") || "john";
+  const { data: profileData } = useGetProfile();
   const isNewAccount = localStorage.getItem("newAccount") === "true";
   const profileSetupComplete =
     localStorage.getItem("profileSetupComplete") === "true";
@@ -81,28 +53,11 @@ const Profile = () => {
   const [showReels, setShowReels] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
 
-  // ---------------- EXISTING FULL PROFILE (UNCHANGED) ----------------
-  const existingInvestorData = {
-    name: "John Anderson",
-    username: "@johnanderson",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
-    bio: "Angel investor | Early stage startup enthusiast | Focus on AI & SaaS",
-    location: "San Francisco, CA",
-    stats: {
-      followers: 2847,
-      following: 342,
-      postsSaved: 156,
-      profileViews: 1893,
-      posts: 342,
-    },
-  };
-
   // -------------------- SELECT WHICH DATA TO USE ----------------------
   const investorData =
     isNewAccount && !profileSetupComplete
-      ? placeholderProfile(username)
-      : existingInvestorData;
+      ? formatUserData(profileData || {})
+      : formatUserData(profileData || {});
 
   // -------------------- INVESTMENTS (EXISTING KEPT SAME) --------------------
   const [investments] = useState<Investment[]>(
