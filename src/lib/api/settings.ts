@@ -1,9 +1,12 @@
 import { ZSettingsUser } from "@/types/Profile";
 import axiosClient from "./axiosClient";
 import { SETTINGS_ENDPOINTS } from "./endpoints";
+import { ZChangePasswordResponse } from "@/types/misc";
 
 interface SettingsApiRes {
   settings: ZSettingsUser;
+  success?: boolean;
+  error?: string;
 }
 
 async function getSettings() {
@@ -12,18 +15,27 @@ async function getSettings() {
 }
 
 async function updateSettings(payload: {
-  displayName?: string;
+  fullName?: string;
   username?: string;
   phone?: string;
 }) {
-  return axiosClient.put(SETTINGS_ENDPOINTS.SETTINGS, payload);
+  const res: SettingsApiRes = await axiosClient.put(SETTINGS_ENDPOINTS.SETTINGS, payload);
+  return res;
+}
+
+
+interface ChangePasswordResponse {
+  success?: boolean;
+  message?: string;
+  error?: string;
 }
 
 async function changePassword(currentPassword: string, newPassword: string) {
-  return axiosClient.put(SETTINGS_ENDPOINTS.PASSWORD, {
+  const res: ZChangePasswordResponse = await axiosClient.put(SETTINGS_ENDPOINTS.PASSWORD, {
     currentPassword,
     newPassword,
   });
+  return res;
 }
 
 export { getSettings, updateSettings, changePassword };

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, AtSign, BarChart3, Bookmark, Activity, Settings as SettingsIcon, MessageSquare, Lock, Briefcase, Crown, HelpCircle, Info, ChevronRight, Mail, Phone as PhoneIcon, KeyRound, Play, ShoppingBag, FileText, X, Filter, Shield, Building } from "lucide-react";
+import { ArrowLeft, User, AtSign, BarChart3, Bookmark, Activity, Settings as SettingsIcon, MessageSquare, Lock, Briefcase, Crown, HelpCircle, Info, ChevronRight, Mail, Phone as PhoneIcon, KeyRound, Play, ShoppingBag, FileText, X, Filter, Shield, Building, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -14,6 +14,8 @@ import { VerificationFlow } from "@/components/VerificationFlow";
 import { useGetProfile } from "@/hooks/profile/useGetProfile";
 import { useAppStore } from "@/store/useAppStore";
 import { useGetSettings } from "@/hooks/settings/useGetSettings";
+import { useUpdateSettings } from "@/hooks/settings/useUpdateSettings";
+import { useChangePassword } from "@/hooks/settings/useChangePassword";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -39,14 +41,14 @@ const Settings = () => {
   const [companyVerificationOpen, setCompanyVerificationOpen] = useState(false);
 
   // Form states
-  const [name, setName] = useState("John Doe");
-  const [username, setUsername] = useState("johndoe");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("john.doe@example.com");
+  const [confirmPassword, setConfirmPassword] = useState(""); 
+  const [email, setEmail] = useState("");
   const [emailCode, setEmailCode] = useState("");
-  const [phone, setPhone] = useState("+1234567890");
+  const [phone, setPhone] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
   const [commentsSetting, setCommentsSetting] = useState("verified");
   const [connectSetting, setConnectSetting] = useState("accepted");
@@ -58,27 +60,39 @@ const Settings = () => {
   const [selectedFilters, setSelectedFilters] = useState<string[]>(["AI", "Technology", "Startups"]);
   const [currentKeyword, setCurrentKeyword] = useState("");
   const [showFilterOptions, setShowFilterOptions] = useState(false);
+  const { mutateAsync: updateSettings, isPending: isUpdatePending } = useUpdateSettings();
+  const { mutateAsync: changePasswordMutation, isPending: isPasswordPending } = useChangePassword();
 
-  const handleSaveName = () => {
-    toast.success("Name updated successfully");
-    setNameDrawerOpen(false);
-  };
-
-  const handleSaveUsername = () => {
-    toast.success("Username updated successfully");
-    setUsernameDrawerOpen(false);
-  };
-
-  const handleSavePassword = () => {
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
+  const handleSaveName = async () => {
+    try {
+      const res = await updateSettings({ fullName: name });
+      console.log(res);
+      if (res.success) {
+        toast.success("Name updated successfully");
+        setNameDrawerOpen(false);
+      } else {
+        toast.error(res?.error || "Failed to update name");
+      }
+    } catch (err) {
+      const errorMessage = err?.message || "Failed to update name";
+      toast.error(errorMessage);
     }
-    toast.success("Password updated successfully");
-    setPasswordDrawerOpen(false);
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+  };
+
+  const handleSaveUsername = async () => {
+    try {
+      const res = await updateSettings({ username });
+
+      if (res.success) {
+        toast.success("Username updated successfully");
+        setUsernameDrawerOpen(false);
+      } else {
+        toast.error(res?.error || "Failed to update username");
+      }
+    } catch (err) {
+      const errorMessage = err?.message || "Failed to update username";
+      toast.error(errorMessage);
+    }
   };
 
   const handleSaveEmail = () => {
@@ -87,9 +101,48 @@ const Settings = () => {
     setEmailCode("");
   };
 
-  const handleSavePhone = () => {
-    toast.success("Phone updated successfully");
-    setPhoneDrawerOpen(false);
+const handleSavePassword = async () => {
+  if (newPassword !== confirmPassword) {
+    toast.error("Passwords do not match");
+    return;
+  }
+
+  try {
+    const res = await changePasswordMutation({
+      currentPassword: oldPassword,
+      newPassword,
+    });
+
+    if (res?.success) {
+      toast.success("Password updated successfully");
+      setPasswordDrawerOpen(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+      toast.error(res?.error || "Failed to update password");
+    }
+  } catch (err) {
+    toast.error(err?.message || "Failed to update password");
+  }
+};
+
+
+  const handleSavePhone = async() => {
+
+    try {
+      const res = await updateSettings({ phone });
+
+      if (res.success) {
+        toast.success("Phone updated successfully");
+        setPhoneDrawerOpen(false);
+      } else {
+        toast.error(res?.error || "Failed to update phone number");
+      }
+    } catch (err) {
+      const errorMessage = err?.message || "Failed to update phone number";
+      toast.error(errorMessage);
+    }
     setPhoneCode("");
   };
 
@@ -157,7 +210,7 @@ const Settings = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate("/profile")}
             className="hover:bg-muted/80"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -171,7 +224,9 @@ const Settings = () => {
         <div className="max-w-2xl mx-auto space-y-6 pt-6">
           {/* Account Information Section */}
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Account Information</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+              Account Information
+            </h2>
             <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
               <SettingItem
                 icon={User}
@@ -212,7 +267,9 @@ const Settings = () => {
 
           {/* Content Section */}
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Content</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+              Content
+            </h2>
             <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
               <SettingItem
                 icon={BarChart3}
@@ -239,7 +296,9 @@ const Settings = () => {
 
           {/* Privacy Section */}
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Privacy</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+              Privacy
+            </h2>
             <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
               <SettingItem
                 icon={MessageSquare}
@@ -259,7 +318,9 @@ const Settings = () => {
 
           {/* Account Section */}
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Account</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+              Account
+            </h2>
             <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
               <SettingItem
                 icon={Shield}
@@ -273,13 +334,12 @@ const Settings = () => {
                 title="Portfolio Verification"
                 subtitle="Verify your investment portfolio"
                 onClick={() => {
-                    if (accountType === "investor") {
-                      navigate("/startupinvestor");
-                    } else {
-                      navigate("/startupportfolio");
-                    }
-                  }}
-
+                  if (accountType === "investor") {
+                    navigate("/startupinvestor");
+                  } else {
+                    navigate("/startupportfolio");
+                  }
+                }}
               />
               <Separator />
               {/* <SettingItem
@@ -300,7 +360,9 @@ const Settings = () => {
 
           {/* Help Section */}
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">Help</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3">
+              Help
+            </h2>
             <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
               <SettingItem
                 icon={HelpCircle}
@@ -357,7 +419,11 @@ const Settings = () => {
               </p>
             </div>
             <Button onClick={handleSaveName} className="w-full h-12">
-              Save Changes
+              {isUpdatePending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </div>
         </DrawerContent>
@@ -385,7 +451,11 @@ const Settings = () => {
               </p>
             </div>
             <Button onClick={handleSaveUsername} className="w-full h-12">
-              Save Changes
+              {isUpdatePending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </div>
         </DrawerContent>
@@ -433,7 +503,11 @@ const Settings = () => {
               />
             </div>
             <Button onClick={handleSavePassword} className="w-full h-12">
-              Update Password
+              {isPasswordPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                " Update Password"
+              )}
             </Button>
           </div>
         </DrawerContent>
@@ -511,19 +585,27 @@ const Settings = () => {
               </p>
             </div>
             <Button onClick={handleSavePhone} className="w-full h-12">
-              Verify & Update
+              {isUpdatePending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </div>
         </DrawerContent>
       </Drawer>
 
       {/* Content Preferences Drawer */}
-      <Drawer open={preferencesDrawerOpen} onOpenChange={setPreferencesDrawerOpen}>
+      <Drawer
+        open={preferencesDrawerOpen}
+        onOpenChange={setPreferencesDrawerOpen}
+      >
         <DrawerContent className="h-[70vh] md:max-w-lg md:mx-auto">
           <DrawerHeader>
             <DrawerTitle>Content Preferences</DrawerTitle>
             <DrawerDescription>
-              {selectedFilters.length} {selectedFilters.length === 1 ? 'filter' : 'filters'} selected
+              {selectedFilters.length}{" "}
+              {selectedFilters.length === 1 ? "filter" : "filters"} selected
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 py-6 space-y-6 overflow-y-auto">
@@ -539,7 +621,7 @@ const Settings = () => {
                   placeholder="Type keyword and press Enter"
                   className="h-12"
                 />
-                <Button 
+                <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setShowFilterOptions(!showFilterOptions)}
@@ -558,7 +640,7 @@ const Settings = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Active Filters</Label>
-                  <Button 
+                  <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedFilters([])}
@@ -590,7 +672,9 @@ const Settings = () => {
             {showFilterOptions && (
               <div className="space-y-6 pt-4 border-t border-border">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">Filter Options</h3>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Filter Options
+                  </h3>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -614,8 +698,8 @@ const Settings = () => {
                             onClick={() => handleToggleFilter(filter)}
                             className={`p-3 rounded-lg border text-left transition-all ${
                               isSelected
-                                ? 'bg-primary/10 border-primary text-primary font-medium'
-                                : 'bg-card border-border/50 text-foreground hover:bg-muted/50'
+                                ? "bg-primary/10 border-primary text-primary font-medium"
+                                : "bg-card border-border/50 text-foreground hover:bg-muted/50"
                             }`}
                           >
                             <span className="text-sm">{filter}</span>
@@ -630,7 +714,9 @@ const Settings = () => {
 
             {selectedFilters.length === 0 && !showFilterOptions && (
               <div className="text-center py-8 bg-muted/30 rounded-lg">
-                <p className="text-sm text-muted-foreground">No filters selected yet</p>
+                <p className="text-sm text-muted-foreground">
+                  No filters selected yet
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Type keywords or use the filter icon to add filters
                 </p>
@@ -645,44 +731,52 @@ const Settings = () => {
         <DrawerContent className="h-[60vh] md:max-w-lg md:mx-auto">
           <DrawerHeader>
             <DrawerTitle>Comment Settings</DrawerTitle>
-            <DrawerDescription>Control who can comment on your posts</DrawerDescription>
+            <DrawerDescription>
+              Control who can comment on your posts
+            </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 py-6 space-y-4 overflow-y-auto">
             <div className="space-y-3">
               <Label>Who can comment</Label>
               <div className="space-y-2">
-                <button 
+                <button
                   onClick={() => setCommentsSetting("all")}
                   className={`w-full p-4 text-left rounded-lg border transition-all ${
                     commentsSetting === "all"
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 hover:bg-muted/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 hover:bg-muted/50"
                   }`}
                 >
                   <p className="font-medium text-sm">All</p>
-                  <p className="text-xs text-muted-foreground">Everyone can comment</p>
+                  <p className="text-xs text-muted-foreground">
+                    Everyone can comment
+                  </p>
                 </button>
-                <button 
+                <button
                   onClick={() => setCommentsSetting("verified")}
                   className={`w-full p-4 text-left rounded-lg border transition-all ${
                     commentsSetting === "verified"
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 hover:bg-muted/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 hover:bg-muted/50"
                   }`}
                 >
                   <p className="font-medium text-sm">Only Verified</p>
-                  <p className="text-xs text-muted-foreground">Only verified users can comment</p>
+                  <p className="text-xs text-muted-foreground">
+                    Only verified users can comment
+                  </p>
                 </button>
-                <button 
+                <button
                   onClick={() => setCommentsSetting("none")}
                   className={`w-full p-4 text-left rounded-lg border transition-all ${
                     commentsSetting === "none"
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 hover:bg-muted/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 hover:bg-muted/50"
                   }`}
                 >
                   <p className="font-medium text-sm">None</p>
-                  <p className="text-xs text-muted-foreground">Disable all comments</p>
+                  <p className="text-xs text-muted-foreground">
+                    Disable all comments
+                  </p>
                 </button>
               </div>
             </div>
@@ -695,55 +789,67 @@ const Settings = () => {
         <DrawerContent className="h-[60vh] md:max-w-lg md:mx-auto">
           <DrawerHeader>
             <DrawerTitle>Connect Settings</DrawerTitle>
-            <DrawerDescription>Manage direct message permissions</DrawerDescription>
+            <DrawerDescription>
+              Manage direct message permissions
+            </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 py-6 space-y-4 overflow-y-auto">
             <div className="space-y-3">
               <Label>Who can message you</Label>
               <div className="space-y-2">
-                <button 
+                <button
                   onClick={() => setConnectSetting("all")}
                   className={`w-full p-4 text-left rounded-lg border transition-all ${
                     connectSetting === "all"
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 hover:bg-muted/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 hover:bg-muted/50"
                   }`}
                 >
                   <p className="font-medium text-sm">All</p>
-                  <p className="text-xs text-muted-foreground">Everyone can message you</p>
+                  <p className="text-xs text-muted-foreground">
+                    Everyone can message you
+                  </p>
                 </button>
-                <button 
+                <button
                   onClick={() => setConnectSetting("accepted")}
                   className={`w-full p-4 text-left rounded-lg border transition-all ${
                     connectSetting === "accepted"
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 hover:bg-muted/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 hover:bg-muted/50"
                   }`}
                 >
-                  <p className="font-medium text-sm">After Connection Accepted</p>
-                  <p className="text-xs text-muted-foreground">Only after you accept their connection</p>
+                  <p className="font-medium text-sm">
+                    After Connection Accepted
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Only after you accept their connection
+                  </p>
                 </button>
-                <button 
+                <button
                   onClick={() => setConnectSetting("verified")}
                   className={`w-full p-4 text-left rounded-lg border transition-all ${
                     connectSetting === "verified"
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 hover:bg-muted/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 hover:bg-muted/50"
                   }`}
                 >
                   <p className="font-medium text-sm">Verified</p>
-                  <p className="text-xs text-muted-foreground">Only verified users can message</p>
+                  <p className="text-xs text-muted-foreground">
+                    Only verified users can message
+                  </p>
                 </button>
-                <button 
+                <button
                   onClick={() => setConnectSetting("investors")}
                   className={`w-full p-4 text-left rounded-lg border transition-all ${
                     connectSetting === "investors"
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border/50 hover:bg-muted/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border/50 hover:bg-muted/50"
                   }`}
                 >
                   <p className="font-medium text-sm">Investors</p>
-                  <p className="text-xs text-muted-foreground">Only verified investors can message</p>
+                  <p className="text-xs text-muted-foreground">
+                    Only verified investors can message
+                  </p>
                 </button>
               </div>
             </div>
@@ -756,7 +862,9 @@ const Settings = () => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Portfolio & KYC Verification</DialogTitle>
-            <DialogDescription>Update your portfolio and verify your identity</DialogDescription>
+            <DialogDescription>
+              Update your portfolio and verify your identity
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 pt-4">
             <div className="space-y-2">
@@ -788,7 +896,8 @@ const Settings = () => {
               <Label>KYC Verification</Label>
               <div className="p-4 rounded-lg border border-border bg-muted/30">
                 <p className="text-sm text-muted-foreground">
-                  Verify your identity to unlock premium features and build trust with investors and partners.
+                  Verify your identity to unlock premium features and build
+                  trust with investors and partners.
                 </p>
                 <Button variant="outline" className="mt-3">
                   Start Verification
@@ -807,7 +916,9 @@ const Settings = () => {
               <Crown className="h-5 w-5 text-yellow-500" />
               Get Premium
             </DialogTitle>
-            <DialogDescription>Unlock exclusive features and grow faster</DialogDescription>
+            <DialogDescription>
+              Unlock exclusive features and grow faster
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 pt-4">
             <div className="grid gap-4">
@@ -817,7 +928,9 @@ const Settings = () => {
                 </div>
                 <div>
                   <p className="font-medium text-sm">Advanced Analytics</p>
-                  <p className="text-xs text-muted-foreground">Track engagement and growth metrics</p>
+                  <p className="text-xs text-muted-foreground">
+                    Track engagement and growth metrics
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
@@ -826,7 +939,9 @@ const Settings = () => {
                 </div>
                 <div>
                   <p className="font-medium text-sm">Priority Support</p>
-                  <p className="text-xs text-muted-foreground">Get help from our team anytime</p>
+                  <p className="text-xs text-muted-foreground">
+                    Get help from our team anytime
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
@@ -835,7 +950,9 @@ const Settings = () => {
                 </div>
                 <div>
                   <p className="font-medium text-sm">Verified Badge</p>
-                  <p className="text-xs text-muted-foreground">Stand out with a verified profile</p>
+                  <p className="text-xs text-muted-foreground">
+                    Stand out with a verified profile
+                  </p>
                 </div>
               </div>
             </div>
@@ -860,10 +977,7 @@ const Settings = () => {
           <div className="space-y-6 pt-4">
             <div className="space-y-2">
               <Label htmlFor="subject">Subject</Label>
-              <Input
-                id="subject"
-                placeholder="What do you need help with?"
-              />
+              <Input id="subject" placeholder="What do you need help with?" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="message">Message</Label>
@@ -906,7 +1020,8 @@ const Settings = () => {
               <div>
                 <p className="font-medium mb-1">Mission</p>
                 <p className="text-muted-foreground">
-                  Connecting entrepreneurs, investors, and innovators to build the future together.
+                  Connecting entrepreneurs, investors, and innovators to build
+                  the future together.
                 </p>
               </div>
               <div>
@@ -926,11 +1041,14 @@ const Settings = () => {
       </Dialog>
 
       {/* Company Verification Dialog */}
-      <Dialog open={companyVerificationOpen} onOpenChange={setCompanyVerificationOpen}>
+      <Dialog
+        open={companyVerificationOpen}
+        onOpenChange={setCompanyVerificationOpen}
+      >
         <DialogContent className="p-4 sm:p-6 max-w-md bg-background border">
-          <VerificationFlow 
-            type="company" 
-            onComplete={() => setCompanyVerificationOpen(false)} 
+          <VerificationFlow
+            type="company"
+            onComplete={() => setCompanyVerificationOpen(false)}
           />
         </DialogContent>
       </Dialog>
