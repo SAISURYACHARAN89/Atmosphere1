@@ -6,4 +6,14 @@ export const zGetProfileResponse = z.object({
   user: zUserSchema,
 });
 
+
+export const zUploadResponseSchema = z.object({
+  success: z.boolean(),
+  url: z.string().url(),
+  key: z.string(),
+});
+
+export type ZUploadResponse = z.infer<typeof zUploadResponseSchema>;
+
+
 export type ZGetProfileResponse = z.infer<typeof zGetProfileResponse>;

@@ -7,9 +7,12 @@ export const zUserSchema = z.object({
 
   roles: z.array(z.string()),
   verified: z.boolean(),
-
+  location: z.string().optional(),
   createdAt: z.string(),
-
+  fullName: z.string(),
+  bio: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  accountType: z.string().optional(),
   followersCount: z.number(),
   followingCount: z.number(),
 

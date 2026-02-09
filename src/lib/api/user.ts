@@ -1,7 +1,8 @@
 import {  ZCheckUsernameResponse } from "@/types/auth";
 import axiosClient from "./axiosClient";
 import { USER_ENDPOINTS } from "./endpoints";
-import { ZGetProfileResponse } from "@/types/Profile";
+import { ZGetProfileResponse, ZUploadResponse } from "@/types/Profile";
+import { AxiosResponse } from "axios";
 
 /**
  * Fetch & store user
@@ -29,9 +30,9 @@ async function fetchAndStoreUser() {
   }
 }
 
-
 async function updateProfile(payload: unknown) {
-  return axiosClient.put(USER_ENDPOINTS.PROFILE, payload);
+  const res = await axiosClient.put(USER_ENDPOINTS.PROFILE, payload);
+  return res as ZGetProfileResponse;
 }
 
 async function checkIsUserNameAvailable(username: string) {
@@ -72,9 +73,10 @@ async function getStartupProfile(userId: string) {
 }
 
 async function uploadProfilePicture(formData: FormData) {
-  return axiosClient.post(USER_ENDPOINTS.UPLOAD, formData, {
+  const res = await axiosClient.post(USER_ENDPOINTS.UPLOAD, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return res as ZUploadResponse;
 }
 
 async function followUser(targetId: string) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,21 +7,38 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Camera, ArrowLeft, Check, ChevronLeft } from "lucide-react";
+import { useAppStore } from "@/store/useAppStore";
+import { updateProfile, uploadProfilePicture } from "@/lib/api/user";
+import { useUploadProfilePic } from "@/hooks/profile/useUploadProfilePic";
+import { useUpdateProfile } from "@/hooks/profile/useUpdateProfile";
 
 const SetupProfileApple = () => {
   const navigate = useNavigate();
+  const {user, setUser} = useAppStore();
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [username, setUsername] = useState(localStorage.getItem("signupUsername") || "");
+  const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [quickBio, setQuickBio] = useState("");
-  
-  const [accountType, setAccountType] = useState<"investor" | "startup" | "personal" | null>(null);
-  const [email, setEmail] = useState(localStorage.getItem("signupEmail") || "");
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+
+  const {
+    mutateAsync: uploadAvatar,
+  } = useUploadProfilePic();
+
+    const {
+    mutateAsync: updateProfile,
+    isPending: isUpdatingProfile,
+  } = useUpdateProfile();
+
+  const [accountType, setAccountType] = useState<
+    "investor" | "startup" | "personal" | null
+  >(null);
+  const [email, setEmail] = useState("");
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [code, setCode] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
   const [acceptDisclaimer, setAcceptDisclaimer] = useState(false);
-const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,6 +48,7 @@ const [dropdownOpen, setDropdownOpen] = useState(false);
         setProfilePhoto(reader.result as string);
       };
       reader.readAsDataURL(file);
+      setPendingAvatarFile(file);
     }
   };
 
@@ -58,7 +76,7 @@ const [dropdownOpen, setDropdownOpen] = useState(false);
     });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!fullName) {
       toast({
         title: "Missing Information",
@@ -95,23 +113,69 @@ const [dropdownOpen, setDropdownOpen] = useState(false);
       return;
     }
 
-    localStorage.setItem("setupProfilePhoto", profilePhoto || "");
-    localStorage.setItem("setupFullName", fullName);
-    localStorage.setItem("setupQuickBio", quickBio);
-    localStorage.setItem("setupAccountType", accountType);
+    try {
+      let progilePictureUrl = user?.avatarUrl || null;
+      if (profilePhoto !== user?.avatarUrl && pendingAvatarFile) {
+        const formData = new FormData();
+        formData.append("image", pendingAvatarFile, pendingAvatarFile.name);
 
-    if (accountType === "investor") {
-      navigate("/setup-profile-kiwi");
-    } else if(accountType === "startup") {
-      navigate("/setup-profile-startup");
-    }else{
-      navigate("/profile");
+        const res = await uploadAvatar(formData);
+        const finalAvatarUrl = res.url;
+        progilePictureUrl = finalAvatarUrl;
+        console.log(finalAvatarUrl)
+      }
+      const updatedUser = await updateProfile({
+        userData: {
+          fullName,
+          username,
+          accountType,
+          bio: quickBio,
+          avatarUrl: progilePictureUrl,
+          onboardingStep: 2,
+        },
+      });
+      setUser(updatedUser.user);
+      // navigation logic unchanged
+      if (accountType === "investor") {
+        navigate("/setup-profile-kiwi");
+      } else if (accountType === "startup") {
+        navigate("/setup-profile-startup");
+      } else {
+        navigate("/profile");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to save profile";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
   const handleBack = () => {
     navigate(-1);
   };
+
+  useEffect(() => {
+    const {
+      username,
+      fullName: userFullName,
+      email,
+      bio,
+      accountType: roles,
+      verified,
+    } = user || {};
+    setUsername(username || "");
+    setFullName(userFullName || "");
+    setQuickBio(bio || "");
+    setProfilePhoto(user?.avatarUrl || null);
+    setEmail(email || "");
+    const primaryRole = roles?.[0] || "personal";
+    setAccountType(primaryRole as "startup" | "investor" | "personal");
+    setEmailVerified(verified || false);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 py-8">
@@ -124,7 +188,7 @@ const [dropdownOpen, setDropdownOpen] = useState(false);
             <h2 className="text-2xl font-semibold text-foreground">Setup Profile</h2>
             <p className="text-sm text-muted-foreground mt-2">Step 1 of 3</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleNext}>
+          <Button variant="ghost" size="sm" onClick={handleNext} disabled={isUpdatingProfile}>
             Save
           </Button>
         </div>
