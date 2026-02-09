@@ -398,19 +398,18 @@ const Profile = () => {
             {activeSection === "posts" && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-1">
-                  {(isNewAccount && !profileSetupComplete
-                    ? [1, 2, 3, 4, 5, 6]
-                    : [1, 2, 3, 4, 5, 6]
-                  ).map((item) => (
+                  {myPostsData?.posts?.map((item) => (
                     <div
-                      key={item}
+                      key={item?._id}
                       className="aspect-square bg-muted rounded-sm flex items-center justify-center"
                     >
-                      {!isNewAccount || profileSetupComplete ? (
-                        <span className="text-xs text-muted-foreground">
-                          Post {item}
-                        </span>
-                      ) : null}
+                      {
+                          <img
+                            src={item?.media?.[0].url}
+                            alt={item?.content}
+                            className="w-full h-full object-cover rounded-sm"
+                          />
+                     }
                     </div>
                   ))}
                 </div>
