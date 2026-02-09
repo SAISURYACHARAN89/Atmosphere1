@@ -1,10 +1,15 @@
+import { ZStartup } from "@/types/startups";
 import axiosClient from "./axiosClient";
 import { STARTUP_ENDPOINTS } from "./endpoints";
+
+interface FetchStartupResponse {
+  startups: ZStartup[];
+}
 
 /* ---------------- Posts ---------------- */
 
 export async function fetchStartupPosts(limit = 20, skip = 0) {
-  const res = await axiosClient.get(STARTUP_ENDPOINTS.POSTS, {
+  const res: FetchStartupResponse = await axiosClient.get(STARTUP_ENDPOINTS.POSTS, {
     params: { limit, skip },
   });
   return res.startups || [];

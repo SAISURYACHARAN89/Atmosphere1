@@ -23,24 +23,10 @@ import {
   DrawerTitle,
   DrawerFooter,
 } from "@/components/ui/drawer";
+import { ZStartup } from "@/types/startups";
 
-interface StartupPostProps {
-  company: {
-    id: string;
-    name: string;
-    tagline: string;
-    description: string;
-    profileImage: string;
-    revenueGenerating: boolean;
-    fundsRaised: string;
-    currentInvestors: string[];
-    lookingToDilute: boolean;
-    dilutionAmount?: string;
-    images: string[];
-  };
-}
 
-const StartupPost = ({ company }: StartupPostProps) => {
+const StartupPost = ({ company }: {company: ZStartup}) => {
   const navigate = useNavigate();
   const [showBigHeart, setShowBigHeart] = useState(false);
 
@@ -82,8 +68,7 @@ const StartupPost = ({ company }: StartupPostProps) => {
       verified: false,
       time: "1h",
       avatar: "/avatars/p2.jpg",
-      text: "Super excited for this startup!",
-      image: company.images?.[0],
+      text: "Super excited for this startup!"
     },
     {
       id: 3,
@@ -244,7 +229,7 @@ const StartupPost = ({ company }: StartupPostProps) => {
           ) : (
             <img
               src={
-                company.images?.[currentImageIndex] ||
+                // company.images?.[currentImageIndex] ||
                 company?.profileImage ||
                 ""
               }
