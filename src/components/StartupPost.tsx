@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Plus,
   MoreHorizontal,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -23,22 +24,43 @@ import {
   DrawerTitle,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { ZStartup } from "@/types/startups";
+import { ZComment, ZStartup } from "@/types/startups";
+import { useLikeStartup } from "@/hooks/posts/useLikeStartup";
+import { getStartupComments } from "@/lib/api/startup";
+import { getTimeAgo } from "@/utils/misc";
+import { useFollowUser } from "@/hooks/posts/useFollow";
+import { useSavePost } from "@/hooks/posts/useSavePost";
+import { useStartupComment } from "@/hooks/posts/useStartupComment";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
-
-const StartupPost = ({ company }: {company: ZStartup}) => {
+const StartupPost = ({ company }: { company: ZStartup }) => {
   const navigate = useNavigate();
   const [showBigHeart, setShowBigHeart] = useState(false);
+  const { toggleLike } = useLikeStartup(company.id);
+  const { toggleSave } = useSavePost(company.id, company.savedId);
+  const { toggleFollow } = useFollowUser(company.userId);
+  const { submitComment, isPending: isCommentPending } = useStartupComment(company.id);
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [liked, setLiked] = useState(false);
-  const [crowned, setCrowned] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [likes, setLikes] = useState(349);
-  const [crowns, setCrowns] = useState(19);
-  const [comments] = useState(32);
-  const [sends] = useState(12);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [likes, setLikes] = useState(0);
+  const [comments, setComments] = useState(0);
+  const [sends, setSends] = useState(0);
+  const [replyToCommentId, setReplyToCommentId] = useState("");
   const [following, setFollowing] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // const [crowns, setCrowns] = useState(19);
+  // const [crowned, setCrowned] = useState(false);
+
+  const { data:commentData, isLoading: isCommentsLoading } = useQuery({
+    queryKey: ["startupComments", company.id],
+    queryFn: () => getStartupComments(company.id),
+    enabled: isCommentsOpen, // ✅ only fetch when open
+  });
+
+  const commentList = commentData?.comments || [];
 
   // COMMENT HOOKS
   const commentFileRef = useRef<HTMLInputElement>(null);
@@ -52,71 +74,67 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
     setCommentImage(url);
   };
 
-  // COMMENT LIST
-  const [commentList, setCommentList] = useState([
-    {
-      id: 1,
-      name: "Priya Sharma",
-      verified: true,
-      time: "2h",
-      avatar: "/avatars/p1.jpg",
-      text: "Amazing progress! Keep building 🔥",
-    },
-    {
-      id: 2,
-      name: "Ravi Kumar",
-      verified: false,
-      time: "1h",
-      avatar: "/avatars/p2.jpg",
-      text: "Super excited for this startup!"
-    },
-    {
-      id: 3,
-      name: "Ananya Desai",
-      verified: true,
-      time: "30m",
-      avatar: "/avatars/p3.jpg",
-      text: "Love the product vision 🚀",
-    },
-  ]);
-
   const [newComment, setNewComment] = useState("");
   const commentsTopRef = useRef<HTMLDivElement>(null);
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    const prevLiked = liked;
+    const prevLikes = likes;
+
     setLiked(!liked);
     setLikes(liked ? likes - 1 : likes + 1);
+
+    try {
+      await toggleLike(liked);
+    } catch {
+      setLiked(prevLiked);
+      setLikes(prevLikes);
+    }
   };
 
-  const handleCrown = () => {
-    setCrowned(!crowned);
-    setCrowns(crowned ? crowns - 1 : crowns + 1);
+  const handleFollow = async () => {
+    const currentFollowing = following;
+
+    setFollowing(!following);
+
+    try {
+      await toggleFollow(currentFollowing);
+    } catch {
+      setFollowing(currentFollowing);
+    }
   };
 
-  const addComment = () => {
-    if (!newComment.trim() && !commentImage) return;
+  const handleSave = async () => {
+    const prev = saved;
 
-    setCommentList(prev => [
-      {
-        id: Date.now(),
-        name: "You",
-        verified: false,
-        time: "now",
-        avatar: "",
+    setSaved(!saved);
+
+    try {
+      await toggleSave(saved);
+    } catch {
+      setSaved(prev);
+    }
+  };
+  // const handleCrown = () => {
+  //   setCrowned(!crowned);
+  //   setCrowns(crowned ? crowns - 1 : crowns + 1);
+  // };
+
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      await submitComment({
         text: newComment,
-        image: commentImage || null,
-      },
-      ...prev,
-    ]);
-
-    setNewComment("");
-    setCommentImage(null);
-
-    // 🔥 Auto scroll to top
-    setTimeout(() => {
-      commentsTopRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    }, 50);
+        ...(replyToCommentId && { parent: replyToCommentId }),
+      });
+      setNewComment("");
+      setCommentImage(null);
+    } catch (err) {
+      toast.error(`${err?.message || "Failed to add comment"}`);
+    }
   };
+
   let tapTimeout: NodeJS.Timeout | null = null;
 
   const handleDoubleTap = () => {
@@ -145,6 +163,16 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
     }
   };
 
+  useEffect(() => {
+    // setCrowns(company.stats?.crowns);
+    // setCrowned(company?.crownedByCurrentUser);
+    setLikes(company?.stats?.likes);
+    setLiked(company?.likedByCurrentUser);
+    setComments(company?.stats?.comments || 0);
+    setSaved(company?.isSaved);
+    setFollowing(company?.isFollowing);
+    setSends(company?.stats?.shares || 0);
+  }, [company]);
 
   return (
     <Card className="overflow-hidden border-0 bg-background shadow-none">
@@ -183,7 +211,7 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
             className="h-7 px-2.5 rounded-[6px] bg-muted hover:bg-muted/80"
             onClick={(e) => {
               e.stopPropagation();
-              setFollowing(!following);
+              handleFollow();
             }}
           >
             <span className="text-xs font-medium">
@@ -230,8 +258,7 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
             <img
               src={
                 // company.images?.[currentImageIndex] ||
-                company?.profileImage ||
-                ""
+                company?.profileImage || ""
               }
               className="w-full aspect-[16/9] object-cover"
             />
@@ -281,7 +308,7 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
           </Button>
 
           {/* CROWN */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="sm"
             className="h-auto p-0 flex items-center gap-1.5"
@@ -299,16 +326,19 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
             />
 
             <span className="text-[17px] font-medium">{crowns}</span>
-          </Button>
+          </Button> */}
 
           {/* COMMENT DRAWER */}
-          <Drawer>
+          <Drawer open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
             <DrawerTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-auto p-0 flex items-center gap-1.5"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCommentsOpen(true);
+                }}
               >
                 <MessageCircle className="!h-6 !w-6 text-foreground hover:text-accent transition-colors" />
                 <span className="text-[17px] font-medium">{comments}</span>
@@ -334,39 +364,51 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
                 ref={commentsTopRef}
                 className="max-h-[70vh] overflow-y-auto px-4 pb-6 space-y-6"
               >
-                {commentList.map((c) => (
-                  <div key={c.id} className="flex items-start gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={c.avatar} />
-                      <AvatarFallback>{c.name[0]}</AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-semibold text-sm">{c.name}</p>
-                        {c.verified && (
-                          <ShieldCheck className="w-4 h-4 text-primary" />
-                        )}
-                        <span className="text-[12px] text-muted-foreground">
-                          {c.time}
-                        </span>
-                      </div>
-
-                      {c.text && (
-                        <p className="text-sm text-foreground/90 mt-0.5 leading-relaxed">
-                          {c.text}
-                        </p>
-                      )}
-
-                      {c.image && (
-                        <img
-                          src={c.image}
-                          className="rounded-lg mt-2 max-w-[80%]"
-                        />
-                      )}
-                    </div>
+                {isCommentsLoading ? (
+                  <div className="h-20 w-full justify-center items-center">
+                    <Loader2 className="h-5 w-5 animate-spin mx-auto mt-10" />
                   </div>
-                ))}
+                ) : (
+                  <>
+                    {commentList?.map((c) => (
+                      <div key={c._id} className="flex items-start gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={c.author.avatarUrl} />
+                          <AvatarFallback>
+                            {c.author.username[0]}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-semibold text-sm">
+                              {c.author.username}
+                            </p>
+                            {c?.verified && (
+                              <ShieldCheck className="w-4 h-4 text-primary" />
+                            )}
+                            <span className="text-[12px] text-muted-foreground">
+                              {getTimeAgo(c.createdAt)}
+                            </span>
+                          </div>
+
+                          {c.text && (
+                            <p className="text-sm text-foreground/90 mt-0.5 leading-relaxed">
+                              {c.text}
+                            </p>
+                          )}
+
+                          {c?.image && (
+                            <img
+                              src={c?.image}
+                              className="rounded-lg mt-2 max-w-[80%]"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
               {commentImage && (
                 <div className="px-4 pb-2">
@@ -391,12 +433,12 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
               <DrawerFooter className="bg-background border-t p-3">
                 <div className="w-full flex items-center gap-2">
                   {/* + icon */}
-                  <button
+                  {/* <button
                     onClick={() => commentFileRef.current?.click()}
                     className="p-2 rounded-full hover:bg-muted transition"
                   >
                     <Plus className="w-5 h-5 text-muted-foreground" />
-                  </button>
+                  </button> */}
 
                   {/* hidden input */}
                   <input
@@ -421,7 +463,11 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
                     disabled={!newComment.trim() && !commentImage}
                     className="p-2 rounded-full hover:bg-primary/10 disabled:opacity-30 transition"
                   >
-                    <Send className="w-5 h-5 text-primary" />
+                    {isCommentPending ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    ) : (
+                      <Send className="w-5 h-5 text-primary" />
+                    )}
                   </button>
                 </div>
               </DrawerFooter>
@@ -446,10 +492,7 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
             variant="ghost"
             size="sm"
             className="h-auto p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSaved(!saved);
-            }}
+            onClick={handleSave}
           >
             <Bookmark
               className={`!h-6 !w-6 transition-all ${
@@ -480,18 +523,22 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
 
       {/* SMALL INFO BOXES */}
       <div className="px-4 pb-3">
-        <div className="flex justify-between gap-2">
+        <div className="flex gap-2">
           <div className="px-4 py-2 rounded-[6px] border border-border bg-card">
             <p className="text-xs font-medium text-foreground">
-              {company.revenueGenerating ? "Rvnu generating" : "Pre-rvnu"}
+              {company.revenueType}
             </p>
           </div>
 
           <div className="px-4 py-2 rounded-[6px] border border-border bg-card">
-            <p className="text-xs font-medium text-foreground">Rounds : 2</p>
+            <p className="text-xs font-medium text-foreground">
+              Rounds : {company?.rounds || 0}
+            </p>
           </div>
           <div className="px-4 py-2 rounded-[6px] border border-border bg-card">
-            <p className="text-xs font-medium text-foreground">Age : 2 yr</p>
+            <p className="text-xs font-medium text-foreground">
+              Age : {company?.age || 0} yr{company?.age === 1 ? "" : "s"}
+            </p>
           </div>
         </div>
       </div>
@@ -536,13 +583,13 @@ const StartupPost = ({ company }: {company: ZStartup}) => {
               Current round :
             </span>
             <span className="text-sm font-medium text-foreground">
-              Not raising
+              {company?.currentRound}
             </span>
           </div>
         </div>
       )}
     </Card>
   );
-};
+};;;
 
-export default StartupPost;
+  export default StartupPost;

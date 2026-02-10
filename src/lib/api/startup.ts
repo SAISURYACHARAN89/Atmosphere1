@@ -1,4 +1,4 @@
-import { ZStartup } from "@/types/startups";
+import { ZComment, ZStartup } from "@/types/startups";
 import axiosClient from "./axiosClient";
 import { STARTUP_ENDPOINTS } from "./endpoints";
 
@@ -76,10 +76,15 @@ export async function addStartupComment(
   );
 }
 
+
+interface GetStartupCommentsRes{
+  comments: ZComment[];
+} 
 export async function getStartupComments(startupId: string) {
-  return axiosClient.get(
+  const res: GetStartupCommentsRes = await  axiosClient.get(
     STARTUP_ENDPOINTS.COMMENTS(startupId)
   );
+  return res;
 }
 
 export async function getStartupCommentReplies(commentId: string) {

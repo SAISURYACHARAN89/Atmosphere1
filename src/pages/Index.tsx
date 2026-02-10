@@ -7,6 +7,7 @@ import StartupPost from "@/components/StartupPost";
 import { Separator } from "@/components/ui/separator";
 import Cookies from "js-cookie";
 import {  useGetStartupPosts } from "@/hooks/home/useGetStartupPosts";
+import StartupPostSkeleton from "@/components/ui/skeleton/StartupCardSkeleton";
 
 const mockStartups = [
   {
@@ -158,17 +159,9 @@ const Index = () => {
           {/* Startup Posts */}
           {isPending ? (
             <>
-              {mockStartups.map((startup, index) => (
-                <div key={index}>
-                  <div
-                    className="animate-fade-in-up"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <StartupPost company={startup} />
-                  </div>
-                  {index < mockStartups.length - 1 && (
-                    <Separator className="my-6" />
-                  )}
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                  <StartupPostSkeleton />
                 </div>
               ))}
             </>

@@ -58,6 +58,31 @@ export const zStartup = z.object({
   savedId: z.string().nullable(),
 });
 
+
+
+
+export const zAuthorSchema = z.object({
+  _id: z.string(),
+  username: z.string(),
+  avatarUrl: z.string().url().nullable().optional(),
+});
+
+export const zCommentSchema = z.object({
+  _id: z.string(),
+  startup: z.string(),
+  author: zAuthorSchema,
+  text: z.string().nullable(),
+  parent: z.string().nullable(),
+  likesCount: z.number(),
+  createdAt: z.string(), // or z.coerce.date()
+  updatedAt: z.string(), // or z.coerce.date()
+  __v: z.number(),
+});
+
+/* ---------- comments ---------- */
+export type ZComment = z.infer<typeof zCommentSchema>;
+
+
 /* ---------- List ---------- */
 export const zStartupList = z.array(zStartup);
 
