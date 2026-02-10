@@ -1,3 +1,4 @@
+import { ZExplorePost, ZFeedItem } from "@/types/Explore";
 import axiosClient from "./axiosClient";
 import {
   POST_ENDPOINTS,
@@ -7,6 +8,11 @@ import {
   SHARE_ENDPOINTS,
   SAVED_ENDPOINTS,
 } from "./endpoints";
+
+interface FetchPostsRes{
+  posts: ZFeedItem[]
+  count: number
+}
 
 /* ---------------- POSTS ---------------- */
 
@@ -32,10 +38,12 @@ export async function getPostsByUser(userId: string) {
   });
 }
 
+
 export async function fetchExplorePosts(limit = 20, skip = 0) {
-  return axiosClient.get(POST_ENDPOINTS.POSTS, {
+  const res:FetchPostsRes= await axiosClient.get(POST_ENDPOINTS.POSTS, {
     params: { limit, skip },
   });
+  return res;
 }
 
 /* ---------------- LIKES ---------------- */

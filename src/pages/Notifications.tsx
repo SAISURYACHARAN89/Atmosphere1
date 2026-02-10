@@ -40,7 +40,6 @@ const getNotificationIcon = (type: Notification['type']) => {
   }
 };
 
-
 const getActionText = (type: string): string => {
     switch (type) {
         case 'like':
@@ -65,7 +64,6 @@ const getActionText = (type: string): string => {
             return 'interacted with you';
     }
 };
-
 
 const Notifications = () => {
   const navigate = useNavigate();

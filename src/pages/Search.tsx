@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { useExplorePosts } from "@/hooks/explore/useExplorePosts";
+import { ZFeedItem } from "@/types/Explore";
 
 /* ----------------------------- MOCK DATA ----------------------------- */
 
@@ -128,6 +130,8 @@ const Search = () => {
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const { data:exploreData, isPending } = useExplorePosts();
+console.log("Explore Posts Data:", exploreData);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -366,7 +370,7 @@ const Search = () => {
         {/* ---------------- DEFAULT FEED (UPDATED GRID) ---------------- */}
         {!searchQuery && !showSuggestions && (
           <div className="grid grid-cols-3 gap-0.1 mt-6">
-            {forYouContent.map((c, index) => {
+            {exploreData?.posts?.map((c, index) => {
               const cycleIndex = index % 10;
               let spanClass = "aspect-square"; // Default square
 
@@ -380,7 +384,7 @@ const Search = () => {
 
               return (
                 <FeedItem
-                  key={c.id}
+                  key={c._id}
                   content={c}
                   navigate={navigate}
                   className={spanClass}
@@ -459,13 +463,16 @@ const AccountCard = ({ acc }: any) => (
   </div>
 );
 
-const FeedItem = ({ content, navigate, className }: any) => (
+const FeedItem = ({ content, navigate, className }: { content: ZFeedItem; navigate: any; className?: string }) => (
   <div
     className={`relative border border-border/50 overflow-hidden cursor-pointer group ${className}`}
     onClick={() => navigate("/reels", { state: { preview: "search" } })}
   >
-    <img src={content.thumbnail} className="w-full h-full object-cover" />
-
+    {content.type === "post" && content.media.length > 0 ? (
+      <img src={content.media[0].url} className="w-full h-full object-cover" />
+    ):(<div className="w-full h-full bg-gray-200 flex items-center justify-center">
+    <video className="w-full h-full object-cover" src={content.videoUrl} />
+    </div>)}
     {content.type === "reel" && (
       <div className="absolute top-2 right-2 bg-black/50 rounded-full p-1 backdrop-blur-sm">
         <Play className="w-3 h-3 text-white" />
@@ -474,8 +481,8 @@ const FeedItem = ({ content, navigate, className }: any) => (
 
     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
       <div className="text-white text-center">
-        <p className="text-xs font-semibold">{content.author}</p>
-        <p className="text-[10px]">{content.likes} likes</p>
+        <p className="text-xs font-semibold">{content?.author?.username}</p>
+        <p className="text-[10px]">{content.likesCount} likes</p>
         {content.views && <p className="text-[10px]">{content.views} views</p>}
       </div>
     </div>
