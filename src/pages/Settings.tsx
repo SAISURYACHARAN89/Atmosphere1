@@ -66,7 +66,6 @@ const Settings = () => {
   const handleSaveName = async () => {
     try {
       const res = await updateSettings({ fullName: name });
-      console.log(res);
       if (res.success) {
         toast.success("Name updated successfully");
         setNameDrawerOpen(false);

@@ -122,7 +122,6 @@ const SetupProfileApple = () => {
         const res = await uploadAvatar(formData);
         const finalAvatarUrl = res.url;
         progilePictureUrl = finalAvatarUrl;
-        console.log(finalAvatarUrl)
       }
       const updatedUser = await updateProfile({
         userData: {
