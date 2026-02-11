@@ -15,8 +15,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Drawer, DrawerContent, DrawerFooter } from "@/components/ui/drawer";
 import { ZReel } from "@/types/reels";
 import { useLikeReel } from "@/hooks/reels/useLikeReel";
-import { useQuery } from "@tanstack/react-query";
-import { getReelComments } from "@/lib/api/reels";
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
+import { addReelComment, getReelComments } from "@/lib/api/reels";
+import { toast } from "./sonner";
 
 /* ------------------ Types ------------------ */
 
@@ -38,11 +39,13 @@ type CommentItem = {
 
 const ReelCard: React.FC<ReelCardProps> = ({ reel }) => {
   const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
   const [liked, setLiked] = useState(reel.isLiked);
   const [likesCount, setLikesCount] = useState(reel.likesCount);
 
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [commentId, setCommentId] = useState<string | null>(null);
 
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -77,23 +80,22 @@ const ReelCard: React.FC<ReelCardProps> = ({ reel }) => {
   };
 
   /* ---------------- Add Comment ---------------- */
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-
-    const comment = {
-      id: Date.now().toString(),
-      name: "You",
-      text: newComment,
-      likes: 0,
-      isLiked: false,
+    const handleAddComment = async () => {
+      if (!newComment.trim()) return;
+  
+      try {
+        await addReelComment(
+          reel?._id,
+          newComment,
+          commentId || undefined,
+        );
+        setNewComment("");
+        setCommentId(null);
+        queryClient.invalidateQueries({ queryKey: ["reelsComments", reel._id] });
+      } catch (err) {
+        toast.error(`${err?.message || "Failed to add comment"}`);
+      }
     };
-
-    setComments((p) => [comment, ...p]);
-    setNewComment("");
-
-    commentsRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   /* ---------------- Comment Like ---------------- */
 
@@ -190,6 +192,7 @@ const ReelCard: React.FC<ReelCardProps> = ({ reel }) => {
                 {commentList.map((c) => (
                   <div key={c._id} className="flex gap-3">
                     <Avatar className="h-9 w-9">
+                      <AvatarImage src={c.author?.avatarUrl} alt={c.author?.username} />
                       <AvatarFallback>{c.author.username?.[0]}</AvatarFallback>
                     </Avatar>
 
