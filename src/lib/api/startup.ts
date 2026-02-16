@@ -96,3 +96,10 @@ export async function deleteStartupComment(commentId: string) {
     STARTUP_ENDPOINTS.COMMENT_DELETE(commentId)
   );
 }
+
+export async function saveStartupProfile(payload: any) {
+  return axiosClient.post(
+    STARTUP_ENDPOINTS.PROFILE,
+    payload
+  );
+}

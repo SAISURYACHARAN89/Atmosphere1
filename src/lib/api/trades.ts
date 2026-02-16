@@ -1,7 +1,7 @@
-import { axiosClient } from "./core";
-import { TRADE_ENDPOINTS } from "./trade.endpoints";
-
 /* ---------- Markets & Portfolio ---------- */
+
+import axiosClient from "./axiosClient";
+import { TRADE_ENDPOINTS } from "./endpoints";
 
 export async function fetchMarkets() {
   const { data } = await axiosClient.get(TRADE_ENDPOINTS.MARKETS);

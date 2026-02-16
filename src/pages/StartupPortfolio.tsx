@@ -8,14 +8,37 @@ import CompanySummaryCard from "@/components/CompanySummaryCard";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Upload } from "lucide-react";
+import { useAppStore } from "@/store/useAppStore";
+import { useSaveStartupProfile } from "@/hooks/portfolio/useSavePortfolioDetails";
+import { useGetStartupProfile } from "@/hooks/portfolio/useGetStartupProfile";
 
 const Index = () => {
+  const user= useAppStore(s=>s.user);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
+  // const { data:startupProfileData}= useGetStartupProfile(user?._id);
+  const { mutate: saveProfile, isPending } = useSaveStartupProfile();
+
+  const [form, setForm] = useState({
+    companyProfile: "",
+    about: "",
+    location: "",
+    companyType: "",
+    selectedIndustries: [] as string[],
+    establishedOn: "",
+    website: "",
+    teamMembers: [{ id: 1, username: "", role: "", userId: "" }],
+  });
+
+  const handleFormChange = (key: string, value: any) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+  console.log(form)
 
   const handleToggle = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <PortfolioHeader />
@@ -28,7 +51,7 @@ const Index = () => {
           isExpanded={expandedSection === "company"}
           onToggle={() => handleToggle("company")}
         >
-          <CompanyProfileSection />
+          <CompanyProfileSection formData={form} handleFormChange={handleFormChange} />
         </ExpandableSection>
 
         <ExpandableSection 
