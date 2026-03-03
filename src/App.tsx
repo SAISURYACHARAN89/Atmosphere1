@@ -52,6 +52,7 @@ import StartupInvestor from "./pages/StartupInvestor";
 import StartupPortfolio from "./pages/StartupPortfolio";
 import DiditKycFrame from "./pages/Kyc";
 import AppContext from "./components/AppContext";
+import ChildSafety from "./pages/ChildSafety";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -110,6 +111,7 @@ const App = () => {
             <Route path="/kyc-verification" element={<KYCVerification />} />
             <Route path="/portfolio-verification" element={<PortfolioVerification />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/child-safety" element={<ChildSafety />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
